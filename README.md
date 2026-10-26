@@ -1,5 +1,7 @@
 # FastFiles
 
+[![最新版本](https://img.shields.io/github/v/release/Ydd535365042/fastfiles?label=%E6%9C%80%E6%96%B0%E7%89%88%E6%9C%AC)](https://github.com/Ydd535365042/fastfiles/releases/latest) [更新日志](CHANGELOG.md)
+
 **快速、轻巧的 Windows 原生文件管理器。** 现代化的界面，标签页、双窗格、多种布局、预览窗格一应俱全，用 C++（Win32）和 Rust 编写，不依赖 .NET 和 WinUI，打开就能用。
 
 ![主页](docs/images/home-light.png)
@@ -92,7 +94,11 @@
 
 ## 下载
 
-在 [Releases](https://github.com/Ydd535365042/fastfiles/releases) 页面下载：
+当前版本：**1.0.0.3**（[更新日志](CHANGELOG.md)）
 
-- `FastFiles_<版本>_x64_Setup.exe`：安装版，创建开始菜单快捷方式（桌面快捷方式可选），支持卸载。
+在 [Releases](https://github.com/Ydd535365042/fastfiles/releases/latest) 页面下载：
+
+- `FastFiles_1.0.0.3_x64_Setup.exe`：安装版，创建开始菜单快捷方式（桌面快捷方式可选），支持卸载。
 - `FastFiles.exe`：单文件便携版，下载即用。
+
+已经安装的 FastFiles 可以在“设置 → 关于”里点“检查更新”直接升级。

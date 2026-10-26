@@ -1,0 +1,65 @@
+// Generated list: sidebar section icons copied from Files (res/sidebar, MIT license in res/sidebar/LICENSE-Files-MIT.txt)
+#include "resource.h"
+#include "version.h"
+#include <winver.h>
+
+IDI_APP ICON "../res/FastFiles.ico"
+IDR_LANG RCDATA "../res/lang.txt"
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION FF_VER_NUM
+PRODUCTVERSION FF_VER_NUM
+FILEOS VOS_NT_WINDOWS32
+FILETYPE VFT_APP
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "080404B0"
+        BEGIN
+            VALUE "CompanyName", "FastFiles"
+            VALUE "FileDescription", "FastFiles"
+            VALUE "FileVersion", FF_VER_STR
+            VALUE "InternalName", "FastFiles"
+            VALUE "OriginalFilename", "FastFiles.exe"
+            VALUE "ProductName", "FastFiles"
+            VALUE "ProductVersion", FF_VER_STR
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x0804, 1200
+    END
+END
+
+1000 RCDATA "../res/sidebar/Home.scale-100.png"
+1001 RCDATA "../res/sidebar/Home.scale-125.png"
+1002 RCDATA "../res/sidebar/Home.scale-150.png"
+1003 RCDATA "../res/sidebar/Home.scale-200.png"
+1004 RCDATA "../res/sidebar/Pinned.scale-100.png"
+1005 RCDATA "../res/sidebar/Pinned.scale-125.png"
+1006 RCDATA "../res/sidebar/Pinned.scale-150.png"
+1007 RCDATA "../res/sidebar/Pinned.scale-200.png"
+1008 RCDATA "../res/sidebar/Libraries.scale-100.png"
+1009 RCDATA "../res/sidebar/Libraries.scale-125.png"
+1010 RCDATA "../res/sidebar/Libraries.scale-150.png"
+1011 RCDATA "../res/sidebar/Libraries.scale-200.png"
+1012 RCDATA "../res/sidebar/Drives.scale-100.png"
+1013 RCDATA "../res/sidebar/Drives.scale-125.png"
+1014 RCDATA "../res/sidebar/Drives.scale-150.png"
+1015 RCDATA "../res/sidebar/Drives.scale-200.png"
+1016 RCDATA "../res/sidebar/CloudDrives.scale-100.png"
+1017 RCDATA "../res/sidebar/CloudDrives.scale-125.png"
+1018 RCDATA "../res/sidebar/CloudDrives.scale-150.png"
+1019 RCDATA "../res/sidebar/CloudDrives.scale-200.png"
+1020 RCDATA "../res/sidebar/Network.scale-100.png"
+1021 RCDATA "../res/sidebar/Network.scale-125.png"
+1022 RCDATA "../res/sidebar/Network.scale-150.png"
+1023 RCDATA "../res/sidebar/Network.scale-200.png"
+1024 RCDATA "../res/sidebar/Wsl.scale-100.png"
+1025 RCDATA "../res/sidebar/Wsl.scale-125.png"
+1026 RCDATA "../res/sidebar/Wsl.scale-150.png"
+1027 RCDATA "../res/sidebar/Wsl.scale-200.png"
+1028 RCDATA "../res/sidebar/Tags.scale-100.png"
+1029 RCDATA "../res/sidebar/Tags.scale-125.png"
+1030 RCDATA "../res/sidebar/Tags.scale-150.png"
+1031 RCDATA "../res/sidebar/Tags.scale-200.png"

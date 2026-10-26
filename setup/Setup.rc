@@ -1,0 +1,34 @@
+#pragma code_page(65001)
+#include <windows.h>
+#include "version.h"
+#include "payload_path.h"
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+1 ICON "../res/FastFiles.ico"
+
+// The app, compressed by ffpack at build time (Uninstall.exe is this exe with this resource removed)
+100 RCDATA FF_PAYLOAD_PATH
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION FF_VER_NUM
+PRODUCTVERSION FF_VER_NUM
+FILEOS VOS_NT_WINDOWS32
+FILETYPE VFT_APP
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "080404B0"
+        BEGIN
+            VALUE "CompanyName", "FastFiles"
+            VALUE "FileDescription", "FastFiles 安装程序"
+            VALUE "FileVersion", FF_VER_STR
+            VALUE "ProductName", "FastFiles"
+            VALUE "ProductVersion", FF_VER_STR
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x0804, 1200
+    END
+END

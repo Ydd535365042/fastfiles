@@ -45,6 +45,7 @@ struct FileListEvents
     virtual void OnListUp() = 0;                                  // double click on empty space (Files' DoubleClickToGoUp)
     virtual void OnListMenu(HWND list, POINT screen, bool background) = 0; // right click / Apps key
     virtual void OnListLoaded() = 0;                              // the folder's items are in (also after a refresh)
+    virtual void OnListLoading(bool /*loading*/) {}               // opening / 刷新 started, and its items are in (Files' tab ProgressRing)
     virtual void OnListColumnsDefault(unsigned hidden) = 0;       // Files' 设为默认 in the header menu
     virtual void OnListZoom(int direction) = 0;                   // Ctrl+wheel (Files' LayoutPage_PointerWheelChanged)
     // The column view's (ColumnLayoutPage): the selection changed (the user's doing, or SelectFirst), a key before the
@@ -69,6 +70,7 @@ public:
     // Lists `folder` (a file system folder); `select` is a name in it to select and focus once listed
     bool Open(PCIDLIST_ABSOLUTE folder, const std::wstring& select);
     void Reload(); // list again, keeping the selection, focus and scroll position
+    void Refresh(); // the user's 刷新 (F5, menus): Reload, with the items cleared away meanwhile (Files' RefreshItems)
     PCIDLIST_ABSOLUTE Folder() const { return m_folder.get(); }
     const std::wstring& Path() const { return m_path; }
     bool Loading() const { return m_loading; }
@@ -232,7 +234,7 @@ private:
     unsigned m_paintedSel = 0;             // m_sel.version last painted
 
     // FileListModel.cpp
-    void StartListing();
+    void StartListing(bool shown = false); // shown: the tab shows it loading (opening, 刷新; not a change notification)
     void TakeListing(Listing* listing);
     void TakeIcons(std::vector<std::pair<int, int>>* icons, unsigned generation);
     void Arrange();   // filter + sort m_items into m_order (Files' OrderFileList)
@@ -358,6 +360,11 @@ private:
     std::shared_ptr<std::atomic<unsigned>> m_generation = std::make_shared<std::atomic<unsigned>>(0);
     bool m_loading = false;
     bool m_listed = false;              // a listing has come in (empty text only then)
+    bool m_blank = false;               // 刷新: items not drawn until the new listing is in (Refresh)
+    ULONGLONG m_blankSince = 0;
+    std::unique_ptr<Listing> m_held;    // a listing that came in before kBlankMs were up
+    static constexpr ULONGLONG kBlankMs = 150;
+    static constexpr UINT_PTR kRevealTimer = 5; // on the container (FileList.cpp: 1 reload, 2 hover, 3 drag open, 4 scroll)
     std::wstring m_pendingSelect, m_pendingRename;
     int m_pendingTries = 0; // listings a just-created item may still be missing from
     std::wstring m_filter;

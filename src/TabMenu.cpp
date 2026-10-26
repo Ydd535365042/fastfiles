@@ -197,8 +197,8 @@ bool Tab::ShowViewMenu(HWND viewWindow, HWND from, POINT screen)
     // "打开" on one folder: navigate here (like a double click), whatever the folder's open verb points at
     if (alive && !background && (_wcsicmp(verb, L"open") == 0 || _wcsicmp(verb, L"explore") == 0))
         handled = OnDefaultCommand(view.Get()) == S_OK;
-    // 粘贴 / 删除: Files runs them itself (status center, its own dialogs)
-    if (alive && !handled && (_wcsicmp(verb, L"paste") == 0 || _wcsicmp(verb, L"delete") == 0))
+    // 粘贴 / 删除 / 共享: Files runs them itself (status center, its own dialogs, its share sheet)
+    if (alive && !handled && (_wcsicmp(verb, L"paste") == 0 || _wcsicmp(verb, L"delete") == 0 || _wcsicmp(verb, L"Windows.ModernShare") == 0))
         handled = m_events->OnTabVerb(this, verb, background);
     // Test mode: shell items that would change the system (send to, open with, extensions, delete to the bin...) don't run
     if (alive && !handled && cmd >= TabViewMenu::kShellFirst && cmd <= TabViewMenu::kShellLast && Sandbox::VerbAllowed(verb))

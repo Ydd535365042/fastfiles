@@ -6,6 +6,7 @@
 1 小时前	1 hour ago
 1 秒前	1 second ago
 Git 错误	Git error
+GitHub 仓库	GitHub-bewaarplek
 PowerShell 文件	PowerShell files
 {0, plural, other {将删除 # 个项目}}	{0, plural, one {One item will be deleted} other {# items will be deleted}}
 {0, plural, other {文件名冲突}}	Conflicting {0, plural, one {file name} other {file names}}
@@ -59,6 +60,7 @@ PowerShell 文件	PowerShell files
 全部打开	Open all
 全部播放	Play All
 共享	Deel
+共享项目失败	Failed to share items
 关于	Oor
 关闭	Sluit
 关闭所有标签页	Close all tabs
@@ -75,7 +77,6 @@ PowerShell 文件	PowerShell files
 列表	List
 列视图	Kolomme
 创建	Skep
-创建 zip 压缩文件	Create zip archive
 创建分支	Skep tak
 创建快捷方式	Creates a shortcut
 创建新标签	Create new tag
@@ -100,8 +101,6 @@ PowerShell 文件	PowerShell files
 十进制	Decimal
 升序	Stygende
 卡片	Cards
-压缩	Archive
-压缩 	Archive 
 压缩文件	Archive files
 压缩文件密码	Archive password
 原始文件夹	Oorspronklike omslag
@@ -187,6 +186,8 @@ PowerShell 文件	PowerShell files
 将{0, plural, other {#个项目}}复制到“{1}”时出错	Error copying {0, plural, one {# item} other {# items}} to "{1}"
 将{0, plural, other {#个项目}}移动到“{1}”时出错	Error moving {0, plural, one {# item} other {# items}} to "{1}"
 将“{0}”解压缩到“{1}”时出错	Error extracting "{0}" to "{1}"
+将共享你选择的项目	Die items wat jy gekies het sal gedeel word
+将共享已选项目	Die geselekteerde item sal gedeel word
 将文件和文件夹一同排序	Sort files and folders together
 将此操作应用到所有冲突项	Apply this action to all conflicting items
 居中	Center
@@ -286,13 +287,11 @@ PowerShell 文件	PowerShell files
 显示“用选中的项目创建文件夹”选项	Show option to create folder with selection
 显示“编辑文件标签”	Show edit tags flyout
 显示以英文句点 (.) 开头的文件	Show dot files
-显示压缩选项	Show compression options
 显示受保护的系统文件	Wys beskermde stelsellêers
 显示工具栏	Show toolbar
 显示状态中心按钮	Show status center button
 显示状态栏	Show status bar
 显示缩略图	Show thumbnails
-智能解压	Extract here (Smart)
 暗灰色	Gray Dark
 更多选项...	Meer opsies...
 替换已有的项目	Vervang bestaande item
@@ -307,6 +306,8 @@ PowerShell 文件	PowerShell files
 标签操作菜单	Tab actions menu
 格式化	Formaat
 正在从“{1}”中删除{0, plural, other {#个项目}}	Deleting {0, plural, one {# item} other {# items}} from "{1}"
+正在共享 {0}	Deel {0}
+正在共享 {0} {1}	Deel {0} {1}
 正在发现项目...	Discovering items...
 正在取消	Kanselleer
 正在处理项目...	Processing items...
@@ -343,6 +344,7 @@ PowerShell 文件	PowerShell files
 现在	Nou
 生成新名称	Genereer nuwe naam
 用选中的项目创建文件夹	Skep omslag met seleksie
+目前没有可共享的内容。	Daar is niks om nou te deel nie...
 砖红色	Brick Red
 确定	OK
 确定要删除此标签吗？	Are you sure you want to delete this tag?
@@ -354,6 +356,7 @@ PowerShell 文件	PowerShell files
 类型	Item soort kolom
 粉鸢尾花色	Iris Pastel
 粘贴	Plak
+粘贴为快捷方式	Paste shortcut
 粘贴到选中的文件夹	Paste to selected folder
 系统	Stelsel
 红色	Red
@@ -383,9 +386,6 @@ PowerShell 文件	PowerShell files
 要以管理员身份继续吗？	Wil jy graag as administrateur voortgaan?
 要改为在桌面上创建快捷方式吗？	Would you like to create the shortcut on the desktop instead?
 解压	Uitreksel
-解压 	Uitreksel 
-解压到当前文件夹	Onttrek hier
-解压文件	Onttrek lêers
 解压文件到	Onttrek argief
 设为默认	Set as default
 设置	Instellings
@@ -442,6 +442,7 @@ PowerShell 文件	PowerShell files
 1 小时前	منذ ساعة
 1 秒前	منذ ثانية
 Git 错误	خطأ في Git
+GitHub 仓库	مستودع GitHub
 PowerShell 文件	PowerShell files
 {0, plural, other {将删除 # 个项目}}	{0, plural, zero {}one {سيتم حذف عنصر واحد} two {# سيتم حذف العناصر} few {# سيتم حذف العناصر} many {# سيتم حذف العناصر} other {# سيتم حذف العناصر}}
 {0, plural, other {文件名冲突}}	تضارب {0, plural, zero {}one {اسم الملف} two {أسماء الملفات} few {أسماء الملفات} many {أسماء الملفات} other {أسماء الملفات}}
@@ -495,6 +496,7 @@ PowerShell 文件	PowerShell files
 全部打开	فتح الكل
 全部播放	Play All
 共享	مشاركة
+共享项目失败	تعذر مشاركة العناصر
 关于	حول التطبيق
 关闭	إغلاق
 关闭所有标签页	أغلق جميع علامات التبويب
@@ -511,7 +513,6 @@ PowerShell 文件	PowerShell files
 列表	قائمة
 列视图	الأعمدة
 创建	إنشاء
-创建 zip 压缩文件	Create zip archive
 创建分支	إنشاء فرع
 创建快捷方式	ينشئ اختصار
 创建新标签	إنشاء علامة جديدة
@@ -536,8 +537,6 @@ PowerShell 文件	PowerShell files
 十进制	Decimal
 升序	تصاعدي
 卡片	البطاقات
-压缩	Archive
-压缩 	Archive 
 压缩文件	Archive files
 压缩文件密码	كلمة مرور الأرشيف
 原始文件夹	المجلد الأصلي
@@ -623,6 +622,8 @@ PowerShell 文件	PowerShell files
 将{0, plural, other {#个项目}}复制到“{1}”时出错	خطأ في نسخ {0, plural, one {# عنصر} other {# عناصر}} إلى "{1}"
 将{0, plural, other {#个项目}}移动到“{1}”时出错	Error moving {0, plural, one {# item} other {# items}} to "{1}"
 将“{0}”解压缩到“{1}”时出错	خطأ في استخراج "{0}" إلى "{1}"
+将共享你选择的项目	ستتم مشاركة العناصر التي حددتها
+将共享已选项目	سيتم مشاركة العنصر المحدد
 将文件和文件夹一同排序	فرز الملفات والمجلدات معا
 将此操作应用到所有冲突项	تطبيق هذا الإجراء على جميع العناصر المتضاربة
 居中	وسط
@@ -722,13 +723,11 @@ PowerShell 文件	PowerShell files
 显示“用选中的项目创建文件夹”选项	عرض خِيار إنشاء مجلد مع التحديد
 显示“编辑文件标签”	إظهار قائمة تعديل العلامات
 显示以英文句点 (.) 开头的文件	عرض ملفات النقاط
-显示压缩选项	عرض خيارات الضغط
 显示受保护的系统文件	إظهار ملفات النظام المحمية
 显示工具栏	إظهار شريط الأدوات
 显示状态中心按钮	Show status center button
 显示状态栏	إظهار شريط الحالة
 显示缩略图	إظهار الصور المصغرة
-智能解压	استخرج هنا (ذكي)
 暗灰色	رمادي غامق
 更多选项...	خيارات إضافية
 替换已有的项目	استبدل العنصر الموجود سابقا
@@ -743,6 +742,8 @@ PowerShell 文件	PowerShell files
 标签操作菜单	قائمة إجراءات علامة التبويب
 格式化	تنسيق
 正在从“{1}”中删除{0, plural, other {#个项目}}	Deleting {0, plural, one {# item} other {# items}} from "{1}"
+正在共享 {0}	المشاركة: {0}%
+正在共享 {0} {1}	المشاركة{0} {1}
 正在发现项目...	يتم اكتشاف العناصر...
 正在取消	الإلغاء
 正在处理项目...	جاري معالجة العناصر...
@@ -779,6 +780,7 @@ PowerShell 文件	PowerShell files
 现在	الآن
 生成新名称	توليد اسم جديد
 用选中的项目创建文件夹	إنشاء مجلد مع العناصر المحددة
+目前没有可共享的内容。	‏‏لا يوجد شيء لمشاركته الآن.
 砖红色	أحمر طوبي
 确定	موافق
 确定要删除此标签吗？	هل أنت متأكد أنك تريد إزالة هذه العلامة؟
@@ -790,6 +792,7 @@ PowerShell 文件	PowerShell files
 类型	عمود نوع العنصر
 粉鸢尾花色	باستيل إيريس
 粘贴	لصق
+粘贴为快捷方式	لصق الاختصار
 粘贴到选中的文件夹	لصق في المجلد المحدد
 系统	النظام
 红色	أحمر
@@ -819,9 +822,6 @@ PowerShell 文件	PowerShell files
 要以管理员身份继续吗？	هل ترغب في الاستمرار كمسؤول؟
 要改为在桌面上创建快捷方式吗？	هل ترغب في إنشاء الاختصار على سطح المكتب بدلاً من ذلك؟
 解压	استخراج
-解压 	استخراج 
-解压到当前文件夹	فك الظغط هنا
-解压文件	استخرج الملفات
 解压文件到	استخرج الأرشيف
 设为默认	تعيين كافتراضي
 设置	إعدادات
@@ -878,6 +878,7 @@ PowerShell 文件	PowerShell files
 1 小时前	1 гадзіну назад
 1 秒前	1 секунду таму
 Git 错误	Git error
+GitHub 仓库	Рэпазіторый GitHub
 PowerShell 文件	PowerShell files
 {0, plural, other {将删除 # 个项目}}	{0, plural, one {One item will be deleted} other {# items will be deleted}}
 {0, plural, other {文件名冲突}}	Conflicting {0, plural, one {file name} other {file names}}
@@ -931,6 +932,7 @@ PowerShell 文件	PowerShell files
 全部打开	Open all
 全部播放	Play All
 共享	Падзяліцца
+共享项目失败	Failed to share items
 关于	Аб праграме
 关闭	Close
 关闭所有标签页	Close all tabs
@@ -947,7 +949,6 @@ PowerShell 文件	PowerShell files
 列表	List
 列视图	Columns
 创建	Create
-创建 zip 压缩文件	Create zip archive
 创建分支	Create branch
 创建快捷方式	Creates a shortcut
 创建新标签	Create new tag
@@ -972,8 +973,6 @@ PowerShell 文件	PowerShell files
 十进制	Decimal
 升序	Па ўзрастанні
 卡片	Cards
-压缩	Archive
-压缩 	Archive 
 压缩文件	Archive files
 压缩文件密码	Archive password
 原始文件夹	Original folder
@@ -1059,6 +1058,8 @@ PowerShell 文件	PowerShell files
 将{0, plural, other {#个项目}}复制到“{1}”时出错	Error copying {0, plural, one {# item} other {# items}} to "{1}"
 将{0, plural, other {#个项目}}移动到“{1}”时出错	Error moving {0, plural, one {# item} other {# items}} to "{1}"
 将“{0}”解压缩到“{1}”时出错	Error extracting "{0}" to "{1}"
+将共享你选择的项目	Выбраныя элементы будуць адпраўлены
+将共享已选项目	Выбраны элемент будзе адпраўлены
 将文件和文件夹一同排序	Sort files and folders together
 将此操作应用到所有冲突项	Apply this action to all conflicting items
 居中	Center
@@ -1158,13 +1159,11 @@ PowerShell 文件	PowerShell files
 显示“用选中的项目创建文件夹”选项	Паказваць параметр стварэння папкі з вылучанага
 显示“编辑文件标签”	Show edit tags flyout
 显示以英文句点 (.) 开头的文件	Паказваць тыпы файлаў якія вядомы
-显示压缩选项	Show compression options
 显示受保护的系统文件	Паказваць абароненыя сістэмныя файлы
 显示工具栏	Show toolbar
 显示状态中心按钮	Show status center button
 显示状态栏	Show status bar
 显示缩略图	Show thumbnails
-智能解压	Extract here (Smart)
 暗灰色	Gray Dark
 更多选项...	More options...
 替换已有的项目	Замяніць існуючы элемент
@@ -1179,6 +1178,8 @@ PowerShell 文件	PowerShell files
 标签操作菜单	Tab actions menu
 格式化	Фармат
 正在从“{1}”中删除{0, plural, other {#个项目}}	Deleting {0, plural, one {# item} other {# items}} from "{1}"
+正在共享 {0}	Абагульванне {0}
+正在共享 {0} {1}	Абагульванне {0} {1}
 正在发现项目...	Discovering items...
 正在取消	Canceling
 正在处理项目...	Processing items...
@@ -1215,6 +1216,7 @@ PowerShell 文件	PowerShell files
 现在	Зараз
 生成新名称	Generate new name
 用选中的项目创建文件夹	Create folder with selection
+目前没有可共享的内容。	Зараз няма чым падзяліцца...
 砖红色	Brick Red
 确定	OK
 确定要删除此标签吗？	Are you sure you want to delete this tag?
@@ -1226,6 +1228,7 @@ PowerShell 文件	PowerShell files
 类型	Item type column
 粉鸢尾花色	Iris Pastel
 粘贴	Уставіць
+粘贴为快捷方式	Уставіць ярлык
 粘贴到选中的文件夹	Paste to selected folder
 系统	Сістэмны
 红色	Red
@@ -1255,9 +1258,6 @@ PowerShell 文件	PowerShell files
 要以管理员身份继续吗？	Would you like to continue as administrator?
 要改为在桌面上创建快捷方式吗？	Would you like to create the shortcut on the desktop instead?
 解压	Extract
-解压 	Extract 
-解压到当前文件夹	Extract here
-解压文件	Extract files
 解压文件到	Extract archive
 设为默认	Set as default
 设置	Settings
@@ -1314,6 +1314,7 @@ PowerShell 文件	PowerShell files
 1 小时前	1 hour ago
 1 秒前	1 second ago
 Git 错误	Грешка с Git
+GitHub 仓库	GitHub хранилище
 PowerShell 文件	PowerShell files
 {0, plural, other {将删除 # 个项目}}	{0, plural, one {One item will be deleted} other {# items will be deleted}}
 {0, plural, other {文件名冲突}}	Conflicting {0, plural, one {file name} other {file names}}
@@ -1367,6 +1368,7 @@ PowerShell 文件	PowerShell files
 全部打开	Отваряне на всички
 全部播放	Play All
 共享	Споделяне
+共享项目失败	Неуспешно споделяне на елементи
 关于	Относно
 关闭	Затвори
 关闭所有标签页	Close all tabs
@@ -1383,7 +1385,6 @@ PowerShell 文件	PowerShell files
 列表	Списък
 列视图	Колони
 创建	Създаване
-创建 zip 压缩文件	Create zip archive
 创建分支	Създаване на клон
 创建快捷方式	Създаване на пряк път
 创建新标签	Създаване на нов етикет
@@ -1408,8 +1409,6 @@ PowerShell 文件	PowerShell files
 十进制	Decimal
 升序	Възходящ
 卡片	Cards
-压缩	Archive
-压缩 	Archive 
 压缩文件	Archive files
 压缩文件密码	Парола на архива
 原始文件夹	Оригинална папка
@@ -1495,6 +1494,8 @@ PowerShell 文件	PowerShell files
 将{0, plural, other {#个项目}}复制到“{1}”时出错	Error copying {0, plural, one {# item} other {# items}} to "{1}"
 将{0, plural, other {#个项目}}移动到“{1}”时出错	Error moving {0, plural, one {# item} other {# items}} to "{1}"
 将“{0}”解压缩到“{1}”时出错	Грешка, извличайки "{0}" в "{1}"
+将共享你选择的项目	Елементите, които сте избрали, ще бъдат споделени
+将共享已选项目	Избраният елемент ще бъде споделен
 将文件和文件夹一同排序	Сортиране на папките и файловете заедно
 将此操作应用到所有冲突项	Прилагане на това действие за всички конфликтни елементи
 居中	По средата
@@ -1594,13 +1595,11 @@ PowerShell 文件	PowerShell files
 显示“用选中的项目创建文件夹”选项	Показване на възможност за сътворяване на папка с избрани елементи
 显示“编辑文件标签”	Show edit tags flyout
 显示以英文句点 (.) 开头的文件	Show dot files
-显示压缩选项	Показване на възможности за компресиране
 显示受保护的系统文件	Показване на защитените системни файлове
 显示工具栏	Show toolbar
 显示状态中心按钮	Show status center button
 显示状态栏	Show status bar
 显示缩略图	Покажи миниатюри
-智能解压	Extract here (Smart)
 暗灰色	Тъмно сиво
 更多选项...	Още възможности...
 替换已有的项目	Заменете съществуващият елемент
@@ -1615,6 +1614,8 @@ PowerShell 文件	PowerShell files
 标签操作菜单	Tab actions menu
 格式化	Формат
 正在从“{1}”中删除{0, plural, other {#个项目}}	Deleting {0, plural, one {# item} other {# items}} from "{1}"
+正在共享 {0}	Споделяне {0}
+正在共享 {0} {1}	Споделяне {0} {1}
 正在发现项目...	Discovering items...
 正在取消	Отмяна
 正在处理项目...	Обработване на елементите...
@@ -1651,6 +1652,7 @@ PowerShell 文件	PowerShell files
 现在	Сега
 生成新名称	Генерирай ново име
 用选中的项目创建文件夹	Сътворение на папка с избраното
+目前没有可共享的内容。	Няма нищо за споделяне в момента...
 砖红色	Тухлено-червено
 确定	Добре
 确定要删除此标签吗？	Наистина ли искате да изтриете този етикет?
@@ -1662,6 +1664,7 @@ PowerShell 文件	PowerShell files
 类型	Колона с типа на елемента
 粉鸢尾花色	Пастелно ирисово
 粘贴	Поставяне
+粘贴为快捷方式	Paste shortcut
 粘贴到选中的文件夹	Paste to selected folder
 系统	Система
 红色	Червено
@@ -1691,9 +1694,6 @@ PowerShell 文件	PowerShell files
 要以管理员身份继续吗？	Искате ли да продължите като администратор?
 要改为在桌面上创建快捷方式吗？	Бихте ли желали вместо това да се сътвори пряк път на работния плот?
 解压	Извличане
-解压 	Извличане 
-解压到当前文件夹	Извличане тук
-解压文件	Извлечане на файлове
 解压文件到	Извличане на архив
 设为默认	Задаване по подразбиране
 设置	Настройки
@@ -1750,6 +1750,7 @@ PowerShell 文件	PowerShell files
 1 小时前	Fa 1 hora
 1 秒前	Fa 1 segon
 Git 错误	Error del Git
+GitHub 仓库	Repositori GitHub
 PowerShell 文件	Fitxers de PowerShell
 {0, plural, other {将删除 # 个项目}}	{0, plural, one {Se suprimirà un element} other {Se suprimiran # elements}}
 {0, plural, other {文件名冲突}}	En conflicte {0, plural, one {nom del fitxer} other {noms de fitxers}}
@@ -1803,6 +1804,7 @@ PowerShell 文件	Fitxers de PowerShell
 全部打开	Obre-ho tot
 全部播放	Reprodueix-ho tot
 共享	Comparteix
+共享项目失败	No s'han pogut compartir els elements
 关于	Quant a
 关闭	Tanca
 关闭所有标签页	Tanca totes les pestanyes
@@ -1819,7 +1821,6 @@ PowerShell 文件	Fitxers de PowerShell
 列表	Llista
 列视图	Columnes
 创建	Crea
-创建 zip 压缩文件	Crea un arxiu zip
 创建分支	Crea una branca
 创建快捷方式	Crea una drecera
 创建新标签	Crea una etiqueta nova
@@ -1844,8 +1845,6 @@ PowerShell 文件	Fitxers de PowerShell
 十进制	Decimal
 升序	Ascendent
 卡片	Targetes
-压缩	Arxiu
-压缩 	Arxiu 
 压缩文件	Fitxers arxivats
 压缩文件密码	Contrasenya del fitxer
 原始文件夹	Carpeta original
@@ -1931,6 +1930,8 @@ PowerShell 文件	Fitxers de PowerShell
 将{0, plural, other {#个项目}}复制到“{1}”时出错	S'ha produït un error en copiar {0, plural, one {# element} other {# elements}} a «{1}»
 将{0, plural, other {#个项目}}移动到“{1}”时出错	S'ha produït un error en moure {0, plural, one {# element} other {# elements}} a «{1}»
 将“{0}”解压缩到“{1}”时出错	S'ha produït un error en extreure "{0}" a "{1}"
+将共享你选择的项目	Els elements que hàgiu seleccionat es compartiran
+将共享已选项目	L'element seleccionat es compartirà
 将文件和文件夹一同排序	Ordena fitxers i carpetes junts
 将此操作应用到所有冲突项	Aplica aquesta acció a tots els elements conflictius
 居中	Centre
@@ -2030,13 +2031,11 @@ PowerShell 文件	Fitxers de PowerShell
 显示“用选中的项目创建文件夹”选项	Mostra l'opció per crear una carpeta amb selecció
 显示“编辑文件标签”	Mostra el desplegable d'edició d'etiquetes
 显示以英文句点 (.) 开头的文件	Mostra els fitxers que comencen amb un punt
-显示压缩选项	Mostra les opcions de compressió
 显示受保护的系统文件	Mostra els fitxers protegits del sistema
 显示工具栏	Mostra la barra d'eines
 显示状态中心按钮	Mostra el botó del centre d'estat
 显示状态栏	Mostra la barra d’estat
 显示缩略图	Mostra les miniatures
-智能解压	Extreu aquí (intel·ligent)
 暗灰色	Gris fosc
 更多选项...	Més opcions...
 替换已有的项目	Substitueix l'element existent
@@ -2051,6 +2050,8 @@ PowerShell 文件	Fitxers de PowerShell
 标签操作菜单	Menú d'accions de la pestanya
 格式化	Format
 正在从“{1}”中删除{0, plural, other {#个项目}}	S'està eliminant {0, plural, one {# element} other {# elements}} de «{1}»
+正在共享 {0}	Compartint {0}
+正在共享 {0} {1}	Compartint {0} {1}
 正在发现项目...	S'estan descobrint els elements...
 正在取消	Cancel·lant
 正在处理项目...	Processant elements...
@@ -2087,6 +2088,7 @@ PowerShell 文件	Fitxers de PowerShell
 现在	Ara
 生成新名称	Genera un nom nou
 用选中的项目创建文件夹	Crea una carpeta amb selecció
+目前没有可共享的内容。	No n'hi ha res per compartir ara mateix...
 砖红色	Vermell maó
 确定	D’acord
 确定要删除此标签吗？	Esteu segur que voleu esborrar aquesta etiqueta?
@@ -2098,6 +2100,7 @@ PowerShell 文件	Fitxers de PowerShell
 类型	Columna del tipus d'element
 粉鸢尾花色	Iris pastel
 粘贴	Enganxa
+粘贴为快捷方式	Enganxa la drecera
 粘贴到选中的文件夹	Enganxa a la carpeta seleccionada
 系统	Sistema
 红色	Vermell
@@ -2127,9 +2130,6 @@ PowerShell 文件	Fitxers de PowerShell
 要以管理员身份继续吗？	Voleu continuar com a administrador?
 要改为在桌面上创建快捷方式吗？	Voleu crear la drecera a l'escriptori?
 解压	Extreu
-解压 	Extreu 
-解压到当前文件夹	Extreu aquí
-解压文件	Extreu fitxers
 解压文件到	Extreu l'arxiu
 设为默认	Estableix com a defecte
 设置	Configuració
@@ -2186,6 +2186,7 @@ PowerShell 文件	Fitxers de PowerShell
 1 小时前	před 1 hodinou
 1 秒前	před 1 sekundou
 Git 错误	Chyba Gitu
+GitHub 仓库	GitHub repozitář
 PowerShell 文件	PowerShell files
 {0, plural, other {将删除 # 个项目}}	{0, plural, one {Jedna položka bude smazána} few {# položky budou smazány} other {# položek bude smazáno}}
 {0, plural, other {文件名冲突}}	Konflikt {0, plural, one {názvu souboru} other {názvů souborů}}
@@ -2239,6 +2240,7 @@ PowerShell 文件	PowerShell files
 全部打开	Otevřít vše
 全部播放	Play All
 共享	Sdílet
+共享项目失败	Sdílení položek se nezdařilo
 关于	O aplikaci
 关闭	Zavřít
 关闭所有标签页	Zavřít všechny karty
@@ -2255,7 +2257,6 @@ PowerShell 文件	PowerShell files
 列表	Seznam
 列视图	Sloupce
 创建	Vytvořit
-创建 zip 压缩文件	Create zip archive
 创建分支	Vytvořit novou větev
 创建快捷方式	Vytvoří zástupce
 创建新标签	Vytvořit nový štítek
@@ -2280,8 +2281,6 @@ PowerShell 文件	PowerShell files
 十进制	Desetinný
 升序	Vzestupně
 卡片	Karty
-压缩	Archive
-压缩 	Archive 
 压缩文件	Archive files
 压缩文件密码	Heslo archivu
 原始文件夹	Původní složka
@@ -2367,6 +2366,8 @@ PowerShell 文件	PowerShell files
 将{0, plural, other {#个项目}}复制到“{1}”时出错	Error copying {0, plural, one {# item} other {# items}} to "{1}"
 将{0, plural, other {#个项目}}移动到“{1}”时出错	Error moving {0, plural, one {# item} other {# items}} to "{1}"
 将“{0}”解压缩到“{1}”时出错	Chyba při extrahování "{0}“ do "{1}“
+将共享你选择的项目	Vybrané položky budou sdíleny
+将共享已选项目	Vybraná položka bude sdílena
 将文件和文件夹一同排序	Řadit soubory a složky pohromadě
 将此操作应用到所有冲突项	Použít tuto akci na všechny konfliktní položky
 居中	Střed
@@ -2466,13 +2467,11 @@ PowerShell 文件	PowerShell files
 显示“用选中的项目创建文件夹”选项	Zobrazit možnost pro vytvoření složky s výběrem
 显示“编辑文件标签”	Zobrazit výsuvné menu pro upravení štítků
 显示以英文句点 (.) 开头的文件	Zobrazit soubory začínající tečkou
-显示压缩选项	Zobrazit možnosti komprese
 显示受保护的系统文件	Zobrazit chráněné systémové soubory
 显示工具栏	Zobrazit panel nástrojů
 显示状态中心按钮	Zobrazit tlačítko stavového centra
 显示状态栏	Show status bar
 显示缩略图	Zobrazit náhledy
-智能解压	Extrahovat zde (Chytře)
 暗灰色	Tmavě Šedá
 更多选项...	Více možností...
 替换已有的项目	Nahradit existující položku
@@ -2487,6 +2486,8 @@ PowerShell 文件	PowerShell files
 标签操作菜单	Nabídka akcí
 格式化	Formát
 正在从“{1}”中删除{0, plural, other {#个项目}}	Deleting {0, plural, one {# item} other {# items}} from "{1}"
+正在共享 {0}	Sdílení {0}
+正在共享 {0} {1}	Sdílení {0} {1}
 正在发现项目...	Zjišťování položek...
 正在取消	Rušení
 正在处理项目...	Zpracovávání položek...
@@ -2523,6 +2524,7 @@ PowerShell 文件	PowerShell files
 现在	Nyní
 生成新名称	Generovat nové jméno
 用选中的项目创建文件夹	Vytvořit složku s výběrem
+目前没有可共享的内容。	Momentálně zde není co sdílet...
 砖红色	Cihlově červená
 确定	OK
 确定要删除此标签吗？	Opravdu chcete odstranit tento štítek?
@@ -2534,6 +2536,7 @@ PowerShell 文件	PowerShell files
 类型	Sloupec typu položky
 粉鸢尾花色	Pastelová Iris
 粘贴	Vložit
+粘贴为快捷方式	Vložit zástupce
 粘贴到选中的文件夹	Vložit do vybrané složky
 系统	Systém
 红色	Červená
@@ -2563,9 +2566,6 @@ PowerShell 文件	PowerShell files
 要以管理员身份继续吗？	Chcete pokračovat jako správce?
 要改为在桌面上创建快捷方式吗？	Přejete si místo toho vytvořit zástupce na ploše?
 解压	Rozbalit
-解压 	Rozbalit 
-解压到当前文件夹	Rozbalit zde
-解压文件	Rozbalit soubory
 解压文件到	Rozbalit archiv
 设为默认	Nastavit jako výchozí
 设置	Nastavení
@@ -2622,6 +2622,7 @@ PowerShell 文件	PowerShell files
 1 小时前	1 time siden
 1 秒前	1 sekund siden
 Git 错误	Git-fejl
+GitHub 仓库	GitHub-repo
 PowerShell 文件	PowerShell files
 {0, plural, other {将删除 # 个项目}}	{0, plural, one {Ét enme slettes} other {# enmer slettes}}
 {0, plural, other {文件名冲突}}	{0, plural, one {Filnavn} other {Filnavne}} i konflikt
@@ -2675,6 +2676,7 @@ PowerShell 文件	PowerShell files
 全部打开	Åbn alle
 全部播放	Play All
 共享	Del
+共享项目失败	Mislykkedes at dele emner
 关于	Om
 关闭	Luk
 关闭所有标签页	Luk alle faner
@@ -2691,7 +2693,6 @@ PowerShell 文件	PowerShell files
 列表	Liste
 列视图	Kolonner
 创建	Opret
-创建 zip 压缩文件	Create zip archive
 创建分支	Opret gren
 创建快捷方式	Opretter en genvej
 创建新标签	Opret nyt tag
@@ -2716,8 +2717,6 @@ PowerShell 文件	PowerShell files
 十进制	Decimal
 升序	Stigende
 卡片	Kort
-压缩	Archive
-压缩 	Archive 
 压缩文件	Archive files
 压缩文件密码	Arkivadgangskode
 原始文件夹	Oprindelig mappe
@@ -2803,6 +2802,8 @@ PowerShell 文件	PowerShell files
 将{0, plural, other {#个项目}}复制到“{1}”时出错	Fejl under komprimeringen af {0, plural, one {# emne} other {# emner}} til "{1}"
 将{0, plural, other {#个项目}}移动到“{1}”时出错	Error moving {0, plural, one {# item} other {# items}} to "{1}"
 将“{0}”解压缩到“{1}”时出错	Fejl under udpakning af "{0}" til "{1}"
+将共享你选择的项目	De valgte emner vil blive delt
+将共享已选项目	Det valgte emne vil blive delt
 将文件和文件夹一同排序	Sortér filer og mapper sammen
 将此操作应用到所有冲突项	Anvend denne handling på alle modstridende emner
 居中	Centreret
@@ -2902,13 +2903,11 @@ PowerShell 文件	PowerShell files
 显示“用选中的项目创建文件夹”选项	Vis mulighed for at oprette mappe med valg
 显示“编辑文件标签”	Vis Redigér tags-kontekstmenu
 显示以英文句点 (.) 开头的文件	Vis punktum-filer
-显示压缩选项	Vis komprimeringsindstillinger
 显示受保护的系统文件	Vis beskyttede systemfiler
 显示工具栏	Vis værktøjsbjælke
 显示状态中心按钮	Vis statuscenter-knap
 显示状态栏	Show status bar
 显示缩略图	Vis miniaturer
-智能解压	Udpak her (Smart)
 暗灰色	Mørkegrå
 更多选项...	Flere indstillinger...
 替换已有的项目	Erstat eksisterende emne
@@ -2923,6 +2922,8 @@ PowerShell 文件	PowerShell files
 标签操作菜单	Fanehandlingsmenu
 格式化	Format
 正在从“{1}”中删除{0, plural, other {#个项目}}	Sletter {0, plural, one {# emne} other {# emner}} fra "{1}"
+正在共享 {0}	Deler {0}
+正在共享 {0} {1}	Deler {0} {1}
 正在发现项目...	Discovering items...
 正在取消	Afbryder
 正在处理项目...	Behandler emner...
@@ -2959,6 +2960,7 @@ PowerShell 文件	PowerShell files
 现在	Nu
 生成新名称	Generér nyt navn
 用选中的项目创建文件夹	Opret mappe med valg
+目前没有可共享的内容。	Intet at dele lige nu...
 砖红色	Murstensrød
 确定	OK
 确定要删除此标签吗？	Sikker på, at dette tag skal slettes?
@@ -2970,6 +2972,7 @@ PowerShell 文件	PowerShell files
 类型	Emnetypekolonne
 粉鸢尾花色	Iris pastel
 粘贴	Indsæt
+粘贴为快捷方式	Indsæt genvej
 粘贴到选中的文件夹	Indsæt i den valgte mappe
 系统	System
 红色	Rød
@@ -2999,9 +3002,6 @@ PowerShell 文件	PowerShell files
 要以管理员身份继续吗？	Fortsæt som administrator?
 要改为在桌面上创建快捷方式吗？	Opret genvejen på skrivebordet i stedet?
 解压	Udpak
-解压 	Udpak 
-解压到当前文件夹	Udpak hér
-解压文件	Udpak filer
 解压文件到	Udpak arkiv
 设为默认	Angiv som standard
 设置	Indstillinger
@@ -3058,6 +3058,7 @@ PowerShell 文件	PowerShell files
 1 小时前	Vor 1 Stunde
 1 秒前	Vor 1 Sekunde
 Git 错误	Git-Fehler
+GitHub 仓库	GitHub-Repository
 PowerShell 文件	PowerShell-Dateien
 {0, plural, other {将删除 # 个项目}}	{0, plural, one {Ein Element wird gelöscht} other {# Elemente werden gelöscht}}
 {0, plural, other {文件名冲突}}	Im Konflikt {0, plural,one {stehender Dateiname}other {stehende Dateinamen}}
@@ -3111,6 +3112,7 @@ PowerShell 文件	PowerShell-Dateien
 全部打开	Alle öffnen
 全部播放	Alle abspielen
 共享	Teilen
+共享项目失败	Teilen der Elemente fehlgeschlagen
 关于	Info
 关闭	Schließen
 关闭所有标签页	Alle Tabs schließen
@@ -3127,7 +3129,6 @@ PowerShell 文件	PowerShell-Dateien
 列表	Liste
 列视图	Spalten
 创建	Erstellen
-创建 zip 压缩文件	ZIP-Archiv erstellen
 创建分支	Branch erstellen
 创建快捷方式	Verknüpfung erstellen
 创建新标签	Neuen Tag erstellen
@@ -3152,8 +3153,6 @@ PowerShell 文件	PowerShell-Dateien
 十进制	Dezimal
 升序	Aufsteigend
 卡片	Karten
-压缩	Archiv
-压缩 	Archiv 
 压缩文件	Archivdateien
 压缩文件密码	Archiv-Passwort
 原始文件夹	Ursprünglicher Ordner
@@ -3239,6 +3238,8 @@ PowerShell 文件	PowerShell-Dateien
 将{0, plural, other {#个项目}}复制到“{1}”时出错	Fehler beim Kopieren von {0, plural, one {# Element} other {# Elementen}} nach "{1}"
 将{0, plural, other {#个项目}}移动到“{1}”时出错	Fehler beim Verschieben von {0, plural, one {# Element} other {# Elementen}} nach "{1}"
 将“{0}”解压缩到“{1}”时出错	Fehler beim Entpacken von "{0}" nach "{1}"
+将共享你选择的项目	Die von dir ausgewählten Elemente werden geteilt
+将共享已选项目	Das ausgewählte Element wird geteilt
 将文件和文件夹一同排序	Dateien und Ordner zusammen sortieren
 将此操作应用到所有冲突项	Diese Aktionen für alle Konflikte anwenden
 居中	Mittig
@@ -3338,13 +3339,11 @@ PowerShell 文件	PowerShell-Dateien
 显示“用选中的项目创建文件夹”选项	Option anzeigen, um einen Ordner mit der Auswahl zu erstellen
 显示“编辑文件标签”	"Tags bearbeiten" im Kontextmenü anzeigen
 显示以英文句点 (.) 开头的文件	Dateien, die mit einem Punkt beginnen, anzeigen
-显示压缩选项	Komprimierungsoptionen anzeigen
 显示受保护的系统文件	Geschützte Systemdateien anzeigen
 显示工具栏	Werkzeugleiste anzeigen
 显示状态中心按钮	Status-Center-Button anzeigen
 显示状态栏	Statusleiste anzeigen
 显示缩略图	Miniaturansichten anzeigen
-智能解压	Hier entpacken (Smart)
 暗灰色	Dunkelgrau
 更多选项...	Mehr Optionen...
 替换已有的项目	Bestehendes Element ersetzen
@@ -3359,6 +3358,8 @@ PowerShell 文件	PowerShell-Dateien
 标签操作菜单	Tab-Aktionen-Menü
 格式化	Formattieren
 正在从“{1}”中删除{0, plural, other {#个项目}}	Lösche {0, plural, one {# Element} other {# Elemente}} aus "{1}"
+正在共享 {0}	{0} teilen
+正在共享 {0} {1}	{0} {1} werden geteilt
 正在发现项目...	Elemente werden gesucht...
 正在取消	Wird abgebrochen
 正在处理项目...	Elemente werden verarbeitet...
@@ -3395,6 +3396,7 @@ PowerShell 文件	PowerShell-Dateien
 现在	Jetzt
 生成新名称	Neuen Namen erzeugen
 用选中的项目创建文件夹	Ordner mit Auswahl erstellen
+目前没有可共享的内容。	Zurzeit gibt es nichts zu teilen...
 砖红色	Ziegelrot
 确定	OK
 确定要删除此标签吗？	Willst du diesen Tag wirklich löschen?
@@ -3406,6 +3408,7 @@ PowerShell 文件	PowerShell-Dateien
 类型	Dateityp
 粉鸢尾花色	Iris Pastell
 粘贴	Einfügen
+粘贴为快捷方式	Verknüpfung einfügen
 粘贴到选中的文件夹	In ausgewählten Ordner einfügen
 系统	Systemmenü
 红色	Rot
@@ -3435,9 +3438,6 @@ PowerShell 文件	PowerShell-Dateien
 要以管理员身份继续吗？	Möchtest du als Administrator fortfahren?
 要改为在桌面上创建快捷方式吗？	Möchtest du die Verknüpfung stattdessen auf dem Desktop erstellen?
 解压	Entpacken
-解压 	Entpacken 
-解压到当前文件夹	Hier entpacken
-解压文件	Dateien entpacken
 解压文件到	Archiv extrahieren
 设为默认	Als Standard festlegen
 设置	Einstellungen
@@ -3494,6 +3494,7 @@ PowerShell 文件	PowerShell-Dateien
 1 小时前	1 ώρα πριν
 1 秒前	1 δευτερόλεπτο πριν
 Git 错误	Σφάλμα Git
+GitHub 仓库	Αποθετήριο GitHub
 PowerShell 文件	PowerShell files
 {0, plural, other {将删除 # 个项目}}	{0, plural, one {Θα διαγραφεί ένα στοιχείο} other {Θα διαγραφούν # στοιχεία}}
 {0, plural, other {文件名冲突}}	{0, plural, one {Συγκρουόμενο όνομα αρχείου} other {Συγκρουόμενα ονόματα αρχείων}}
@@ -3547,6 +3548,7 @@ PowerShell 文件	PowerShell files
 全部打开	Άνοιγμα όλων
 全部播放	Play All
 共享	Κοινή χρήση
+共享项目失败	Αποτυχία κοινοποίησης στοιχείων
 关于	Σχετικά
 关闭	Κλείσιμο
 关闭所有标签页	Κλείσιμο όλων των καρτελών
@@ -3563,7 +3565,6 @@ PowerShell 文件	PowerShell files
 列表	Λίστα
 列视图	Στήλες
 创建	Δημιουργία
-创建 zip 压缩文件	Δημιουργία συμπιεσμένου zip
 创建分支	Δημιουργία διακλάδωσης
 创建快捷方式	Δημιουργεί μία συντόμευση
 创建新标签	Δημιουργία νέας ετικέτας
@@ -3588,8 +3589,6 @@ PowerShell 文件	PowerShell files
 十进制	Decimal
 升序	Αύξουσα σειρά
 卡片	Κάρτες
-压缩	Archive
-压缩 	Archive 
 压缩文件	Archive files
 压缩文件密码	Κωδικός αρχείου
 原始文件夹	Αρχικός φάκελος
@@ -3675,6 +3674,8 @@ PowerShell 文件	PowerShell files
 将{0, plural, other {#个项目}}复制到“{1}”时出错	Error copying {0, plural, one {# item} other {# items}} to "{1}"
 将{0, plural, other {#个项目}}移动到“{1}”时出错	Error moving {0, plural, one {# item} other {# items}} to "{1}"
 将“{0}”解压缩到“{1}”时出错	Σφάλμα εξαγωγής "{0}" σε "{1}"
+将共享你选择的项目	Τα στοιχεία που έχετε επιλέξει θα κοινοποιηθούν
+将共享已选项目	Το επιλεγμένο στοιχείο θα κοινοποιηθεί
 将文件和文件夹一同排序	Ταξινόμηση αρχείων και φακέλων μαζί
 将此操作应用到所有冲突项	Εφαρμογή αυτής της ενέργειας σε όλα τα αντικρουόμενα στοιχεία
 居中	Κέντρο
@@ -3774,13 +3775,11 @@ PowerShell 文件	PowerShell files
 显示“用选中的项目创建文件夹”选项	Εμφάνιση επιλογής για δημιουργία φακέλου με επιλογή
 显示“编辑文件标签”	Εμφάνιση επεξεργασίας ετικετών
 显示以英文句点 (.) 开头的文件	Εμφάνιση αρχείων dot
-显示压缩选项	Εμφάνιση επιλογών συμπίεσης
 显示受保护的系统文件	Εμφάνιση προστατευόμενων αρχείων συστήματος
 显示工具栏	Εμφάνιση γραμμής εργαλείων
 显示状态中心按钮	Show status center button
 显示状态栏	Show status bar
 显示缩略图	Εμφάνιση μικρογραφιών
-智能解压	Εξαγωγή εδώ (Έξυπνο)
 暗灰色	Γκρι σκούρο
 更多选项...	Περισσότερες επιλογές...
 替换已有的项目	Αντικατάσταση υπάρχοντος στοιχείου
@@ -3795,6 +3794,8 @@ PowerShell 文件	PowerShell files
 标签操作菜单	Μενού ενεργειών καρτέλας
 格式化	Μορφή
 正在从“{1}”中删除{0, plural, other {#个项目}}	Deleting {0, plural, one {# item} other {# items}} from "{1}"
+正在共享 {0}	Κοινή χρήση {0}
+正在共享 {0} {1}	Κοινή χρήση {0} {1}
 正在发现项目...	Discovering items...
 正在取消	Ακύρωση
 正在处理项目...	Επεξεργασία στοιχείων...
@@ -3831,6 +3832,7 @@ PowerShell 文件	PowerShell files
 现在	Τώρα
 生成新名称	Δημιουργία νέου ονόματος
 用选中的项目创建文件夹	Δημιουργία φακέλου με επιλογή
+目前没有可共享的内容。	Δεν υπάρχει τίποτα για κοινή χρήση αυτή τη στιγμή...
 砖红色	Κόκκινο τούβλου
 确定	ΟΚ
 确定要删除此标签吗？	Σίγουρα θέλετε να διαγράψετε αυτήν την ετικέτα;
@@ -3842,6 +3844,7 @@ PowerShell 文件	PowerShell files
 类型	Στήλη τύπου στοιχείου
 粉鸢尾花色	Παστέλ Ίριδας
 粘贴	Επικόλληση
+粘贴为快捷方式	Επικόλληση συντόμευσης
 粘贴到选中的文件夹	Επικόλληση στον επιλεγμένο φάκελο
 系统	Σύστημα
 红色	Κόκκινο
@@ -3871,9 +3874,6 @@ PowerShell 文件	PowerShell files
 要以管理员身份继续吗？	Θα θέλατε να συνεχίσετε ως διαχειριστής;
 要改为在桌面上创建快捷方式吗？	Θέλετε να δημιουργήσετε τη συντόμευση στην επιφάνεια εργασίας αντ' αυτού;
 解压	Εξαγωγή
-解压 	Εξαγωγή 
-解压到当前文件夹	Εξαγωγή εδώ
-解压文件	Εξαγωγή αρχείων
 解压文件到	Εξαγωγή αρχείου
 设为默认	Ορισμός ως προεπιλογή
 设置	Ρυθμίσεις
@@ -3930,6 +3930,7 @@ PowerShell 文件	PowerShell files
 1 小时前	1 hour ago
 1 秒前	1 second ago
 Git 错误	Git error
+GitHub 仓库	GitHub repository
 PowerShell 文件	PowerShell files
 {0, plural, other {将删除 # 个项目}}	{0, plural, one {One item will be deleted} other {# items will be deleted}}
 {0, plural, other {文件名冲突}}	Conflicting {0, plural, one {file name} other {file names}}
@@ -3983,6 +3984,7 @@ PowerShell 文件	PowerShell files
 全部打开	Open all
 全部播放	Play All
 共享	Share
+共享项目失败	Failed to share items
 关于	About
 关闭	Close
 关闭所有标签页	Close all tabs
@@ -3999,7 +4001,6 @@ PowerShell 文件	PowerShell files
 列表	List
 列视图	Columns
 创建	Create
-创建 zip 压缩文件	Create zip archive
 创建分支	Create branch
 创建快捷方式	Creates a shortcut
 创建新标签	Create new tag
@@ -4024,8 +4025,6 @@ PowerShell 文件	PowerShell files
 十进制	Decimal
 升序	Ascending
 卡片	Cards
-压缩	Archive
-压缩 	Archive 
 压缩文件	Archive files
 压缩文件密码	Archive password
 原始文件夹	Original folder
@@ -4111,6 +4110,8 @@ PowerShell 文件	PowerShell files
 将{0, plural, other {#个项目}}复制到“{1}”时出错	Error copying {0, plural, one {# item} other {# items}} to "{1}"
 将{0, plural, other {#个项目}}移动到“{1}”时出错	Error moving {0, plural, one {# item} other {# items}} to "{1}"
 将“{0}”解压缩到“{1}”时出错	Error extracting "{0}" to "{1}"
+将共享你选择的项目	The items you've selected will be shared
+将共享已选项目	The selected item will be shared
 将文件和文件夹一同排序	Sort files and folders together
 将此操作应用到所有冲突项	Apply this action to all conflicting items
 居中	Centre
@@ -4210,13 +4211,11 @@ PowerShell 文件	PowerShell files
 显示“用选中的项目创建文件夹”选项	Show option to create folder from selection
 显示“编辑文件标签”	Show submenu to edit tags
 显示以英文句点 (.) 开头的文件	Show dot files
-显示压缩选项	Show compression menu
 显示受保护的系统文件	Show protected system files
 显示工具栏	Show toolbar
 显示状态中心按钮	Show status centre button
 显示状态栏	Show status bar
 显示缩略图	Show thumbnails
-智能解压	Extract here (Smart)
 暗灰色	Dark Grey
 更多选项...	More options...
 替换已有的项目	Replace existing item
@@ -4231,6 +4230,8 @@ PowerShell 文件	PowerShell files
 标签操作菜单	Tab actions menu
 格式化	Format
 正在从“{1}”中删除{0, plural, other {#个项目}}	Deleting {0, plural, one {# item} other {# items}} from "{1}"
+正在共享 {0}	Sharing {0}
+正在共享 {0} {1}	Sharing {0} {1}
 正在发现项目...	Discovering items...
 正在取消	Cancelling
 正在处理项目...	Processing items...
@@ -4267,6 +4268,7 @@ PowerShell 文件	PowerShell files
 现在	Now
 生成新名称	Generate new name
 用选中的项目创建文件夹	Create folder with selection
+目前没有可共享的内容。	There’s nothing to share at the moment.
 砖红色	Brick Red
 确定	OK
 确定要删除此标签吗？	Are you sure you want to delete this tag?
@@ -4278,6 +4280,7 @@ PowerShell 文件	PowerShell files
 类型	Item type column
 粉鸢尾花色	Iris Pastel
 粘贴	Paste
+粘贴为快捷方式	Paste shortcut
 粘贴到选中的文件夹	Paste to selected folder
 系统	System
 红色	Red
@@ -4307,9 +4310,6 @@ PowerShell 文件	PowerShell files
 要以管理员身份继续吗？	Would you like to continue as administrator?
 要改为在桌面上创建快捷方式吗？	Would you like to create the shortcut on the desktop instead?
 解压	Extract
-解压 	Extract 
-解压到当前文件夹	Extract here
-解压文件	Extract files
 解压文件到	Extract archive
 设为默认	Set as default
 设置	Settings
@@ -4373,7 +4373,6 @@ PowerShell 文件	PowerShell files
  个文件夹)	 folders)
  个文件夹无权访问	 folders could not be accessed
  个文件夹（没有权限）	 folders (no permission)
- 个文件操作还没完成。关闭会取消它们（不完整的压缩包会被删除）。\n\n仍然关闭吗？	 file operations haven't finished. Closing cancels them (incomplete archives are deleted).\n\nClose anyway?
  个文件）	 files)
  个文件，	 files,
  个项目	 items
@@ -4405,6 +4404,8 @@ FastFiles 搜索：按文件名查找当前文件夹及其子文件夹，不依�
 FastFiles 设置 (*.txt)	FastFiles settings (*.txt)
 Git 分支和操作	Git branch and actions
 Git 错误	Git error
+GitHub 仓库	GitHub repository
+GitHub 暂时拒绝了请求，请稍后再试。	GitHub refused the request for now. Try again later.
 Git：正在	Git:
 PowerShell 文件	PowerShell files
 Windows 搜索	Windows Search
@@ -4438,6 +4439,7 @@ Windows 搜索：使用系统索引，可以搜索文件内容。	Windows Search
 上周	Last week
 上月	Last month
 下一个标签页	Next tab
+下载更新失败。	The update couldn't be downloaded.
 下面这些是 Windows 的设置，和资源管理器“文件夹选项”是同一份。	These are Windows settings, shared with File Explorer's Folder Options.
 不透明度	Opacity
 与资源管理器共用	Shared with File Explorer
@@ -4484,6 +4486,7 @@ Windows 搜索：使用系统索引，可以搜索文件内容。	Windows Search
 全部播放	Play All
 共 	Total 
 共享	Share
+共享项目失败	Failed to share items
 关	Off
 关于	About
 关闭	Close
@@ -4517,7 +4520,6 @@ Windows 搜索：使用系统索引，可以搜索文件内容。	Windows Search
 列表	List
 列视图	Columns
 创建	Create
-创建 zip 压缩文件	Create zip archive
 创建分支	Create branch
 创建快捷方式	Creates a shortcut
 创建新 	Create new 
@@ -4550,9 +4552,6 @@ Windows 搜索：使用系统索引，可以搜索文件内容。	Windows Search
 单击打开项目	Open items with a single click
 单击打开项目，鼠标指向时选中。	Open items with a single click; pointing selects them.
 卡片	Cards
-压缩	Archive
-压缩 	Archive 
-压缩为 zip	Compress to zip
 压缩文件	Archive files
 压缩文件不完整，	The archive is incomplete:
 压缩文件密码	Archive password
@@ -4564,6 +4563,7 @@ Windows 搜索：使用系统索引，可以搜索文件内容。	Windows Search
 双面板模式	Dual pane mode
 反向选择	Invert selection
 反转标签页滚轮切换方向	Reverse tab scroll direction
+发现新版本 	New version available: 
 发送到	Send to
 取消	Cancel
 取消固定	Unpin
@@ -4674,6 +4674,8 @@ Windows 搜索：使用系统索引，可以搜索文件内容。	Windows Search
 将{0, plural, other {#个项目}}复制到“{1}”时出错	Error copying {0, plural, one {# item} other {# items}} to "{1}"
 将{0, plural, other {#个项目}}移动到“{1}”时出错	Error moving {0, plural, one {# item} other {# items}} to "{1}"
 将“{0}”解压缩到“{1}”时出错	Error extracting "{0}" to "{1}"
+将共享你选择的项目	The items you've selected will be shared
+将共享已选项目	The selected item will be shared
 将当前文件夹固定到侧边栏	Pin the current folder to the sidebar
 将所选文件夹固定到侧边栏	Pin the selected folders to the sidebar
 将打开 	Will open 
@@ -4691,16 +4693,14 @@ Windows 搜索：使用系统索引，可以搜索文件内容。	Windows Search
 左对齐	Left
 已从“{1}”中删除{0, plural, other {#个项目}}	Deleted {0, plural, one {# item} other {# items}} from "{1}"
 已修改	Modified
-已压缩到 	Compressed to 
 已发现 {0, plural, one {# item} other {# items}}	Discovered {0, plural, one {# item} other {# items}}
 已取消从“{1}”中删除{0, plural, other {#个项目}}	Canceled deleting {0, plural, one {# item} other {# items}} from "{1}"
-已取消压缩	Compression cancelled
 已取消将 {0} 个项目压缩到“{1}”	Canceled compressing {0} items to "{1}"
 已取消将 {0} 解压缩到“{1}”	Canceled extracting "{0}" to "{1}"
 已取消将{0, plural, other {#个项目}}复制到“{1}”	Canceled copying {0, plural, one {# item} other {# items}} to "{1}"
 已取消将{0, plural, other {#个项目}}移动到“{1}”	Canceled moving {0, plural, one {# item} other {# items}} to "{1}"
+已取消更新。	The update was cancelled.
 已取消清空回收站	Canceled emptying Recycle Bin
-已取消解压	Extraction cancelled
 已取消，	Cancelled,
 已固定	Pinned
 已处理 {0}，共 {1}	{0} of {1} processed
@@ -4710,9 +4710,9 @@ Windows 搜索：使用系统索引，可以搜索文件内容。	Windows Search
 已将{0, plural, other {#个项目}}复制到“{1}”	Copied {0, plural, one {# item} other {# items}} to "{1}"
 已将{0, plural, other {#个项目}}移动到“{1}”	Moved {0, plural, one {# item} other {# items}} to "{1}"
 已将“{0}”解压缩到“{1}”	Extracted "{0}" to "{1}"
+已是最新版本	You're up to date
 已暂停 	Paused 
 已添加的项目	Added items
-已解压到 	Extracted to 
 已选择 	Selected 
 布局	Layout
 布局和显示选项 (Ctrl+Shift+1…6)	Layout and view options (Ctrl+Shift+1…6)
@@ -4812,27 +4812,33 @@ Windows 搜索：使用系统索引，可以搜索文件内容。	Windows Search
 新建标签页时打开	New tab opens
 新建窗口	New window
 新标签	New tag
+新版本没有提供这种安装方式的下载文件。	The new version has no download for this kind of installation.
 无	None
 无效位置	Invalid location
 无效名称	Invalid name
 无标签	Untagged
+无法保存下载的文件。	The downloaded file couldn't be saved.
 无法写入 	Can't write 
+无法创建快捷方式。	The shortcut couldn't be created.
 无法创建文件夹 	Can't create folder 
 无法创建此项目	We weren't able to create this item
 无法启动 git.exe	Can't start git.exe
+无法启动安装程序。	The installer couldn't be started.
 无法启动搜索	Can't start the search
 无法在这里新建	Can't create items here
 无法打开 	Can't open 
 无法打开“	Can't open "
+无法打开共享窗口。	The share window couldn't be opened.
 无法打开属性	Can't open the properties
 无法打开日志文件	Unable to open the log file
 无法打开此位置	Can't open this location
 无法打开此压缩文件：格式不受支持，或者文件已损坏	Can't open this archive: the format isn't supported, or the file is damaged
 无法打开终端	Can't open the terminal
 无法播放此文件	Can't play this file
-无法解压此文件	Can't extract this file
+无法替换程序文件。	The program file couldn't be replaced.
 无法设为壁纸	Can't set as wallpaper
 无法读取	Can't read
+无法连接到 GitHub，请检查网络连接。	Can't reach GitHub. Check your network connection.
 日	Day
 日期格式	Date format
 昨天	Yesterday
@@ -4858,7 +4864,6 @@ Windows 搜索：使用系统索引，可以搜索文件内容。	Windows Search
 显示以英文句点 (.) 开头的文件	Show dot files
 显示分区	Sections
 显示列分隔线	Show column lines
-显示压缩选项	Show compression options
 显示受保护的系统文件	Show protected system files
 显示工具栏	Show toolbar
 显示文件扩展名	Show file extensions
@@ -4866,10 +4871,10 @@ Windows 搜索：使用系统索引，可以搜索文件内容。	Windows Search
 显示状态栏	Show status bar
 显示缩略图	Show thumbnails
 显示隐藏的项目	Show hidden items
-智能解压	Smart extract
 暗灰色	Gray Dark
 更多	More
 更多选项...	More options...
+更新已完成，请重新启动 FastFiles。	The update is done. Please restart FastFiles.
 替换已有的项目	Replace existing item
 最近使用的文件	Recent files
 最近没有打开过文件	No recently opened files
@@ -4888,7 +4893,12 @@ Windows 搜索：使用系统索引，可以搜索文件内容。	Windows Search
 标签：	Tag:
 校验失败，压缩文件可能已损坏	 failed its checksum; the archive may be damaged
 格式化	Format
+检查更新	Check for updates
+检查更新失败。	Couldn't check for updates.
+正在下载更新… 	Downloading the update… 
 正在从“{1}”中删除{0, plural, other {#个项目}}	Deleting {0, plural, one {# item} other {# items}} from "{1}"
+正在共享 {0}	Sharing {0}
+正在共享 {0} {1}	Sharing {0} {1}
 正在加载预览…	Loading preview…
 正在发现项目...	Discovering items...
 正在取消	Canceling
@@ -4900,6 +4910,7 @@ Windows 搜索：使用系统索引，可以搜索文件内容。	Windows Search
 正在搜索 	Searching 
 正在播放 	Playing 
 正在查找标签 	Looking for tag 
+正在检查更新…	Checking for updates…
 正在清空回收站	Emptying Recycle Bin
 正在计算 	Calculating 
 正在读取最近使用的文件…	Reading recent files…
@@ -4909,6 +4920,7 @@ Windows 搜索：使用系统索引，可以搜索文件内容。	Windows Search
 此操作需要管理员权限	This action requires administrator rights
 此文件夹为空。	This folder is empty.
 此文件没有可用的预览	No preview available for this file
+此版本的 Windows 不支持共享。	This version of Windows doesn't support sharing.
 此选项会修改系统注册表，并可能对你的设备产生意想不到的副作用。继续即代表您自行承担风险。	This option changes the system registry and may have unexpected side effects on your device. Continue at your own risk.
 此项目不支持共享	This item can't be shared
 水平	Horizontal
@@ -4953,6 +4965,7 @@ Windows 搜索：使用系统索引，可以搜索文件内容。	Windows Search
 用选中的项目创建文件夹	Create folder with selection
 登录 Windows 后在后台启动，同时开启“关闭窗口后继续在后台运行”。	Starts in the background when you sign in to Windows, and turns on "Keep running in the background after closing".
 的数据已损坏	's data is damaged
+目前没有可共享的内容。	There's nothing to share right now...
 砖红色	Brick Red
 确定	OK
 确定要删除此标签吗？	Are you sure you want to delete this tag?
@@ -4964,6 +4977,7 @@ Windows 搜索：使用系统索引，可以搜索文件内容。	Windows Search
 移动到 %1	Move to %1
 移除	Remove
 窗格	Panes
+立即更新	Update now
 筛选 (Ctrl+Shift+F)	Filter (Ctrl+Shift+F)
 筛选栏	Filter bar
 筛选：只显示名称包含输入内容的项目	Filter: only show items whose name contains this
@@ -4971,6 +4985,7 @@ Windows 搜索：使用系统索引，可以搜索文件内容。	Windows Search
 粉鸢尾花色	Iris Pastel
 粘贴	Paste
 粘贴 (Ctrl+V)	Paste (Ctrl+V)
+粘贴为快捷方式	Paste shortcut
 粘贴到选中的文件夹	Paste into the selected folder
 系统	System
 红色	Red
@@ -5006,17 +5021,9 @@ Windows 搜索：使用系统索引，可以搜索文件内容。	Windows Search
 要改为在桌面上创建快捷方式吗？	Would you like to create the shortcut on the desktop instead?
 视图	View
 解压	Extract
-解压 	Extract 
-解压到…	Extract to…
-解压到同名文件夹	Extract to a folder of the same name
-解压到同名文件夹，或从下拉菜单选择位置	Extract to a folder of the same name, or pick a place from the menu
-解压到当前位置	Extract here
-解压到当前文件夹	Extract here
 解压失败	Extraction failed
 解压失败：	Extraction failed:
-解压文件	Extract files
 解压文件到	Extract archive
-解压缩到 	Extract to 
 计算选中文件夹的大小	Calculate the size of the selected folder
 设为默认	Set as default
 设置	Settings
@@ -5077,6 +5084,7 @@ Windows 搜索：使用系统索引，可以搜索文件内容。	Windows Search
 降序排序	Sort items in descending order
 隐藏的项目	Hidden items
 顶端对齐	Top
+项	items
 项目复选框	Item check boxes
 预览	Preview
 预览弹窗	Preview popup
@@ -5099,7 +5107,6 @@ Windows 搜索：使用系统索引，可以搜索文件内容。	Windows Search
 （没有本地分支）	(no local branches)
 ，共 	, total 
 ，查看了 	, checked 
-，跳过 	, skipped 
 [es-419]
 \n解压缩大小 	 Tamaño sin comprimir 
  个项目	 elementos
@@ -5108,6 +5115,7 @@ Windows 搜索：使用系统索引，可以搜索文件内容。	Windows Search
 1 小时前	Hace 1 hora
 1 秒前	Hace 1 segundo
 Git 错误	Error de Git
+GitHub 仓库	Repositorio de GitHub
 PowerShell 文件	Archivos PowerShell
 {0, plural, other {将删除 # 个项目}}	{0, plural, one {Un elemento será eliminado} other {# elementos serán eliminados}}
 {0, plural, other {文件名冲突}}	Conflicto {0, plural, one {elemento} other {elementos}}
@@ -5161,6 +5169,7 @@ PowerShell 文件	Archivos PowerShell
 全部打开	Abrir todo
 全部播放	Reproducir todo
 共享	Compartir
+共享项目失败	No se pudo compartir elementos
 关于	Acerca de Files
 关闭	Cerrar
 关闭所有标签页	Cerrar todas las pestañas
@@ -5177,7 +5186,6 @@ PowerShell 文件	Archivos PowerShell
 列表	Lista
 列视图	Columnas
 创建	Crear
-创建 zip 压缩文件	Crear archivo zip
 创建分支	Crear rama
 创建快捷方式	Crea un acceso directo
 创建新标签	Crear nueva etiqueta
@@ -5202,8 +5210,6 @@ PowerShell 文件	Archivos PowerShell
 十进制	Decimal
 升序	Ascendente
 卡片	Tarjetas
-压缩	Archivo
-压缩 	Archivo 
 压缩文件	Archivos comprimidos
 压缩文件密码	Contraseña de archivo
 原始文件夹	Carpeta original
@@ -5289,6 +5295,8 @@ PowerShell 文件	Archivos PowerShell
 将{0, plural, other {#个项目}}复制到“{1}”时出错	Error copiando {0, plural, one {# elemento} other {# elementos}} a "{1}"
 将{0, plural, other {#个项目}}移动到“{1}”时出错	Error moviendo {0, plural, one {# elemento} other {# elementos}} a "{1}"
 将“{0}”解压缩到“{1}”时出错	Error al extraer "{0}" en "{1}"
+将共享你选择的项目	Los elementos que ha seleccionado se compartirán
+将共享已选项目	Se compartirá el elemento seleccionado
 将文件和文件夹一同排序	Ordenar archivos y carpetas a la vez
 将此操作应用到所有冲突项	Aplicar esta acción a todos los elementos en conflicto
 居中	Centro
@@ -5388,13 +5396,11 @@ PowerShell 文件	Archivos PowerShell
 显示“用选中的项目创建文件夹”选项	Mostrar opción para crear una carpeta con la selección
 显示“编辑文件标签”	Mostrar etiquetas de edición desplegables
 显示以英文句点 (.) 开头的文件	Mostrar archivos que comienzan con un punto
-显示压缩选项	Mostrar opciones de compresión
 显示受保护的系统文件	Mostrar archivos protegidos del sistema
 显示工具栏	Mostrar barra de herramientas
 显示状态中心按钮	Mostrar botón del centro de estado
 显示状态栏	Mostrar barra de estado
 显示缩略图	Mostrar miniaturas
-智能解压	Extraer aquí (Inteligente)
 暗灰色	Gris oscuro
 更多选项...	Más opciones...
 替换已有的项目	Reemplazar elemento existente
@@ -5409,6 +5415,8 @@ PowerShell 文件	Archivos PowerShell
 标签操作菜单	Menú de acciones de pestaña
 格式化	Formato
 正在从“{1}”中删除{0, plural, other {#个项目}}	Eliminando {0, plural, one {# elemento} other {# elementos}} desde "{1}"
+正在共享 {0}	Compartiendo {0}
+正在共享 {0} {1}	Compartiendo {0} {1}
 正在发现项目...	Descubriendo elementos...
 正在取消	Cancelando
 正在处理项目...	Procesando elementos...
@@ -5445,6 +5453,7 @@ PowerShell 文件	Archivos PowerShell
 现在	Ahora
 生成新名称	Generar nuevo nombre
 用选中的项目创建文件夹	Crear carpeta con la selección
+目前没有可共享的内容。	No hay nada que compartir ahora mismo...
 砖红色	Rojo ladrillo
 确定	Aceptar
 确定要删除此标签吗？	¿Está seguro que desea eliminar esta etiqueta?
@@ -5456,6 +5465,7 @@ PowerShell 文件	Archivos PowerShell
 类型	Tipo
 粉鸢尾花色	Iris pastel
 粘贴	Pegar
+粘贴为快捷方式	Atajo para pegar
 粘贴到选中的文件夹	Pegar a la carpeta seleccionada
 系统	Sistema
 红色	Rojo
@@ -5485,9 +5495,6 @@ PowerShell 文件	Archivos PowerShell
 要以管理员身份继续吗？	¿Le gustaría continuar como administrador?
 要改为在桌面上创建快捷方式吗？	¿Desea crear el acceso directo en el escritorio, en su lugar?
 解压	Extraer
-解压 	Extraer 
-解压到当前文件夹	Extraer aquí
-解压文件	Extraer archivos
 解压文件到	Extraer archivo
 设为默认	Establecer como predeterminado
 设置	Ajustes
@@ -5544,6 +5551,7 @@ PowerShell 文件	Archivos PowerShell
 1 小时前	Hace 1 hora
 1 秒前	Hace 1 segundo
 Git 错误	Error de Git
+GitHub 仓库	Repositorio GitHub
 PowerShell 文件	Archivos PowerShell
 {0, plural, other {将删除 # 个项目}}	{0, plural, one {Se eliminará un elemento} other {Se eliminarán # elementos}}
 {0, plural, other {文件名冲突}}	En conflicto {0, plural, one {nombre de archivo} other {nombres de archivo}}
@@ -5597,6 +5605,7 @@ PowerShell 文件	Archivos PowerShell
 全部打开	Abrir todo
 全部播放	Reproducir todo
 共享	Compartir
+共享项目失败	No se han podido compartir los elementos
 关于	Acerca de
 关闭	Cerrar
 关闭所有标签页	Cerrar todas las pestañas
@@ -5613,7 +5622,6 @@ PowerShell 文件	Archivos PowerShell
 列表	Lista
 列视图	Columnas
 创建	Crear
-创建 zip 压缩文件	Crear archivo zip
 创建分支	Crear rama
 创建快捷方式	Crea un acceso directo
 创建新标签	Crear nueva etiqueta
@@ -5638,8 +5646,6 @@ PowerShell 文件	Archivos PowerShell
 十进制	Decimal
 升序	Ascendente
 卡片	Tarjetas
-压缩	Archivo
-压缩 	Archivo 
 压缩文件	Archivos comprimidos
 压缩文件密码	Contraseña de archivo
 原始文件夹	Carpeta de origen
@@ -5725,6 +5731,8 @@ PowerShell 文件	Archivos PowerShell
 将{0, plural, other {#个项目}}复制到“{1}”时出错	Error copiando {0, plural, one {# elemento} other {# elementos}} a "{1}"
 将{0, plural, other {#个项目}}移动到“{1}”时出错	Error moviendo {0, plural, one {# elemento} other {# elementos}} a "{1}"
 将“{0}”解压缩到“{1}”时出错	Error al extraer "{0}" en "{1}"
+将共享你选择的项目	Los elementos seleccionados serán compartidos
+将共享已选项目	El elemento seleccionado será compartido
 将文件和文件夹一同排序	Ordenar archivos y carpetas a la vez
 将此操作应用到所有冲突项	Aplicar esta acción a todos los elementos en conflicto
 居中	Centro
@@ -5824,13 +5832,11 @@ PowerShell 文件	Archivos PowerShell
 显示“用选中的项目创建文件夹”选项	Mostrar opción para crear una carpeta con la selección
 显示“编辑文件标签”	Mostrar menú Etiquetas de edición
 显示以英文句点 (.) 开头的文件	Mostrar archivos que comienzan con un punto
-显示压缩选项	Mostrar opciones de compresión
 显示受保护的系统文件	Mostrar archivos protegidos del sistema
 显示工具栏	Mostrar barra de herramientas
 显示状态中心按钮	Mostrar botón del centro de actividades
 显示状态栏	Mostrar barra de estado
 显示缩略图	Mostrar miniaturas
-智能解压	Extraer aquí (Inteligente)
 暗灰色	Gris oscuro
 更多选项...	Más opciones...
 替换已有的项目	Reemplazar elemento existente
@@ -5845,6 +5851,8 @@ PowerShell 文件	Archivos PowerShell
 标签操作菜单	Menú de acciones de pestaña
 格式化	Formatear
 正在从“{1}”中删除{0, plural, other {#个项目}}	Eliminando {0, plural, one {# elemento} other {# elementos}} desde "{1}"
+正在共享 {0}	Compartiendo {0}
+正在共享 {0} {1}	Compartiendo {0} {1}
 正在发现项目...	Descubriendo elementos...
 正在取消	Cancelando
 正在处理项目...	Procesando elementos...
@@ -5881,6 +5889,7 @@ PowerShell 文件	Archivos PowerShell
 现在	Ahora
 生成新名称	Generar nuevo nombre
 用选中的项目创建文件夹	Crear carpeta con la selección
+目前没有可共享的内容。	No hay nada que compartir ahora mismo...
 砖红色	Rojo ladrillo
 确定	Aceptar
 确定要删除此标签吗？	¿Está seguro que desea eliminar esta etiqueta?
@@ -5892,6 +5901,7 @@ PowerShell 文件	Archivos PowerShell
 类型	Columna de tipo de elemento
 粉鸢尾花色	Iris pastel
 粘贴	Pegar
+粘贴为快捷方式	Pegar acceso directo
 粘贴到选中的文件夹	Pegar a la carpeta seleccionada
 系统	Sistema
 红色	Rojo
@@ -5921,9 +5931,6 @@ PowerShell 文件	Archivos PowerShell
 要以管理员身份继续吗？	¿Desea continuar como administrador?
 要改为在桌面上创建快捷方式吗？	¿Desea crear el acceso directo en el escritorio, en su lugar?
 解压	Extraer
-解压 	Extraer 
-解压到当前文件夹	Extraer aquí
-解压文件	Extraer archivos
 解压文件到	Extraer archivo
 设为默认	Establecer como predeterminado
 设置	Configuración
@@ -5980,6 +5987,7 @@ PowerShell 文件	Archivos PowerShell
 1 小时前	1 ساعت پیش
 1 秒前	1 ثانیه قبل
 Git 错误	خطا Git
+GitHub 仓库	منبع GitHub
 PowerShell 文件	فایل‌های پاورشل
 {0, plural, other {将删除 # 个项目}}	{0, plural, one {One item will be deleted} other {# items will be deleted}}
 {0, plural, other {文件名冲突}}	Conflicting {0, plural, one {file name} other {file names}}
@@ -6033,6 +6041,7 @@ PowerShell 文件	فایل‌های پاورشل
 全部打开	باز کردن همه
 全部播放	پخش همه
 共享	اشتراک‌گذاری
+共享项目失败	Failed to share items
 关于	درباره
 关闭	بستن
 关闭所有标签页	بستن همه زبانه‌ها
@@ -6049,7 +6058,6 @@ PowerShell 文件	فایل‌های پاورشل
 列表	فهرست
 列视图	ستون ها
 创建	ايجاد
-创建 zip 压缩文件	ایجاد آرشیو زیپ
 创建分支	ایجاد شاخه
 创建快捷方式	میانبر ایجاد می کند
 创建新标签	ایجاد برچسب جدید
@@ -6074,8 +6082,6 @@ PowerShell 文件	فایل‌های پاورشل
 十进制	Decimal
 升序	صعودی
 卡片	Cards
-压缩	آرشیو
-压缩 	آرشیو 
 压缩文件	فایل‌های فشرده
 压缩文件密码	رمز آرشیو
 原始文件夹	پوشه اصلی
@@ -6161,6 +6167,8 @@ PowerShell 文件	فایل‌های پاورشل
 将{0, plural, other {#个项目}}复制到“{1}”时出错	Error copying {0, plural, one {# item} other {# items}} to "{1}"
 将{0, plural, other {#个项目}}移动到“{1}”时出错	Error moving {0, plural, one {# item} other {# items}} to "{1}"
 将“{0}”解压缩到“{1}”时出错	Error extracting "{0}" to "{1}"
+将共享你选择的项目	موارد انتخاب شده به اشتراک گذاشته میشوند
+将共享已选项目	مورد انتخاب شده به اشتراک گذاشته میشود
 将文件和文件夹一同排序	مرتب‌سازی فایل‌ها و پوشه‌ها در کنار هم
 将此操作应用到所有冲突项	Apply this action to all conflicting items
 居中	مرکز
@@ -6260,13 +6268,11 @@ PowerShell 文件	فایل‌های پاورشل
 显示“用选中的项目创建文件夹”选项	نشان داده گزینه ای برای ایجاد فولدر با موارد انتخابی
 显示“编辑文件标签”	نمایش منوی شناور ویرایش تگ‌ها
 显示以英文句点 (.) 开头的文件	نمایش فایل هایی که با نقطه شروع میشوند
-显示压缩选项	نمایش گزینه‌های فشرده‌سازی
 显示受保护的系统文件	فایل های سیستمی حفاظت شده را نشان بده
 显示工具栏	Show toolbar
 显示状态中心按钮	Show status center button
 显示状态栏	Show status bar
 显示缩略图	نمایش تصاویر کوچک
-智能解压	Extract here (Smart)
 暗灰色	خاکستری تیره
 更多选项...	گزینه‌های بیشتر...
 替换已有的项目	مورد موجود را جایگزین کن
@@ -6281,6 +6287,8 @@ PowerShell 文件	فایل‌های پاورشل
 标签操作菜单	Tab actions menu
 格式化	فرمت
 正在从“{1}”中删除{0, plural, other {#个项目}}	Deleting {0, plural, one {# item} other {# items}} from "{1}"
+正在共享 {0}	درحال اشتراک در {0}
+正在共享 {0} {1}	درحال اشتراک {0} {1}
 正在发现项目...	Discovering items...
 正在取消	در حال لغو کردن
 正在处理项目...	در حال پردازش آیتم‌ها...
@@ -6317,6 +6325,7 @@ PowerShell 文件	فایل‌های پاورشل
 现在	اکنون
 生成新名称	ایجاد نام جدید
 用选中的项目创建文件夹	یک پوشه با موارد انتخابی
+目前没有可共享的内容。	در حال حاضر چیزی برای اشتراک وجود ندارد...
 砖红色	قرمز آجری
 确定	پذیرش
 确定要删除此标签吗？	آیا مطمئن هستید که می خواهید این برچسب را حذف کنید؟
@@ -6328,6 +6337,7 @@ PowerShell 文件	فایل‌های پاورشل
 类型	ستون نوع آیتم
 粉鸢尾花色	پاستل سوسنی
 粘贴	جای‌گذاری
+粘贴为快捷方式	الصاق میانبر
 粘贴到选中的文件夹	Paste to selected folder
 系统	سیستم
 红色	قرمز
@@ -6357,9 +6367,6 @@ PowerShell 文件	فایل‌های پاورشل
 要以管理员身份继续吗？	آیا مایلید به عنوان مدیر ادامه دهید؟
 要改为在桌面上创建快捷方式吗？	آیا می خواهید به جای آن میانبر را روی دسکتاپ ایجاد کنید؟
 解压	استخراج
-解压 	استخراج 
-解压到当前文件夹	استخراج در اینجا
-解压文件	استخراج فایل ها
 解压文件到	استخراج آرشیو
 设为默认	تنظیم به‌عنوان پیش‌فرض
 设置	تنظیمات
@@ -6416,6 +6423,7 @@ PowerShell 文件	فایل‌های پاورشل
 1 小时前	tunti sitten
 1 秒前	sekunti sitten
 Git 错误	Git-virhe
+GitHub 仓库	GitHub-repositorio
 PowerShell 文件	PowerShell-tiedostot
 {0, plural, other {将删除 # 个项目}}	{0, plural, one {Yksi kohde poistetaan} other {# kohdetta poistetaan}}
 {0, plural, other {文件名冲突}}	{0, plural, one {ristiriitainen tiedostonimi} other {ristiriitaista tiedostonimeä}}
@@ -6469,6 +6477,7 @@ PowerShell 文件	PowerShell-tiedostot
 全部打开	Avaa kaikki
 全部播放	Toista kaikki
 共享	Jaa
+共享项目失败	Kohteiden jakaminen epäonnistui
 关于	Tietoja
 关闭	Sulje
 关闭所有标签页	Sulje kaikki välilehdet
@@ -6485,7 +6494,6 @@ PowerShell 文件	PowerShell-tiedostot
 列表	Luettelo
 列视图	Sarakkeet
 创建	Luo
-创建 zip 压缩文件	Luo zip-arkisto
 创建分支	Luo haara
 创建快捷方式	Luo pikakuvakkeen
 创建新标签	Luo uusi tunniste
@@ -6510,8 +6518,6 @@ PowerShell 文件	PowerShell-tiedostot
 十进制	Decimal
 升序	Nouseva
 卡片	Kortit
-压缩	Arkisto
-压缩 	Arkisto 
 压缩文件	Arkistotiedostot
 压缩文件密码	Arkiston salasana
 原始文件夹	Alkuperäinen kansio
@@ -6597,6 +6603,8 @@ PowerShell 文件	PowerShell-tiedostot
 将{0, plural, other {#个项目}}复制到“{1}”时出错	Error copying {0, plural, one {# item} other {# items}} to "{1}"
 将{0, plural, other {#个项目}}移动到“{1}”时出错	Error moving {0, plural, one {# item} other {# items}} to "{1}"
 将“{0}”解压缩到“{1}”时出错	Virhe purettaessa "{0}" kansioon "{1}"
+将共享你选择的项目	Valitsemasi kohteet jaetaan
+将共享已选项目	Valittu kohde jaetaan
 将文件和文件夹一同排序	Lajittele tiedostot ja kansiot yhdessä
 将此操作应用到所有冲突项	Käytä tätä toimintoa kaikkiin ristiriitaisiin kohteisiin
 居中	Keskitetty
@@ -6696,13 +6704,11 @@ PowerShell 文件	PowerShell-tiedostot
 显示“用选中的项目创建文件夹”选项	Näytä vaihtoehto kansion luomiseen valinnalla
 显示“编辑文件标签”	Näytä muokkaa tunnisteita -pikaikkuna
 显示以英文句点 (.) 开头的文件	Näytä pistetiedostot
-显示压缩选项	Näytä pakkausvalinnat
 显示受保护的系统文件	Näytä suojatut järjestelmätiedostot
 显示工具栏	Näytä työkalupalkki
 显示状态中心按钮	Show status center button
 显示状态栏	Show status bar
 显示缩略图	Näytä pikkukuvat
-智能解压	Pura tänne (älykäs)
 暗灰色	Tumman harmaa
 更多选项...	Lisää vaihtoehtoja...
 替换已有的项目	Korvaa olemassa oleva kohde
@@ -6717,6 +6723,8 @@ PowerShell 文件	PowerShell-tiedostot
 标签操作菜单	Välilehden toimintovalikko
 格式化	Muoto
 正在从“{1}”中删除{0, plural, other {#个项目}}	Deleting {0, plural, one {# item} other {# items}} from "{1}"
+正在共享 {0}	Jaetaan {0}
+正在共享 {0} {1}	Jaetaan {0} {1}
 正在发现项目...	Discovering items...
 正在取消	Perutaan
 正在处理项目...	Käsitellään kohteita...
@@ -6753,6 +6761,7 @@ PowerShell 文件	PowerShell-tiedostot
 现在	Nyt
 生成新名称	Luo uusi nimi
 用选中的项目创建文件夹	Luo kansio valinnalla
+目前没有可共享的内容。	Tällä hetkellä ei ole mitään jaettavaa...
 砖红色	Tiilenpunainen
 确定	OK
 确定要删除此标签吗？	Haluatko varmasti poistaa tämän tunnisteen?
@@ -6764,6 +6773,7 @@ PowerShell 文件	PowerShell-tiedostot
 类型	Kohteen tyyppi -sarake
 粉鸢尾花色	Iiris-pastelli
 粘贴	Liitä
+粘贴为快捷方式	Liitä pikakuvake
 粘贴到选中的文件夹	Liitä valittuun kansioon
 系统	Järjestelmä
 红色	Punainen
@@ -6793,9 +6803,6 @@ PowerShell 文件	PowerShell-tiedostot
 要以管理员身份继续吗？	Haluatko jatkaa järjestelmänvalvojana?
 要改为在桌面上创建快捷方式吗？	Haluatko sen sijaan luoda pikakuvakkeen työpöydälle?
 解压	Pura
-解压 	Pura 
-解压到当前文件夹	Pura tähän
-解压文件	Pura tiedostot
 解压文件到	Pura arkisto
 设为默认	Aseta oletukseksi
 设置	Asetukset
@@ -6852,6 +6859,7 @@ PowerShell 文件	PowerShell-tiedostot
 1 小时前	1 oras na nakalipas
 1 秒前	1 second ago
 Git 错误	Git error
+GitHub 仓库	GitHub repository
 PowerShell 文件	PowerShell files
 {0, plural, other {将删除 # 个项目}}	{0, plural, one {One item will be deleted} other {# items will be deleted}}
 {0, plural, other {文件名冲突}}	Conflicting {0, plural, one {file name} other {file names}}
@@ -6905,6 +6913,7 @@ PowerShell 文件	PowerShell files
 全部打开	Buksan Lahat
 全部播放	Play All
 共享	Ibahagi
+共享项目失败	Failed to share items
 关于	Tungkol dito
 关闭	Isara
 关闭所有标签页	Close all tabs
@@ -6921,7 +6930,6 @@ PowerShell 文件	PowerShell files
 列表	List
 列视图	Mga hanay
 创建	Lumikha
-创建 zip 压缩文件	Create zip archive
 创建分支	Gumawa ng sangay
 创建快捷方式	Gumagawa ng shortcut
 创建新标签	Gumawa ng bagong pananda
@@ -6946,8 +6954,6 @@ PowerShell 文件	PowerShell files
 十进制	Decimal
 升序	Pataas
 卡片	Cards
-压缩	Archive
-压缩 	Archive 
 压缩文件	Archive files
 压缩文件密码	I-archive ang password
 原始文件夹	Orihinal na folder
@@ -7032,6 +7038,8 @@ PowerShell 文件	PowerShell files
 将{0, plural, other {#个项目}}复制到“{1}”时出错	Error copying {0, plural, one {# item} other {# items}} to "{1}"
 将{0, plural, other {#个项目}}移动到“{1}”时出错	Error moving {0, plural, one {# item} other {# items}} to "{1}"
 将“{0}”解压缩到“{1}”时出错	Error extracting "{0}" to "{1}"
+将共享你选择的项目	Ibabahagi ang mga item na iyong pinili
+将共享已选项目	Ibabahagi ang napiling item
 将文件和文件夹一同排序	Sort files and folders together
 将此操作应用到所有冲突项	I-apply ang aksyon na ito sa lahat ng mga natatanging item
 居中	Center
@@ -7130,13 +7138,11 @@ PowerShell 文件	PowerShell files
 显示“用选中的项目创建文件夹”选项	Show option to create folder with selection
 显示“编辑文件标签”	Ipakita ang edit tags flyout
 显示以英文句点 (.) 开头的文件	Show dot files
-显示压缩选项	Show compression options
 显示受保护的系统文件	Ipakita ang protektadong mga system files
 显示工具栏	Show toolbar
 显示状态中心按钮	Show status center button
 显示状态栏	Show status bar
 显示缩略图	Ipakita ang thumbnails
-智能解压	Extract here (Smart)
 暗灰色	Gray Dark
 更多选项...	Higit pang mga opsyon...
 替换已有的项目	Palitan ang kasalukuyang item
@@ -7151,6 +7157,8 @@ PowerShell 文件	PowerShell files
 标签操作菜单	Tab actions menu
 格式化	Ayos
 正在从“{1}”中删除{0, plural, other {#个项目}}	Deleting {0, plural, one {# item} other {# items}} from "{1}"
+正在共享 {0}	Binabahagi {0}
+正在共享 {0} {1}	Binabahagi {0} {1}
 正在发现项目...	Discovering items...
 正在取消	Canceling
 正在处理项目...	Processing items...
@@ -7187,6 +7195,7 @@ PowerShell 文件	PowerShell files
 现在	Ngayon
 生成新名称	Bumuo ng bagong pangalan
 用选中的项目创建文件夹	Lumikha ng folder gamit ang mga pinili
+目前没有可共享的内容。	Walang maibabahagi ngayon...
 砖红色	Brick Red
 确定	Sige
 确定要删除此标签吗？	Sigurado ka bang gusto mong tanggalin ang tanda na ito?
@@ -7198,6 +7207,7 @@ PowerShell 文件	PowerShell files
 类型	Hanay ng uri ng item
 粉鸢尾花色	Iris Pastel
 粘贴	I-paste
+粘贴为快捷方式	I-paste ang shortcut
 粘贴到选中的文件夹	Paste to selected folder
 系统	Sistema
 红色	Red
@@ -7227,9 +7237,6 @@ PowerShell 文件	PowerShell files
 要以管理员身份继续吗？	Gusto mo bang magpatuloy bilang tagapangasiwa?
 要改为在桌面上创建快捷方式吗？	Gusto mo bang gumawa nalang ng shortcut sa desktop?
 解压	I-extract
-解压 	I-extract 
-解压到当前文件夹	I-extract dito
-解压文件	I-extract ang mga file
 解压文件到	Extract archive
 设为默认	Itakda bilang default
 设置	Mga Setting
@@ -7286,6 +7293,7 @@ PowerShell 文件	PowerShell files
 1 小时前	Il y a 1 heure
 1 秒前	Il y a 1 seconde
 Git 错误	Erreur Git
+GitHub 仓库	Dépôt GitHub
 PowerShell 文件	Fichiers PowerShell
 {0, plural, other {将删除 # 个项目}}	{0, plural, one {1 élément sera supprimé} other {# éléments seront supprimés}}
 {0, plural, other {文件名冲突}}	En conflit {0, plural, one {avec un nom de fichier} other {avec des noms de fichiers}}
@@ -7339,6 +7347,7 @@ PowerShell 文件	Fichiers PowerShell
 全部打开	Tout ouvrir
 全部播放	Tout lire
 共享	Partager
+共享项目失败	Échec du partage d'éléments
 关于	À propos
 关闭	Fermer
 关闭所有标签页	Fermer tous les onglets
@@ -7355,7 +7364,6 @@ PowerShell 文件	Fichiers PowerShell
 列表	Liste
 列视图	Colonnes
 创建	Créer
-创建 zip 压缩文件	Créer une archive ZIP
 创建分支	Créer une branche
 创建快捷方式	Crée un raccourci
 创建新标签	Créer une nouvelle étiquette
@@ -7380,8 +7388,6 @@ PowerShell 文件	Fichiers PowerShell
 十进制	Décimal
 升序	Croissant
 卡片	Tuiles
-压缩	Archive
-压缩 	Archive 
 压缩文件	Fichiers d'archive
 压缩文件密码	Mot de passe de l'archive
 原始文件夹	Dossier d'origine
@@ -7467,6 +7473,8 @@ PowerShell 文件	Fichiers PowerShell
 将{0, plural, other {#个项目}}复制到“{1}”时出错	Erreur lors de la copie de {0, plural, one {# élément} other {# éléments}} vers « {1} »
 将{0, plural, other {#个项目}}移动到“{1}”时出错	Erreur lors du déplacement de {0, plural, one {# élément} other {# éléments}} vers « {1} »
 将“{0}”解压缩到“{1}”时出错	Erreur lors de l'extraction de « {0} » vers « {1} »
+将共享你选择的项目	Les éléments sélectionnés seront partagés
+将共享已选项目	L'élément sélectionné sera partagé
 将文件和文件夹一同排序	Trier les fichiers et les dossiers ensemble
 将此操作应用到所有冲突项	Appliquer cette action à tous les éléments en conflit
 居中	Centrer
@@ -7566,13 +7574,11 @@ PowerShell 文件	Fichiers PowerShell
 显示“用选中的项目创建文件夹”选项	Afficher l'option pour créer un dossier avec la sélection
 显示“编辑文件标签”	Afficher la modification des étiquettes en survolant
 显示以英文句点 (.) 开头的文件	Afficher les fichiers dont le nom commence par un point
-显示压缩选项	Afficher les options de compression
 显示受保护的系统文件	Afficher les fichiers système protégés
 显示工具栏	Afficher la barre d'outils
 显示状态中心按钮	Afficher le bouton du centre de statut
 显示状态栏	Afficher la barre de statut
 显示缩略图	Afficher les miniatures
-智能解压	Extraire ici (Intelligent)
 暗灰色	Gris foncé
 更多选项...	Plus d'options…
 替换已有的项目	Remplacer l'élément existant
@@ -7587,6 +7593,8 @@ PowerShell 文件	Fichiers PowerShell
 标签操作菜单	Menu des actions de l'onglet
 格式化	Formater
 正在从“{1}”中删除{0, plural, other {#个项目}}	Suppression de {0, plural, one {# élément} other {# éléments}} depuis « {1} »
+正在共享 {0}	Partage de {0}
+正在共享 {0} {1}	Partage de {0} {1}
 正在发现项目...	Préparation des éléments...
 正在取消	Annulation
 正在处理项目...	Traitement des éléments...
@@ -7623,6 +7631,7 @@ PowerShell 文件	Fichiers PowerShell
 现在	Maintenant
 生成新名称	Générer un nouveau nom
 用选中的项目创建文件夹	Créer un dossier avec la sélection
+目前没有可共享的内容。	Il n'y a rien à partager pour le moment…
 砖红色	Rouge brique
 确定	OK
 确定要删除此标签吗？	Êtes-vous sûr de vouloir supprimer cette étiquette ?
@@ -7634,6 +7643,7 @@ PowerShell 文件	Fichiers PowerShell
 类型	Type
 粉鸢尾花色	Pastel iris
 粘贴	Coller
+粘贴为快捷方式	Coller le raccourci
 粘贴到选中的文件夹	Coller dans le dossier sélectionné
 系统	Système
 红色	Rouge
@@ -7663,9 +7673,6 @@ PowerShell 文件	Fichiers PowerShell
 要以管理员身份继续吗？	Voulez-vous continuer en tant qu'administrateur ?
 要改为在桌面上创建快捷方式吗？	Souhaitez-vous plutôt créer le raccourci sur le bureau ?
 解压	Extraire
-解压 	Extraire 
-解压到当前文件夹	Extraire ici
-解压文件	Extraire les fichiers
 解压文件到	Extraire l'archive
 设为默认	Définir par défaut
 设置	Paramètres
@@ -7722,6 +7729,7 @@ PowerShell 文件	Fichiers PowerShell
 1 小时前	לפני שעה
 1 秒前	לפני שנייה
 Git 错误	שגיאת Git
+GitHub 仓库	הפרויקט ב-GitHub
 PowerShell 文件	PowerShell files
 {0, plural, other {将删除 # 个项目}}	{0, plural, one {One item will be deleted} other {# items will be deleted}}
 {0, plural, other {文件名冲突}}	Conflicting {0, plural, one {file name} other {file names}}
@@ -7775,6 +7783,7 @@ PowerShell 文件	PowerShell files
 全部打开	פתח הכל
 全部播放	Play All
 共享	שתף
+共享项目失败	Failed to share items
 关于	אודות
 关闭	סגירה
 关闭所有标签页	Close all tabs
@@ -7791,7 +7800,6 @@ PowerShell 文件	PowerShell files
 列表	רשימה
 列视图	עמודות
 创建	‏‏צור
-创建 zip 压缩文件	Create zip archive
 创建分支	Create branch
 创建快捷方式	Creates a shortcut
 创建新标签	צור תג חדש
@@ -7816,8 +7824,6 @@ PowerShell 文件	PowerShell files
 十进制	Decimal
 升序	סדר עולה
 卡片	Cards
-压缩	Archive
-压缩 	Archive 
 压缩文件	Archive files
 压缩文件密码	Archive password
 原始文件夹	תיקייה מקורית
@@ -7903,6 +7909,8 @@ PowerShell 文件	PowerShell files
 将{0, plural, other {#个项目}}复制到“{1}”时出错	Error copying {0, plural, one {# item} other {# items}} to "{1}"
 将{0, plural, other {#个项目}}移动到“{1}”时出错	Error moving {0, plural, one {# item} other {# items}} to "{1}"
 将“{0}”解压缩到“{1}”时出错	Error extracting "{0}" to "{1}"
+将共享你选择的项目	הפריטים שבחרו ישותפו
+将共享已选项目	הפריט הנבחר ישותף
 将文件和文件夹一同排序	מיין קבצים ותיקיות יחד
 将此操作应用到所有冲突项	Apply this action to all conflicting items
 居中	מרכז
@@ -8002,13 +8010,11 @@ PowerShell 文件	PowerShell files
 显示“用选中的项目创建文件夹”选项	הצג אפשרות יצירת תיקיה ע"י בחירה
 显示“编辑文件标签”	הצג תפריט עריכת תגיות
 显示以英文句点 (.) 开头的文件	הצג קבצי נקודה
-显示压缩选项	הראה אפשרויות דחיסה
 显示受保护的系统文件	הצג קבצי מערכת מוגנים
 显示工具栏	Show toolbar
 显示状态中心按钮	Show status center button
 显示状态栏	Show status bar
 显示缩略图	הצג תמונות ממוזערות
-智能解压	חלץ לכאן (חכם)
 暗灰色	אפור כהה
 更多选项...	אפשרויות נוספות
 替换已有的项目	החלף פריט קיים
@@ -8023,6 +8029,8 @@ PowerShell 文件	PowerShell files
 标签操作菜单	Tab actions menu
 格式化	עיצוב
 正在从“{1}”中删除{0, plural, other {#个项目}}	Deleting {0, plural, one {# item} other {# items}} from "{1}"
+正在共享 {0}	שיתוף: {0}%
+正在共享 {0} {1}	שיתוף {0} {1}
 正在发现项目...	Discovering items...
 正在取消	מבטל
 正在处理项目...	Processing items...
@@ -8059,6 +8067,7 @@ PowerShell 文件	PowerShell files
 现在	עכשיו
 生成新名称	צור שם חדש
 用选中的项目创建文件夹	Create folder with selection
+目前没有可共享的内容。	אין כרגע פריטים לשיתוף.
 砖红色	Brick Red
 确定	אישור
 确定要删除此标签吗？	Are you sure you want to delete this tag?
@@ -8070,6 +8079,7 @@ PowerShell 文件	PowerShell files
 类型	עמודת סוג פריט
 粉鸢尾花色	איריס פסטל
 粘贴	הדבק
+粘贴为快捷方式	צור קיצור דרך
 粘贴到选中的文件夹	Paste to selected folder
 系统	מערכת
 红色	אדום
@@ -8099,9 +8109,6 @@ PowerShell 文件	PowerShell files
 要以管理员身份继续吗？	האם תרצו להמשיך בתור מנהלים?
 要改为在桌面上创建快捷方式吗？	Would you like to create the shortcut on the desktop instead?
 解压	חלץ
-解压 	חלץ 
-解压到当前文件夹	חלץ לכאן
-解压文件	חלץ קבצים
 解压文件到	חלץ ארכיון
 设为默认	Set as default
 设置	הגדרות
@@ -8158,6 +8165,7 @@ PowerShell 文件	PowerShell files
 1 小时前	1 hour ago
 1 秒前	1 second ago
 Git 错误	Git error
+GitHub 仓库	गिटहब रिपोजिटरी
 PowerShell 文件	PowerShell files
 {0, plural, other {将删除 # 个项目}}	{0, plural, one {One item will be deleted} other {# items will be deleted}}
 {0, plural, other {文件名冲突}}	Conflicting {0, plural, one {file name} other {file names}}
@@ -8211,6 +8219,7 @@ PowerShell 文件	PowerShell files
 全部打开	Open all
 全部播放	Play All
 共享	साझा
+共享项目失败	Failed to share items
 关于	बारे में
 关闭	बंद करें
 关闭所有标签页	Close all tabs
@@ -8227,7 +8236,6 @@ PowerShell 文件	PowerShell files
 列表	List
 列视图	स्तंभ
 创建	बनाएँ
-创建 zip 压缩文件	Create zip archive
 创建分支	Create branch
 创建快捷方式	Creates a shortcut
 创建新标签	Create new tag
@@ -8252,8 +8260,6 @@ PowerShell 文件	PowerShell files
 十进制	Decimal
 升序	बढ़तेक्रममें
 卡片	Cards
-压缩	Archive
-压缩 	Archive 
 压缩文件	Archive files
 压缩文件密码	Archive password
 原始文件夹	Original folder
@@ -8339,6 +8345,8 @@ PowerShell 文件	PowerShell files
 将{0, plural, other {#个项目}}复制到“{1}”时出错	Error copying {0, plural, one {# item} other {# items}} to "{1}"
 将{0, plural, other {#个项目}}移动到“{1}”时出错	Error moving {0, plural, one {# item} other {# items}} to "{1}"
 将“{0}”解压缩到“{1}”时出错	Error extracting "{0}" to "{1}"
+将共享你选择的项目	आपके द्वारा चुने गए वस्तुओं साझा किए जाएंगे
+将共享已选项目	चयनित आइटम साझा किया जाएगा
 将文件和文件夹一同排序	Sort files and folders together
 将此操作应用到所有冲突项	Apply this action to all conflicting items
 居中	Center
@@ -8438,13 +8446,11 @@ PowerShell 文件	PowerShell files
 显示“用选中的项目创建文件夹”选项	Show option to create folder with selection
 显示“编辑文件标签”	Show edit tags flyout
 显示以英文句点 (.) 开头的文件	डॉट फाइल दिखाये
-显示压缩选项	Show compression options
 显示受保护的系统文件	Show protected system files
 显示工具栏	Show toolbar
 显示状态中心按钮	Show status center button
 显示状态栏	Show status bar
 显示缩略图	थंबनेल दिखाएँ
-智能解压	Extract here (Smart)
 暗灰色	Gray Dark
 更多选项...	अधिक विकल्प
 替换已有的项目	मौजूदा वस्तु को बदलें
@@ -8459,6 +8465,8 @@ PowerShell 文件	PowerShell files
 标签操作菜单	Tab actions menu
 格式化	स्वरूपित करें
 正在从“{1}”中删除{0, plural, other {#个项目}}	Deleting {0, plural, one {# item} other {# items}} from "{1}"
+正在共享 {0}	साझाकरण {0}
+正在共享 {0} {1}	साझाकरण {0} {1}
 正在发现项目...	Discovering items...
 正在取消	Canceling
 正在处理项目...	Processing items...
@@ -8495,6 +8503,7 @@ PowerShell 文件	PowerShell files
 现在	अभी
 生成新名称	Generate new name
 用选中的项目创建文件夹	Create folder with selection
+目前没有可共享的内容。	अभी साझा करने के लिए कुछ भी नहीं है.
 砖红色	Brick Red
 确定	OK
 确定要删除此标签吗？	Are you sure you want to delete this tag?
@@ -8506,6 +8515,7 @@ PowerShell 文件	PowerShell files
 类型	Item type column
 粉鸢尾花色	Iris Pastel
 粘贴	पेस्ट
+粘贴为快捷方式	Paste shortcut
 粘贴到选中的文件夹	Paste to selected folder
 系统	सिस्टम
 红色	Red
@@ -8535,9 +8545,6 @@ PowerShell 文件	PowerShell files
 要以管理员身份继续吗？	Would you like to continue as administrator?
 要改为在桌面上创建快捷方式吗？	Would you like to create the shortcut on the desktop instead?
 解压	निकाल
-解压 	निकाल 
-解压到当前文件夹	Extract here
-解压文件	Extract files
 解压文件到	Extract archive
 设为默认	Set as default
 设置	सेटिंग्स
@@ -8594,6 +8601,7 @@ PowerShell 文件	PowerShell files
 1 小时前	Prije 1 sat
 1 秒前	Prije 1 sekunde
 Git 错误	Git pogreška
+GitHub 仓库	GitHub repozitorij
 PowerShell 文件	PowerShell datoteke
 {0, plural, other {将删除 # 个项目}}	{0, plural, one {# stavka će biti izbrisana} few {# stavke će biti izbrisane} other {# stavki će biti izbrisano}}
 {0, plural, other {文件名冲突}}	{0, plural, one {Naziv datoteke u sukobu} few {Nazivi datoteka u sukobu} other {Nazivi datoteka u sukobu}}
@@ -8647,6 +8655,7 @@ PowerShell 文件	PowerShell datoteke
 全部打开	Otvori sve
 全部播放	Reproduciraj sve
 共享	Podijeli
+共享项目失败	Dijeljenje stavki nije uspjelo
 关于	O aplikaciji
 关闭	Zatvori
 关闭所有标签页	Zatvori sve kartice
@@ -8663,7 +8672,6 @@ PowerShell 文件	PowerShell datoteke
 列表	Popis
 列视图	Stupci
 创建	Napravi
-创建 zip 压缩文件	Stvori zip arhivu
 创建分支	Stvori granu
 创建快捷方式	Stvara prečac
 创建新标签	Izradi novu oznaku
@@ -8688,8 +8696,6 @@ PowerShell 文件	PowerShell datoteke
 十进制	Decimalni
 升序	Uzlazno
 卡片	Pločice
-压缩	Arhiva
-压缩 	Arhiva 
 压缩文件	Arhivske datoteke
 压缩文件密码	Lozinka arhive
 原始文件夹	Originalna mapa
@@ -8775,6 +8781,8 @@ PowerShell 文件	PowerShell datoteke
 将{0, plural, other {#个项目}}复制到“{1}”时出错	Pogreška pri kopiranju {0, plural, one {# stavke} few {# stavke} other {# stavki}} u "{1}"
 将{0, plural, other {#个项目}}移动到“{1}”时出错	{0, plural, one {Pogreška pri premještanju # stavke} few {Pogreška pri premještanju # stavki} other {Pogreška pri premještanju # stavki}} u "{1}"
 将“{0}”解压缩到“{1}”时出错	Pogreška pri raspakiravanju "{0}" u "{1}"
+将共享你选择的项目	Stavke koje ste odabrali bit će podijeljene
+将共享已选项目	Odabrana stavka bit će podijeljena
 将文件和文件夹一同排序	Sortiraj datoteke i mape zajedno
 将此操作应用到所有冲突项	Primijeni ovu radnju na sve stavke u sukobu
 居中	Centrirano
@@ -8874,13 +8882,11 @@ PowerShell 文件	PowerShell datoteke
 显示“用选中的项目创建文件夹”选项	Prikaži opciju za stvaranje mape za odabrane stavke
 显示“编辑文件标签”	Prikaži izbornik za uređivanje oznaka
 显示以英文句点 (.) 开头的文件	Prikaz datoteka s točkom
-显示压缩选项	Prikaži opcije kompresije
 显示受保护的系统文件	Prikaz zaštićenih sistemskih datoteka
 显示工具栏	Prikaži alatnu traku
 显示状态中心按钮	Prikaži gumb status centra
 显示状态栏	Prikaži statusnu traku
 显示缩略图	Prikaži minijature
-智能解压	Raspakiraj ovdje (Pametno)
 暗灰色	Tamno siva
 更多选项...	Više postavki...
 替换已有的项目	Zamijeni postojeću stavku
@@ -8895,6 +8901,8 @@ PowerShell 文件	PowerShell datoteke
 标签操作菜单	Izbornik radnji kartica
 格式化	Oblik
 正在从“{1}”中删除{0, plural, other {#个项目}}	Brisanje {0, plural, one {# stavke} few {# stavke} other {# stavki}} iz "{1}"
+正在共享 {0}	Dijeljenje {0}
+正在共享 {0} {1}	Dijeljenje {0} {1}
 正在发现项目...	Otkrivanje stavki...
 正在取消	Otkazivanje
 正在处理项目...	Obrada stavki...
@@ -8931,6 +8939,7 @@ PowerShell 文件	PowerShell datoteke
 现在	Sada
 生成新名称	Generirajte novi naziv
 用选中的项目创建文件夹	Stvori mapu za odabrane stavke
+目前没有可共享的内容。	Trenutno nema ničeg za podijeliti...
 砖红色	Cigleno crvena
 确定	U redu
 确定要删除此标签吗？	Jeste li sigurni da želite izbrisati ovu oznaku?
@@ -8942,6 +8951,7 @@ PowerShell 文件	PowerShell datoteke
 类型	Stupac vrste stavke
 粉鸢尾花色	Iris pastelna
 粘贴	Zalijepi
+粘贴为快捷方式	Zalijepi prečac
 粘贴到选中的文件夹	Zalijepi u odabranu mapu
 系统	Sustav
 红色	Crvena
@@ -8971,9 +8981,6 @@ PowerShell 文件	PowerShell datoteke
 要以管理员身份继续吗？	Želite li nastaviti kao administrator?
 要改为在桌面上创建快捷方式吗？	Želite li umjesto toga stvoriti prečac na radnoj površini?
 解压	Raspakiraj
-解压 	Raspakiraj 
-解压到当前文件夹	Raspakiraj ovdje
-解压文件	Raspakiraj datoteke
 解压文件到	Raspakiranje arhive
 设为默认	Postavi kao zadano
 设置	Postavke
@@ -9030,6 +9037,7 @@ PowerShell 文件	PowerShell datoteke
 1 小时前	1 órával ezelőtt
 1 秒前	1 másodperccel ezelőtt
 Git 错误	Git hiba
+GitHub 仓库	GitHub repó
 PowerShell 文件	PowerShell fájlok
 {0, plural, other {将删除 # 个项目}}	{0, plural, one {#} other {#}} elem törlésre kerül
 {0, plural, other {文件名冲突}}	Ütköző {0, plural, one {fájlnév} other {fájlnevek}}
@@ -9083,6 +9091,7 @@ PowerShell 文件	PowerShell fájlok
 全部打开	Összes megnyitása
 全部播放	Összes lejátszása
 共享	Megosztás
+共享项目失败	Az elemek megosztása sikertelen
 关于	Névjegy
 关闭	Bezárás
 关闭所有标签页	Összes lap bezárása
@@ -9099,7 +9108,6 @@ PowerShell 文件	PowerShell fájlok
 列表	Lista
 列视图	Oszlopok
 创建	Létrehozás
-创建 zip 压缩文件	Zip archívum létrehozása
 创建分支	Ág létrehozása
 创建快捷方式	Parancsikon létrehozása
 创建新标签	Új címke létrehozása
@@ -9124,8 +9132,6 @@ PowerShell 文件	PowerShell fájlok
 十进制	Decimális
 升序	Növekvő
 卡片	Kártyák
-压缩	Archívum
-压缩 	Archívum 
 压缩文件	Fájlok archiválása
 压缩文件密码	Jelszó
 原始文件夹	Eredeti mappa
@@ -9211,6 +9217,8 @@ PowerShell 文件	PowerShell fájlok
 将{0, plural, other {#个项目}}复制到“{1}”时出错	Hiba {0, plural, one {# elem} other {# elem}} átmásolásakor ide: "{1}"
 将{0, plural, other {#个项目}}移动到“{1}”时出错	Hiba {0, plural, one {# elem} other {# elem}} áthelyezésekor ide: "{1}”
 将“{0}”解压缩到“{1}”时出错	Nem sikerült "{0}" kicsomagolása ide: "{1}"
+将共享你选择的项目	A kijelölt elemek meg lesznek osztva
+将共享已选项目	A kijelölt elem meg lesz osztva
 将文件和文件夹一同排序	Fájlok és mappák együtt
 将此操作应用到所有冲突项	Művelet végrehajtása minden ütközés esetén
 居中	Középre
@@ -9310,13 +9318,11 @@ PowerShell 文件	PowerShell fájlok
 显示“用选中的项目创建文件夹”选项	Kijelölt elemekkel való mappa létrehozásának megjelenítése
 显示“编辑文件标签”	Címkék módosítása
 显示以英文句点 (.) 开头的文件	Ponttal kezdődő fájlok megjelenítése
-显示压缩选项	Tömörítési beállítások megjelenítése
 显示受保护的系统文件	Az operációs rendszer védett fájljainak megjelenítése
 显示工具栏	Eszköztár megjelenítése
 显示状态中心按钮	Állapotközpont gomb megjelenítése
 显示状态栏	Állapotsor megjelenítése
 显示缩略图	Miniatűrök megjelenítése
-智能解压	Intelligens kicsomagolás ide
 暗灰色	Sötétszürke
 更多选项...	További lehetőségek...
 替换已有的项目	Felülírás/összefésülés
@@ -9331,6 +9337,8 @@ PowerShell 文件	PowerShell fájlok
 标签操作菜单	Fülműveletek menü
 格式化	Formázás
 正在从“{1}”中删除{0, plural, other {#个项目}}	{0, plural, one {# elem} other {# elem}} törlése innen: "{1}"
+正在共享 {0}	{0} megosztása
+正在共享 {0} {1}	{0} {1} megosztása
 正在发现项目...	Elemek felderítése...
 正在取消	Megszakítás
 正在处理项目...	Elemek feldolgozása...
@@ -9367,6 +9375,7 @@ PowerShell 文件	PowerShell fájlok
 现在	Most
 生成新名称	Új név létrehozása
 用选中的项目创建文件夹	Mappa létrehozása a kijelölt elemekkel
+目前没有可共享的内容。	Nincs mit megosztani...
 砖红色	Téglavörös
 确定	OK
 确定要删除此标签吗？	Biztosan törölni szeretné ezt a címkét?
@@ -9378,6 +9387,7 @@ PowerShell 文件	PowerShell fájlok
 类型	Elem típusa
 粉鸢尾花色	Írisz pasztell
 粘贴	Beillesztés
+粘贴为快捷方式	Parancsikon beillesztése
 粘贴到选中的文件夹	Beillesztés a kiválasztott mappába
 系统	Rendszer
 红色	Vörös
@@ -9407,9 +9417,6 @@ PowerShell 文件	PowerShell fájlok
 要以管理员身份继续吗？	Szeretné rendszergazdaként folytatni?
 要改为在桌面上创建快捷方式吗？	Szeretné inkább az Asztalon létrehozni a parancsikont?
 解压	Kicsomagolás
-解压 	Kicsomagolás 
-解压到当前文件夹	Kicsomagolás ide
-解压文件	Fájlok kicsomagolása
 解压文件到	Archívum kicsomagolása
 设为默认	Beállítás alapértelmezettként
 设置	Beállítások
@@ -9466,6 +9473,7 @@ PowerShell 文件	PowerShell fájlok
 1 小时前	1 ժամ առաջ
 1 秒前	1 վարկյան առաջ
 Git 错误	Git-ի սխալ
+GitHub 仓库	GitHub պահեստ
 PowerShell 文件	PowerShell files
 {0, plural, other {将删除 # 个项目}}	{0, plural, one {Մեկ տարր կջնջվի} other {# տարր կջնջվի}}
 {0, plural, other {文件名冲突}}	Conflicting {0, plural, one {file name} other {file names}}
@@ -9519,6 +9527,7 @@ PowerShell 文件	PowerShell files
 全部打开	Բացել բոլորը
 全部播放	Play All
 共享	Կիսվել
+共享项目失败	Failed to share items
 关于	Մասին
 关闭	Փակել
 关闭所有标签页	Փակել բոլոր ներդիրները
@@ -9535,7 +9544,6 @@ PowerShell 文件	PowerShell files
 列表	Ցուցակ
 列视图	Սյունակներ
 创建	Ստեղծել
-创建 zip 压缩文件	Create zip archive
 创建分支	Ստեղծել մասնաճուղ
 创建快捷方式	Ստեղծել կարճատ
 创建新标签	Ստեղծել նոր պիտակ
@@ -9560,8 +9568,6 @@ PowerShell 文件	PowerShell files
 十进制	Decimal
 升序	Աճման կարգով
 卡片	Քարտեր
-压缩	Archive
-压缩 	Archive 
 压缩文件	Archive files
 压缩文件密码	Պահոցի գաղտնաբառը
 原始文件夹	Բնօրինակ պանակ
@@ -9647,6 +9653,8 @@ PowerShell 文件	PowerShell files
 将{0, plural, other {#个项目}}复制到“{1}”时出错	Error copying {0, plural, one {# item} other {# items}} to "{1}"
 将{0, plural, other {#个项目}}移动到“{1}”时出错	Error moving {0, plural, one {# item} other {# items}} to "{1}"
 将“{0}”解压缩到“{1}”时出错	Error extracting "{0}" to "{1}"
+将共享你选择的项目	The items you've selected will be shared
+将共享已选项目	The selected item will be shared
 将文件和文件夹一同排序	Դասավորել նիշքերը եւ պանակները միասին
 将此操作应用到所有冲突项	Կիրառեք այս գործողությունը բոլոր հակասական տարրերի վրա
 居中	Կենտրոնում
@@ -9746,13 +9754,11 @@ PowerShell 文件	PowerShell files
 显示“用选中的项目创建文件夹”选项	Ցույց տալ ընտրանք, ստեղծելու համար պանակ՝ ընտրվածով
 显示“编辑文件标签”	Ցույց տալ խմբագրման պիտակի ենթացանկը
 显示以英文句点 (.) 开头的文件	Show dot files
-显示压缩选项	Ցույց տալ սեղմման ընտրանքները
 显示受保护的系统文件	Ցույց տալ պաշտպանված համակարգի նիշքերը
 显示工具栏	Ցույց տալ գործիքագոտին
 显示状态中心按钮	Show status center button
 显示状态栏	Show status bar
 显示缩略图	Ցույց տալ մանրապատկերը
-智能解压	Արտահանել այստեղ (Խելացի)
 暗灰色	Մուգ Գորշ
 更多选项...	Ավել ընտրանքներ...
 替换已有的项目	Replace existing item
@@ -9767,6 +9773,8 @@ PowerShell 文件	PowerShell files
 标签操作菜单	Ներդիրի գործողությունների ցանկ
 格式化	Ձեւաչափ
 正在从“{1}”中删除{0, plural, other {#个项目}}	Deleting {0, plural, one {# item} other {# items}} from "{1}"
+正在共享 {0}	Կիսվել «{0}»-ով
+正在共享 {0} {1}	Կիսում {0} {1}
 正在发现项目...	Discovering items...
 正在取消	Չեղարկում
 正在处理项目...	Processing items...
@@ -9803,6 +9811,7 @@ PowerShell 文件	PowerShell files
 现在	Հիմա
 生成新名称	Արտադրել նոր անուն
 用选中的项目创建文件夹	Ստեղծել պանակ ընտրվածով
+目前没有可共享的内容。	There's nothing to share right now...
 砖红色	Աղյուսե Կարմիր
 确定	ԼԱՎ
 确定要删除此标签吗？	Are you sure you want to delete this tag?
@@ -9814,6 +9823,7 @@ PowerShell 文件	PowerShell files
 类型	Տարրի տեսակի սյունակ
 粉鸢尾花色	Հիրիկ Կավիճ
 粘贴	Կպցնել
+粘贴为快捷方式	Կպցնել կարճատը
 粘贴到选中的文件夹	Paste to selected folder
 系统	Համակարգ
 红色	Կարմիր
@@ -9843,9 +9853,6 @@ PowerShell 文件	PowerShell files
 要以管理员身份继续吗？	Կցանկանա՞ք շարունակել որպես վարիչ
 要改为在桌面上创建快捷方式吗？	Would you like to create the shortcut on the desktop instead?
 解压	Արտահանել
-解压 	Արտահանել 
-解压到当前文件夹	Արտահանել այստեղ
-解压文件	Արտահանել նիշքերը
 解压文件到	Արտահանել պահոցը
 设为默认	Կայեր որպես լռելյայն
 设置	Կայանքներ
@@ -9902,6 +9909,7 @@ PowerShell 文件	PowerShell files
 1 小时前	1 jam yang lalu
 1 秒前	1 detik yang lalu
 Git 错误	Kesalahan pada Git
+GitHub 仓库	Repositori GitHub
 PowerShell 文件	File PowerShell
 {0, plural, other {将删除 # 个项目}}	{0, plural, one {Satu item akan dihapus} other {# item akan dihapus}}
 {0, plural, other {文件名冲突}}	{0, plural, one {nama berkas yang konflik} other {nama berkas yang konflik}}
@@ -9955,6 +9963,7 @@ PowerShell 文件	File PowerShell
 全部打开	Buka semua
 全部播放	Putar Semua
 共享	Berbagi
+共享项目失败	Gagal membagi item
 关于	Tentang
 关闭	Tutup
 关闭所有标签页	Tutup semua tab
@@ -9971,7 +9980,6 @@ PowerShell 文件	File PowerShell
 列表	Daftar
 列视图	Kolom
 创建	Buat
-创建 zip 压缩文件	Buat arsip zip
 创建分支	Buat branch
 创建快捷方式	Membuat pintasan
 创建新标签	Buat tag baru
@@ -9996,8 +10004,6 @@ PowerShell 文件	File PowerShell
 十进制	Desimal
 升序	Urut naik
 卡片	Kartu
-压缩	Arsip
-压缩 	Arsip 
 压缩文件	File arsip
 压缩文件密码	Kata sandi arsip
 原始文件夹	Folder asli
@@ -10083,6 +10089,8 @@ PowerShell 文件	File PowerShell
 将{0, plural, other {#个项目}}复制到“{1}”时出错	Kesalahan menyalin {0, plural, one {# item} other {# item}} ke "{1}"
 将{0, plural, other {#个项目}}移动到“{1}”时出错	Kesalahan memindahkan {0, plural, one {# item} other {# item}} ke "{1}"
 将“{0}”解压缩到“{1}”时出错	Error Mengekstrak "{0}" ke "{1}"
+将共享你选择的项目	Item yang Anda pilih akan dibagikan
+将共享已选项目	Item yang dipilih akan dibagikan
 将文件和文件夹一同排序	Urutkan file dan folder bersama
 将此操作应用到所有冲突项	Terapkan aksi ini pada semua item yang berbenturan
 居中	Tengah
@@ -10182,13 +10190,11 @@ PowerShell 文件	File PowerShell
 显示“用选中的项目创建文件夹”选项	Tampilkan opsi membuat folder dengan pilihan
 显示“编辑文件标签”	Tampilkan tag edit flyout
 显示以英文句点 (.) 开头的文件	Tampilkan berkas dot
-显示压缩选项	Tampilkan pilihan kompresi
 显示受保护的系统文件	Tampilkan file sistem yang dilindungi
 显示工具栏	Tampilkan bilah alat
 显示状态中心按钮	Tampilkan tombol pusat status
 显示状态栏	Tampilkan bilah status
 显示缩略图	Tampilkan gambar mini
-智能解压	Ekstrak disini (Smart)
 暗灰色	Abu-abu gelap
 更多选项...	Opsi lainnya...
 替换已有的项目	Ganti item yang sudah ada
@@ -10203,6 +10209,8 @@ PowerShell 文件	File PowerShell
 标签操作菜单	Aksi tab menu
 格式化	Format
 正在从“{1}”中删除{0, plural, other {#个项目}}	Sedang menghapus {0, plural, one {# item} other {# item}} dari "{1}"
+正在共享 {0}	Berbagi {0}
+正在共享 {0} {1}	Berbagi {0} {1}
 正在发现项目...	Menemukan item...
 正在取消	Membatalkan
 正在处理项目...	Item sedang di proses...
@@ -10239,6 +10247,7 @@ PowerShell 文件	File PowerShell
 现在	Sekarang
 生成新名称	Buat nama baru
 用选中的项目创建文件夹	Buat folder dari yang dipilih
+目前没有可共享的内容。	Tidak ada yang bisa dibagikan saat ini...
 砖红色	Merah Bata
 确定	OKE
 确定要删除此标签吗？	Yakin ingin menghapus tag ini?
@@ -10250,6 +10259,7 @@ PowerShell 文件	File PowerShell
 类型	Kolom jenis item
 粉鸢尾花色	Iris Pastel
 粘贴	Tempel
+粘贴为快捷方式	Tempel Pintasan
 粘贴到选中的文件夹	Tempel ke folder yang dipilih
 系统	Sistem
 红色	Merah
@@ -10279,9 +10289,6 @@ PowerShell 文件	File PowerShell
 要以管理员身份继续吗？	Apakah Anda ingin melanjutkan sebagai administrator?
 要改为在桌面上创建快捷方式吗？	Apakah Anda ingin membuat pintasan di desktop?
 解压	Ekstrak
-解压 	Ekstrak 
-解压到当前文件夹	Ekstrak di sini
-解压文件	Ekstrak file
 解压文件到	Ekstrak arsip
 设为默认	Atur sebagai bawaan
 设置	Pengaturan
@@ -10338,6 +10345,7 @@ PowerShell 文件	File PowerShell
 1 小时前	1 ora fa
 1 秒前	1 secondo fa
 Git 错误	Errore di Git
+GitHub 仓库	Repository di GitHub
 PowerShell 文件	File PowerShell
 {0, plural, other {将删除 # 个项目}}	{0, plural, one {Un elemento sarà eliminato} other {# elementi saranno eliminati}}
 {0, plural, other {文件名冲突}}	Conflitto {0, plural, one {nome del file} other {nomi dei file}}
@@ -10391,6 +10399,7 @@ PowerShell 文件	File PowerShell
 全部打开	Apri tutto
 全部播放	Riproduci tutto
 共享	Condividi
+共享项目失败	Impossibile condividere gli elementi
 关于	Informazioni app
 关闭	Chiudi
 关闭所有标签页	Chiudi tutte le schede
@@ -10407,7 +10416,6 @@ PowerShell 文件	File PowerShell
 列表	Elenco
 列视图	Colonne
 创建	Crea
-创建 zip 压缩文件	Crea archivio zip
 创建分支	Crea branch
 创建快捷方式	Crea un collegamento
 创建新标签	Crea una nuova etichetta
@@ -10432,8 +10440,6 @@ PowerShell 文件	File PowerShell
 十进制	Decimale
 升序	Crescente
 卡片	Schede
-压缩	Archivio
-压缩 	Archivio 
 压缩文件	Archivia file
 压缩文件密码	Password dell'archivio
 原始文件夹	Cartella originale
@@ -10519,6 +10525,8 @@ PowerShell 文件	File PowerShell
 将{0, plural, other {#个项目}}复制到“{1}”时出错	Errore nella copia {0, plural, one {di # elemento} other {di # elementi}} in "{1}"
 将{0, plural, other {#个项目}}移动到“{1}”时出错	Errore nello spostamento di {0, plural, one {# elemento} other {# elementi}} in "{1}"
 将“{0}”解压缩到“{1}”时出错	Errore nell'estrazione di "{0}" in "{1}"
+将共享你选择的项目	Gli elementi selezionati saranno condivisi
+将共享已选项目	L'elemento selezionato sarà condiviso
 将文件和文件夹一同排序	Ordina file e cartelle insieme
 将此操作应用到所有冲突项	Applica questa azione a tutti gli elementi in conflitto
 居中	Centro
@@ -10618,13 +10626,11 @@ PowerShell 文件	File PowerShell
 显示“用选中的项目创建文件夹”选项	Mostra l'opzione per creare una cartella con la selezione
 显示“编辑文件标签”	Mostra il menù per la modifica dei tag
 显示以英文句点 (.) 开头的文件	Mostra file e cartelle che iniziano con un punto
-显示压缩选项	Mostra opzioni di compressione
 显示受保护的系统文件	Mostra file di sistema protetti
 显示工具栏	Mostra barra degli strumenti
 显示状态中心按钮	Mostra il pulsante centro di stato
 显示状态栏	Mostra la barra di stato
 显示缩略图	Mostra anteprime
-智能解压	Estrai qui (Smart)
 暗灰色	Grigio Scuro
 更多选项...	Altre opzioni...
 替换已有的项目	Sostituisci elemento
@@ -10639,6 +10645,8 @@ PowerShell 文件	File PowerShell
 标签操作菜单	Menu azioni scheda
 格式化	Formato
 正在从“{1}”中删除{0, plural, other {#个项目}}	Eliminando {0, plural, one {# elemento} other {# elementi}} da "{1}"
+正在共享 {0}	Condivisione di {0}
+正在共享 {0} {1}	Condivisionne di {0} {1}
 正在发现项目...	Trovare gli elementi...
 正在取消	Annullando
 正在处理项目...	Elaborazione degli elementi...
@@ -10675,6 +10683,7 @@ PowerShell 文件	File PowerShell
 现在	Ora
 生成新名称	Genera nuovo nome
 用选中的项目创建文件夹	Crea cartella dalla selezione
+目前没有可共享的内容。	Nessun contenuto da condividere.
 砖红色	Rosso Mattone
 确定	OK
 确定要删除此标签吗？	Sei sicuro/a di voler eliminare questo tag?
@@ -10686,6 +10695,7 @@ PowerShell 文件	File PowerShell
 类型	Tipo elemento
 粉鸢尾花色	Iris Pastello
 粘贴	Incolla
+粘贴为快捷方式	Incolla collegamento
 粘贴到选中的文件夹	Incolla nella cartella selezionata
 系统	Sistema
 红色	Rosso
@@ -10715,9 +10725,6 @@ PowerShell 文件	File PowerShell
 要以管理员身份继续吗？	Vuoi continuare come amministratore?
 要改为在桌面上创建快捷方式吗？	Vorresti invece creare il collegamento sul desktop?
 解压	Estrai
-解压 	Estrai 
-解压到当前文件夹	Estrai qui
-解压文件	Estrai
 解压文件到	Estrai archivio
 设为默认	Imposta come predefinito
 设置	Impostazioni
@@ -10773,6 +10780,7 @@ PowerShell 文件	File PowerShell
 1 天前	1 日前
 1 小时前	1 時間前
 Git 错误	Git エラー
+GitHub 仓库	GitHub リポジトリ
 PowerShell 文件	PowerShell ファイル
 {0, plural, other {将删除 # 个项目}}	{0, plural, other {# 個の項目が削除されます}}
 {0, plural, other {文件名冲突}}	{0, plural, other {ファイル名}}が競合しています
@@ -10823,6 +10831,7 @@ PowerShell 文件	PowerShell ファイル
 全部打开	すべて開く
 全部播放	Play All
 共享	共有
+共享项目失败	項目を共有できませんでした
 关于	Files について
 关闭	閉じる
 关闭所有标签页	すべてのタブを閉じる
@@ -10839,7 +10848,6 @@ PowerShell 文件	PowerShell ファイル
 列表	一覧
 列视图	カラム
 创建	作成
-创建 zip 压缩文件	アーカイブを作成
 创建分支	ブランチを作成
 创建快捷方式	ショートカットを作成
 创建新标签	新しいタグを作成
@@ -10864,8 +10872,6 @@ PowerShell 文件	PowerShell ファイル
 十进制	10進
 升序	昇順
 卡片	カード
-压缩	アーカイブ
-压缩 	アーカイブ 
 压缩文件	圧縮ファイル
 压缩文件密码	アーカイブのパスワード
 原始文件夹	元のフォルダー
@@ -10951,6 +10957,8 @@ PowerShell 文件	PowerShell ファイル
 将{0, plural, other {#个项目}}复制到“{1}”时出错	​"{1}" への {0, plural, other {# 項目}}のコピー中にエラーが発生しました
 将{0, plural, other {#个项目}}移动到“{1}”时出错	「{1}」から {0, plural, one {# 件} other {# 件}} を移動中にエラーが発生しました
 将“{0}”解压缩到“{1}”时出错	"{0}" を "{1}" へ展開中にエラーが発生しました
+将共享你选择的项目	選択した項目が共有されます
+将共享已选项目	選択した項目が共有されます
 将文件和文件夹一同排序	ファイルとフォルダーを一緒に並べ替える
 将此操作应用到所有冲突项	すべての競合する項目にこれを実行する
 居中	中央
@@ -11047,13 +11055,11 @@ PowerShell 文件	PowerShell ファイル
 显示“用选中的项目创建文件夹”选项	[選択した項目でフォルダーを作成] オプションを表示する
 显示“编辑文件标签”	[タグを編集] オプションを表示する
 显示以英文句点 (.) 开头的文件	ドット ファイルを表示する
-显示压缩选项	[圧縮] および [展開] メニューを表示する
 显示受保护的系统文件	保護されたシステム ファイルを表示する
 显示工具栏	ツールバーを表示する
 显示状态中心按钮	ステータスセンターボタンを表示
 显示状态栏	ステータスバーを表示
 显示缩略图	サムネイルを表示する
-智能解压	ここに展開 (スマート)
 暗灰色	グレー ダーク
 更多选项...	その他のオプション...
 替换已有的项目	既存の項目を置換
@@ -11066,6 +11072,8 @@ PowerShell 文件	PowerShell ファイル
 标签操作菜单	タブ操作メニュー
 格式化	フォーマット
 正在从“{1}”中删除{0, plural, other {#个项目}}	「{1}」から {0, plural, one {# 件} other {# 件}} を削除中
+正在共享 {0}	{0} を共有しています
+正在共享 {0} {1}	{0} {1} を共有しています
 正在发现项目...	項目を検出しています…
 正在取消	キャンセル中
 正在处理项目...	項目を処理しています...
@@ -11102,6 +11110,7 @@ PowerShell 文件	PowerShell ファイル
 现在	今
 生成新名称	名前を変更
 用选中的项目创建文件夹	選択した項目でフォルダーを作成
+目前没有可共享的内容。	現在共有できるものはありません。
 砖红色	ブリック レッド
 确定	OK
 确定要删除此标签吗？	このタグを削除しますか？
@@ -11113,6 +11122,7 @@ PowerShell 文件	PowerShell ファイル
 类型	種類
 粉鸢尾花色	アイリス パステル
 粘贴	貼り付け
+粘贴为快捷方式	ショートカットを貼り付け
 粘贴到选中的文件夹	選択したフォルダーに貼り付け
 系统	システム
 红色	レッド
@@ -11142,9 +11152,6 @@ PowerShell 文件	PowerShell ファイル
 要以管理员身份继续吗？	管理者として続行しますか?
 要改为在桌面上创建快捷方式吗？	代わりにデスクトップにショートカットを作成しますか?
 解压	展開
-解压 	展開 
-解压到当前文件夹	ここに展開
-解压文件	ファイルを展開
 解压文件到	アーカイブを展開
 设为默认	デフォルトに設定
 设置	設定
@@ -11201,6 +11208,7 @@ PowerShell 文件	PowerShell ファイル
 1 小时前	1 hour ago
 1 秒前	1 second ago
 Git 错误	Git error
+GitHub 仓库	GitHub repository
 PowerShell 文件	PowerShell files
 {0, plural, other {将删除 # 个项目}}	{0, plural, one {One item will be deleted} other {# items will be deleted}}
 {0, plural, other {文件名冲突}}	Conflicting {0, plural, one {file name} other {file names}}
@@ -11254,6 +11262,7 @@ PowerShell 文件	PowerShell files
 全部打开	Open all
 全部播放	Play All
 共享	გაზიარება
+共享项目失败	Failed to share items
 关于	შესახებ
 关闭	დახურვა
 关闭所有标签页	Close all tabs
@@ -11270,7 +11279,6 @@ PowerShell 文件	PowerShell files
 列表	List
 列视图	სვეტები
 创建	შექმნა
-创建 zip 压缩文件	Create zip archive
 创建分支	Create branch
 创建快捷方式	Creates a shortcut
 创建新标签	Create new tag
@@ -11295,8 +11303,6 @@ PowerShell 文件	PowerShell files
 十进制	Decimal
 升序	ზრდადობის მიხედვით
 卡片	Cards
-压缩	Archive
-压缩 	Archive 
 压缩文件	Archive files
 压缩文件密码	Archive password
 原始文件夹	Original folder
@@ -11382,6 +11388,8 @@ PowerShell 文件	PowerShell files
 将{0, plural, other {#个项目}}复制到“{1}”时出错	Error copying {0, plural, one {# item} other {# items}} to "{1}"
 将{0, plural, other {#个项目}}移动到“{1}”时出错	Error moving {0, plural, one {# item} other {# items}} to "{1}"
 将“{0}”解压缩到“{1}”时出错	Error extracting "{0}" to "{1}"
+将共享你选择的项目	ელემენტები, რომლებიც თქვენ მონიშნეთ გაზიარდებიან
+将共享已选项目	მონიშნული ელემენტები გაზიარდებიან
 将文件和文件夹一同排序	Sort files and folders together
 将此操作应用到所有冲突项	Apply this action to all conflicting items
 居中	Center
@@ -11481,13 +11489,11 @@ PowerShell 文件	PowerShell files
 显示“用选中的项目创建文件夹”选项	Show option to create folder with selection
 显示“编辑文件标签”	Show edit tags flyout
 显示以英文句点 (.) 开头的文件	Show dot files
-显示压缩选项	Show compression options
 显示受保护的系统文件	დაცული სისტემის ფაილების ჩვენება
 显示工具栏	Show toolbar
 显示状态中心按钮	Show status center button
 显示状态栏	Show status bar
 显示缩略图	Show thumbnails
-智能解压	Extract here (Smart)
 暗灰色	Gray Dark
 更多选项...	მეტი არჩევანი...
 替换已有的项目	არსებული ნივთის ჩანაცვლება
@@ -11502,6 +11508,8 @@ PowerShell 文件	PowerShell files
 标签操作菜单	Tab actions menu
 格式化	ფორმატი
 正在从“{1}”中删除{0, plural, other {#个项目}}	Deleting {0, plural, one {# item} other {# items}} from "{1}"
+正在共享 {0}	გაზიარდება {0}
+正在共享 {0} {1}	გაზიარდება {0} {1}
 正在发现项目...	Discovering items...
 正在取消	Canceling
 正在处理项目...	Processing items...
@@ -11538,6 +11546,7 @@ PowerShell 文件	PowerShell files
 现在	Now
 生成新名称	არსებულის ჩანაცვლება
 用选中的项目创建文件夹	Create folder with selection
+目前没有可共享的内容。	ამჟამად აქ გასაზიარებელი არაფერია...
 砖红色	Brick Red
 确定	OK
 确定要删除此标签吗？	Are you sure you want to delete this tag?
@@ -11549,6 +11558,7 @@ PowerShell 文件	PowerShell files
 类型	ნივთის ტიპის სვეტი
 粉鸢尾花色	Iris Pastel
 粘贴	Paste
+粘贴为快捷方式	Paste shortcut
 粘贴到选中的文件夹	Paste to selected folder
 系统	სისტემა
 红色	Red
@@ -11578,9 +11588,6 @@ PowerShell 文件	PowerShell files
 要以管理员身份继续吗？	გსურთ გააგრძელოთ, როგორც ადმინისტრატორმა?
 要改为在桌面上创建快捷方式吗？	Would you like to create the shortcut on the desktop instead?
 解压	ამოღება
-解压 	ამოღება 
-解压到当前文件夹	ამოღება აქ
-解压文件	ფაილების ამოღება
 解压文件到	Extract archive
 设为默认	Set as default
 设置	პარამეტრები
@@ -11637,6 +11644,7 @@ PowerShell 文件	PowerShell files
 1 小时前	1 ម៉ោងមុន
 1 秒前	1 វិនាទី​មុន
 Git 错误	Git error
+GitHub 仓库	រីប៉ូហ្គីតហាប់
 PowerShell 文件	PowerShell files
 {0, plural, other {将删除 # 个项目}}	{0, plural, one {One item will be deleted} other {# items will be deleted}}
 {0, plural, other {文件名冲突}}	Conflicting {0, plural, one {file name} other {file names}}
@@ -11690,6 +11698,7 @@ PowerShell 文件	PowerShell files
 全部打开	Open all
 全部播放	Play All
 共享	ចែក​រំលែក​
+共享项目失败	Failed to share items
 关于	អំពី
 关闭	បិទ
 关闭所有标签页	បិទផ្ទាំងទាំងអស់
@@ -11706,7 +11715,6 @@ PowerShell 文件	PowerShell files
 列表	បញ្ជី
 列视图	ជួរឈរ
 创建	Create
-创建 zip 压缩文件	Create zip archive
 创建分支	Create branch
 创建快捷方式	Creates a shortcut
 创建新标签	Create new tag
@@ -11731,8 +11739,6 @@ PowerShell 文件	PowerShell files
 十进制	Decimal
 升序	លំដាប់​ឡើង
 卡片	Cards
-压缩	Archive
-压缩 	Archive 
 压缩文件	Archive files
 压缩文件密码	Archive password
 原始文件夹	Original folder
@@ -11818,6 +11824,8 @@ PowerShell 文件	PowerShell files
 将{0, plural, other {#个项目}}复制到“{1}”时出错	Error copying {0, plural, one {# item} other {# items}} to "{1}"
 将{0, plural, other {#个项目}}移动到“{1}”时出错	Error moving {0, plural, one {# item} other {# items}} to "{1}"
 将“{0}”解压缩到“{1}”时出错	Error extracting "{0}" to "{1}"
+将共享你选择的项目	ធាតុដែលអ្នកបានជ្រើសរើសនឹងត្រូវបានចែករំលែក
+将共享已选项目	ធាតុដែលបានជ្រើសរើសនឹងត្រូវបានចែករំលែក
 将文件和文件夹一同排序	តម្រៀបឯកសារនិងថតឯកសារជាមួយគ្នា
 将此操作应用到所有冲突项	Apply this action to all conflicting items
 居中	កណ្តាល
@@ -11917,13 +11925,11 @@ PowerShell 文件	PowerShell files
 显示“用选中的项目创建文件夹”选项	បង្ហាញជម្រើសដើម្បីបង្កើតថតជាមួយជម្រើស
 显示“编辑文件标签”	បង្ហាញការកែសម្រួលស្លាក
 显示以英文句点 (.) 开头的文件	បង្ហាញឯកសារមានចុច
-显示压缩选项	បង្ហាញជម្រើសបង្ហាប់
 显示受保护的系统文件	Show protected system files
 显示工具栏	Show toolbar
 显示状态中心按钮	Show status center button
 显示状态栏	Show status bar
 显示缩略图	Show thumbnails
-智能解压	Extract here (Smart)
 暗灰色	Gray Dark
 更多选项...	បង្ហាញជម្រើសច្រើនទៀត...
 替换已有的项目	ជំនួសធាតុដែលមានស្រាប់
@@ -11938,6 +11944,8 @@ PowerShell 文件	PowerShell files
 标签操作菜单	Tab actions menu
 格式化	ទ្រង់ទ្រាយ
 正在从“{1}”中删除{0, plural, other {#个项目}}	Deleting {0, plural, one {# item} other {# items}} from "{1}"
+正在共享 {0}	កំពុងចែករំលែក {0}
+正在共享 {0} {1}	កំពុងចែករំលែក {0} {1}
 正在发现项目...	Discovering items...
 正在取消	កំពុងបោះបង់
 正在处理项目...	Processing items...
@@ -11974,6 +11982,7 @@ PowerShell 文件	PowerShell files
 现在	ឥឡូវនេះ
 生成新名称	Generate new name
 用选中的项目创建文件夹	Create folder with selection
+目前没有可共享的内容。	មិនមានអ្វីត្រូវចែករំលែកពេលនេះ ...
 砖红色	Brick Red
 确定	អូខេ
 确定要删除此标签吗？	Are you sure you want to delete this tag?
@@ -11985,6 +11994,7 @@ PowerShell 文件	PowerShell files
 类型	ជួរឈរប្រភេទធាតុ
 粉鸢尾花色	Iris Pastel
 粘贴	បិទភ្ជាប់
+粘贴为快捷方式	បិទភ្ជាប់ផ្លូវកាត់
 粘贴到选中的文件夹	Paste to selected folder
 系统	ប្រព័ន្ធ
 红色	Red
@@ -12014,9 +12024,6 @@ PowerShell 文件	PowerShell files
 要以管理员身份继续吗？	Would you like to continue as administrator?
 要改为在桌面上创建快捷方式吗？	Would you like to create the shortcut on the desktop instead?
 解压	Extract
-解压 	Extract 
-解压到当前文件夹	Extract here
-解压文件	Extract files
 解压文件到	Extract archive
 设为默认	កំណត់ជាបុរេជម្រើស
 设置	ការកំណត់
@@ -12073,6 +12080,7 @@ PowerShell 文件	PowerShell files
 1 小时前	1시간 전
 1 秒前	1초 전
 Git 错误	Git 오류
+GitHub 仓库	GitHub 저장소
 PowerShell 文件	PowerShell files
 {0, plural, other {将删除 # 个项目}}	{0, plural, other {항목 #개가 삭제됩니다}}
 {0, plural, other {文件名冲突}}	{0, plural, other {파일 이름}} 중복
@@ -12126,6 +12134,7 @@ PowerShell 文件	PowerShell files
 全部打开	모두 열기
 全部播放	모두 재생
 共享	공유
+共享项目失败	항목 공유에 실패했습니다
 关于	정보
 关闭	닫기
 关闭所有标签页	모든 탭 닫기
@@ -12142,7 +12151,6 @@ PowerShell 文件	PowerShell files
 列表	목록
 列视图	열
 创建	만들기
-创建 zip 压缩文件	ZIP 파일로 압축하기
 创建分支	브랜치 생성
 创建快捷方式	바로 가기를 생성합니다
 创建新标签	새 태그 만들기
@@ -12167,8 +12175,6 @@ PowerShell 文件	PowerShell files
 十进制	Decimal
 升序	상승하는
 卡片	카드
-压缩	Archive
-压缩 	Archive 
 压缩文件	Archive files
 压缩文件密码	압축 파일 비밀번호
 原始文件夹	원본 폴더
@@ -12254,6 +12260,8 @@ PowerShell 文件	PowerShell files
 将{0, plural, other {#个项目}}复制到“{1}”时出错	"{1}" 로 ​{0, plural, other {# 개 항목}}을 복사하는 중 오류가 발생했습니다
 将{0, plural, other {#个项目}}移动到“{1}”时出错	Error moving {0, plural, one {# item} other {# items}} to "{1}"
 将“{0}”解压缩到“{1}”时出错	"{0}"을(를) "{1}"에 압축 해제하는 중 오류가 발생했습니다
+将共享你选择的项目	선택한 항목이 공유됩니다
+将共享已选项目	선택한 항목이 공유됩니다
 将文件和文件夹一同排序	파일과 폴더를 함께 정렬
 将此操作应用到所有冲突项	모든 항목에 적용
 居中	가운데
@@ -12353,13 +12361,11 @@ PowerShell 文件	PowerShell files
 显示“用选中的项目创建文件夹”选项	'선택한 항목으로 폴더 생성' 옵션 표시
 显示“编辑文件标签”	'태그 편집' 표시
 显示以英文句点 (.) 开头的文件	온점(.)으로 시작하는 파일 표시
-显示压缩选项	압축 옵션 보기
 显示受保护的系统文件	보호된 시스템 파일 표시
 显示工具栏	도구 모음 표시
 显示状态中心按钮	Show status center button
 显示状态栏	Show status bar
 显示缩略图	이미지 표지 표시
-智能解压	여기에 압축 해제 (스마트)
 暗灰色	어두운 회색
 更多选项...	추가 옵션...
 替换已有的项目	기존 항목으로 대체하기
@@ -12374,6 +12380,8 @@ PowerShell 文件	PowerShell files
 标签操作菜单	탭 동작 메뉴
 格式化	포맷
 正在从“{1}”中删除{0, plural, other {#个项目}}	Deleting {0, plural, one {# item} other {# items}} from "{1}"
+正在共享 {0}	{0} 공유
+正在共享 {0} {1}	{0} {1} 항목 공유
 正在发现项目...	항목 찾는 중...
 正在取消	취소 중
 正在处理项目...	항목 처리 중...
@@ -12410,6 +12418,7 @@ PowerShell 文件	PowerShell files
 现在	지금
 生成新名称	새 이름 생성
 用选中的项目创建文件夹	선택한 항목으로 폴더 생성
+目前没有可共享的内容。	공유할 항목이 없습니다...
 砖红色	벽돌
 确定	확인
 确定要删除此标签吗？	정말 이 태그를 삭제 하시겠습니까?
@@ -12421,6 +12430,7 @@ PowerShell 文件	PowerShell files
 类型	항목 유형 열
 粉鸢尾花色	파스텔 아이리스
 粘贴	붙여 넣기
+粘贴为快捷方式	바로 가기 붙여 넣기
 粘贴到选中的文件夹	선택한 폴더에 붙여넣기
 系统	시스템
 红色	빨강
@@ -12450,9 +12460,6 @@ PowerShell 文件	PowerShell files
 要以管理员身份继续吗？	관리자 권한으로 계속하시겠습니까?
 要改为在桌面上创建快捷方式吗？	대신 바탕 화면에 바로 가기를 만드시겠습니까?
 解压	압축 해제
-解压 	압축 해제 
-解压到当前文件夹	여기에 압축 해제
-解压文件	파일 압축 해제
 解压文件到	압축 풀기
 设为默认	기본으로 지정
 设置	설정
@@ -12509,6 +12516,7 @@ PowerShell 文件	PowerShell files
 1 小时前	prieš 1 val
 1 秒前	prieš 1 sekundę
 Git 错误	â€žGitâ€œ klaida
+GitHub 仓库	â€žGitHubâ€œ saugykla
 PowerShell 文件	PowerShell files
 {0, plural, other {将删除 # 个项目}}	{0, plural, one {Bus ištrintas vienas elementas} other {Bus ištrinta # elementų}}
 {0, plural, other {文件名冲突}}	Conflicting {0, plural, one {failo pavadinimas} other {failų pavadinimai}}
@@ -12562,6 +12570,7 @@ PowerShell 文件	PowerShell files
 全部打开	Atidaryti visus
 全部播放	Play All
 共享	Bendrinti
+共享项目失败	Nepavyko bendrinti elementų
 关于	Apie
 关闭	Uždaryti
 关闭所有标签页	Uždarykite visus skirtukus
@@ -12578,7 +12587,6 @@ PowerShell 文件	PowerShell files
 列表	Sąrašas
 列视图	Stulpeliai
 创建	Sukurti
-创建 zip 压缩文件	Sukurti zip archyvą
 创建分支	Sukurti filialą
 创建快捷方式	Sukuria nuorodÄ…
 创建新标签	Sukurti naują žymą
@@ -12603,8 +12611,6 @@ PowerShell 文件	PowerShell files
 十进制	Dešimtainė
 升序	DidÄ—janÄia tvarka
 卡片	Kortelės
-压缩	Archive
-压缩 	Archive 
 压缩文件	Archive files
 压缩文件密码	Archyvuoti slaptažodį
 原始文件夹	Originalus aplankas
@@ -12690,6 +12696,8 @@ PowerShell 文件	PowerShell files
 将{0, plural, other {#个项目}}复制到“{1}”时出错	Error copying {0, plural, one {# item} other {# items}} to "{1}"
 将{0, plural, other {#个项目}}移动到“{1}”时出错	Error moving {0, plural, one {# item} other {# items}} to "{1}"
 将“{0}”解压缩到“{1}”时出错	Klaida išskleidžiant „{1}“ į „{1}“
+将共享你选择的项目	Jūsų pasirinkti elementai bus bendrinami
+将共享已选项目	Pasirinktas elementas bus bendrinamas
 将文件和文件夹一同排序	Rūšiuoti failus ir aplankus kartu
 将此操作应用到所有冲突项	Taikykite šį veiksmą visiems nesuderinamiems elementams
 居中	centras
@@ -12789,13 +12797,11 @@ PowerShell 文件	PowerShell files
 显示“用选中的项目创建文件夹”选项	Rodyti parinktį sukurti aplanką su pasirinkimu
 显示“编辑文件标签”	Rodyti redagavimo žymas
 显示以英文句点 (.) 开头的文件	Rodyti taÅ¡kinius failus
-显示压缩选项	Rodyti suspaudimo parinktis
 显示受保护的系统文件	Rodyti apsaugotus sistemos failus
 显示工具栏	Rodyti įrankių juostą
 显示状态中心按钮	Rodyti būsenos centrinį mygtuką
 显示状态栏	Rodyti būsenos juostą
 显示缩略图	Rodyti miniatiÅ«ras
-智能解压	Ištraukite čia (išmanusis)
 暗灰色	Pilka Tamsi
 更多选项...	Daugiau parinkÄiÅ³...
 替换已有的项目	Pakeisti esamÄ… elementÄ…
@@ -12810,6 +12816,8 @@ PowerShell 文件	PowerShell files
 标签操作菜单	Skirtuko veiksmų meniu
 格式化	Formatas
 正在从“{1}”中删除{0, plural, other {#个项目}}	Deleting {0, plural, one {# prekė} other {# prekės}} iš "{1}"
+正在共享 {0}	Bendrinimas {0}
+正在共享 {0} {1}	Bendrinimas {1} {1}
 正在发现项目...	Atrandami daiktai...
 正在取消	Atšaukiamas
 正在处理项目...	Apdorojami elementai...
@@ -12846,6 +12854,7 @@ PowerShell 文件	PowerShell files
 现在	Dabar
 生成新名称	Sukurti naują pavadinimą
 用选中的项目创建文件夹	Sukurkite aplanką su pasirinkimu
+目前没有可共享的内容。	Šiuo metu nėra kuo dalintis...
 砖红色	Plytų raudona
 确定	Gerai/Supratau
 确定要删除此标签吗？	Ar tikrai norite ištrinti šią žymą?
@@ -12857,6 +12866,7 @@ PowerShell 文件	PowerShell files
 类型	Elemento tipo stulpelis
 粉鸢尾花色	Iris Pastelė
 粘贴	Ä®klijuoti
+粘贴为快捷方式	Ä®klijuoti nuorodÄ…
 粘贴到选中的文件夹	Įklijuoti į pasirinktą aplanką
 系统	Sistema
 红色	Raudona/-s
@@ -12886,9 +12896,6 @@ PowerShell 文件	PowerShell files
 要以管理员身份继续吗？	Ar norėtumėte toliau dirbti administratoriumi?
 要改为在桌面上创建快捷方式吗？	Ar norėtumėte sukurti spartųjį klavišą darbalaukyje?
 解压	IÅ¡skleisti
-解压 	IÅ¡skleisti 
-解压到当前文件夹	IÅ¡skleisti Äia
-解压文件	IÅ¡skleisti failus
 解压文件到	Išskleisti archyvą
 设为默认	Nustatyti kaip numatytąjį
 设置	Nustatymai
@@ -12945,6 +12952,7 @@ PowerShell 文件	PowerShell files
 1 小时前	1 hour ago
 1 秒前	1 second ago
 Git 错误	Git error
+GitHub 仓库	Izveidot GitHub krātuvi
 PowerShell 文件	PowerShell files
 {0, plural, other {将删除 # 个项目}}	{0, plural, one {One item will be deleted} other {# items will be deleted}}
 {0, plural, other {文件名冲突}}	Conflicting {0, plural, one {file name} other {file names}}
@@ -12998,6 +13006,7 @@ PowerShell 文件	PowerShell files
 全部打开	Open all
 全部播放	Play All
 共享	Kopīgot
+共享项目失败	Failed to share items
 关于	Par
 关闭	Aizvērt
 关闭所有标签页	Close all tabs
@@ -13014,7 +13023,6 @@ PowerShell 文件	PowerShell files
 列表	List
 列视图	Kolonnas
 创建	Izveidot
-创建 zip 压缩文件	Create zip archive
 创建分支	Create branch
 创建快捷方式	Izveidot saīsni
 创建新标签	Create new tag
@@ -13039,8 +13047,6 @@ PowerShell 文件	PowerShell files
 十进制	Decimal
 升序	Augošā secībā
 卡片	Cards
-压缩	Archive
-压缩 	Archive 
 压缩文件	Archive files
 压缩文件密码	Arhīva parole
 原始文件夹	Original folder
@@ -13126,6 +13132,8 @@ PowerShell 文件	PowerShell files
 将{0, plural, other {#个项目}}复制到“{1}”时出错	Error copying {0, plural, one {# item} other {# items}} to "{1}"
 将{0, plural, other {#个项目}}移动到“{1}”时出错	Error moving {0, plural, one {# item} other {# items}} to "{1}"
 将“{0}”解压缩到“{1}”时出错	Error extracting "{0}" to "{1}"
+将共享你选择的项目	Atlasītie vienumi tiks koplietoti
+将共享已选项目	Atlasītais vienums tiks koplietots
 将文件和文件夹一同排序	Sort files and folders together
 将此操作应用到所有冲突项	Apply this action to all conflicting items
 居中	Center
@@ -13225,13 +13233,11 @@ PowerShell 文件	PowerShell files
 显示“用选中的项目创建文件夹”选项	Show option to create folder with selection
 显示“编辑文件标签”	Show edit tags flyout
 显示以英文句点 (.) 开头的文件	Show dot files
-显示压缩选项	Show compression options
 显示受保护的系统文件	Rādīt sistēmas aizsargātos failus
 显示工具栏	Show toolbar
 显示状态中心按钮	Show status center button
 显示状态栏	Show status bar
 显示缩略图	Rādīt sīktēlus
-智能解压	Extract here (Smart)
 暗灰色	Gray Dark
 更多选项...	Papildu opcijas...
 替换已有的项目	Aizvietot esošo vienumu
@@ -13246,6 +13252,8 @@ PowerShell 文件	PowerShell files
 标签操作菜单	Tab actions menu
 格式化	Formāts
 正在从“{1}”中删除{0, plural, other {#个项目}}	Deleting {0, plural, one {# item} other {# items}} from "{1}"
+正在共享 {0}	Kopīgo {0}
+正在共享 {0} {1}	Kopīgo {0} {1}
 正在发现项目...	Discovering items...
 正在取消	Canceling
 正在处理项目...	Processing items...
@@ -13282,6 +13290,7 @@ PowerShell 文件	PowerShell files
 现在	Tagad
 生成新名称	Ģenerēt jaunu nosaukumu
 用选中的项目创建文件夹	Create folder with selection
+目前没有可共享的内容。	Pašlaik šeit nav nekā koplietojama...
 砖红色	Brick Red
 确定	OK
 确定要删除此标签吗？	Are you sure you want to delete this tag?
@@ -13293,6 +13302,7 @@ PowerShell 文件	PowerShell files
 类型	Vienuma tipa kolonna
 粉鸢尾花色	Iris Pastel
 粘贴	Paste
+粘贴为快捷方式	Paste shortcut
 粘贴到选中的文件夹	Paste to selected folder
 系统	Sistēma
 红色	Red
@@ -13322,9 +13332,6 @@ PowerShell 文件	PowerShell files
 要以管理员身份继续吗？	Vai vēlaties turpināt kā administrators?
 要改为在桌面上创建快捷方式吗？	Vēlies izveidot saīsni uz darbavirsmas?
 解压	Izvērst
-解压 	Izvērst 
-解压到当前文件夹	Izvilkt šeit
-解压文件	Izvilkt failus
 解压文件到	Extract archive
 设为默认	Iestatīt kā noklusējumu
 设置	Iestatījumi
@@ -13381,6 +13388,7 @@ PowerShell 文件	PowerShell files
 1 小时前	1 jam yang lalu
 1 秒前	1 saat yang lalu
 Git 错误	Git error
+GitHub 仓库	Repositori GitHub
 PowerShell 文件	PowerShell files
 {0, plural, other {将删除 # 个项目}}	{0, plural, one {One item will be deleted} other {# items will be deleted}}
 {0, plural, other {文件名冲突}}	Conflicting {0, plural, one {file name} other {file names}}
@@ -13434,6 +13442,7 @@ PowerShell 文件	PowerShell files
 全部打开	Open all
 全部播放	Play All
 共享	Kongsi
+共享项目失败	Failed to share items
 关于	Tentang
 关闭	Close
 关闭所有标签页	Close all tabs
@@ -13450,7 +13459,6 @@ PowerShell 文件	PowerShell files
 列表	Senarai
 列视图	Kolum
 创建	Create
-创建 zip 压缩文件	Create zip archive
 创建分支	Create branch
 创建快捷方式	Creates a shortcut
 创建新标签	Create new tag
@@ -13475,8 +13483,6 @@ PowerShell 文件	PowerShell files
 十进制	Decimal
 升序	Menaik
 卡片	Cards
-压缩	Archive
-压缩 	Archive 
 压缩文件	Archive files
 压缩文件密码	Archive password
 原始文件夹	Folder asal
@@ -13562,6 +13568,8 @@ PowerShell 文件	PowerShell files
 将{0, plural, other {#个项目}}复制到“{1}”时出错	Error copying {0, plural, one {# item} other {# items}} to "{1}"
 将{0, plural, other {#个项目}}移动到“{1}”时出错	Error moving {0, plural, one {# item} other {# items}} to "{1}"
 将“{0}”解压缩到“{1}”时出错	Error extracting "{0}" to "{1}"
+将共享你选择的项目	Item yang anda pilih akan dikongsi
+将共享已选项目	Item yang dipilih akan dikongsi
 将文件和文件夹一同排序	Isih fail dan folder bersama
 将此操作应用到所有冲突项	Apply this action to all conflicting items
 居中	Tengah
@@ -13661,13 +13669,11 @@ PowerShell 文件	PowerShell files
 显示“用选中的项目创建文件夹”选项	Tunjukkan pilihan untuk buat folder dengan pilihan
 显示“编辑文件标签”	Tunjukkan panel sunting tag
 显示以英文句点 (.) 开头的文件	Show dot files
-显示压缩选项	Tunjukkan pilihan pemampatan
 显示受保护的系统文件	Paparkan fail sistem yang dilindungi
 显示工具栏	Show toolbar
 显示状态中心按钮	Show status center button
 显示状态栏	Show status bar
 显示缩略图	Show thumbnails
-智能解压	Ekstrak di sini (Pintar)
 暗灰色	Kelabu Gelap
 更多选项...	More options...
 替换已有的项目	Gantikan item yang sedia ada
@@ -13682,6 +13688,8 @@ PowerShell 文件	PowerShell files
 标签操作菜单	Tab actions menu
 格式化	Format
 正在从“{1}”中删除{0, plural, other {#个项目}}	Deleting {0, plural, one {# item} other {# items}} from "{1}"
+正在共享 {0}	Berkongsi {0}
+正在共享 {0} {1}	Berkongsi {0} {1}
 正在发现项目...	Discovering items...
 正在取消	Canceling
 正在处理项目...	Processing items...
@@ -13718,6 +13726,7 @@ PowerShell 文件	PowerShell files
 现在	Sekarang
 生成新名称	Generate new name
 用选中的项目创建文件夹	Cipta folder dengan pilihan
+目前没有可共享的内容。	Tiada apa-apa untuk dikongsi sekarang...
 砖红色	Merah Batu
 确定	OK
 确定要删除此标签吗？	Are you sure you want to delete this tag?
@@ -13729,6 +13738,7 @@ PowerShell 文件	PowerShell files
 类型	Item type column
 粉鸢尾花色	Pastel Iris
 粘贴	Tampal
+粘贴为快捷方式	Tampal pintasan
 粘贴到选中的文件夹	Paste to selected folder
 系统	Sistem
 红色	Merah
@@ -13758,9 +13768,6 @@ PowerShell 文件	PowerShell files
 要以管理员身份继续吗？	Would you like to continue as administrator?
 要改为在桌面上创建快捷方式吗？	Would you like to create the shortcut on the desktop instead?
 解压	Extract
-解压 	Extract 
-解压到当前文件夹	Ekstrak di sini
-解压文件	Ekstrak fail
 解压文件到	Extract archive
 设为默认	Set as default
 设置	Tetapan
@@ -13817,6 +13824,7 @@ PowerShell 文件	PowerShell files
 1 小时前	1 time siden
 1 秒前	1 sekund siden
 Git 错误	Feil i Git
+GitHub 仓库	GitHub repository
 PowerShell 文件	PowerShell files
 {0, plural, other {将删除 # 个项目}}	{0, plural, one {Ett element vil bli slettet} other {# elementer vil bli slettet}}
 {0, plural, other {文件名冲突}}	Conflicting {0, plural, one {file name} other {file names}}
@@ -13870,6 +13878,7 @@ PowerShell 文件	PowerShell files
 全部打开	Åpne alle sider
 全部播放	Play All
 共享	Del
+共享项目失败	Kunne ikke dele elementer
 关于	Om
 关闭	Lukk
 关闭所有标签页	Lukk alle faner
@@ -13886,7 +13895,6 @@ PowerShell 文件	PowerShell files
 列表	Liste
 列视图	Kolonner
 创建	Opprett
-创建 zip 压缩文件	Create zip archive
 创建分支	Opprett gren
 创建快捷方式	Oppretter en snarvei
 创建新标签	Opprett ny tagg
@@ -13911,8 +13919,6 @@ PowerShell 文件	PowerShell files
 十进制	Decimal
 升序	Stigende
 卡片	Cards
-压缩	Archive
-压缩 	Archive 
 压缩文件	Archive files
 压缩文件密码	Arkivpassord
 原始文件夹	Opprinnelig mappe
@@ -13998,6 +14004,8 @@ PowerShell 文件	PowerShell files
 将{0, plural, other {#个项目}}复制到“{1}”时出错	Error copying {0, plural, one {# item} other {# items}} to "{1}"
 将{0, plural, other {#个项目}}移动到“{1}”时出错	Error moving {0, plural, one {# item} other {# items}} to "{1}"
 将“{0}”解压缩到“{1}”时出错	Feil ved utpakking "{0}" til "{1}"
+将共享你选择的项目	Elementene du har valgt vil bli delt
+将共享已选项目	Elementet du har valgt vil bli delt
 将文件和文件夹一同排序	Sorter filer og mapper sammen
 将此操作应用到所有冲突项	Bruk handlingen for alle konflikter
 居中	Midtstilt
@@ -14097,13 +14105,11 @@ PowerShell 文件	PowerShell files
 显示“用选中的项目创建文件夹”选项	Vis alternativet for å opprette mappe med utvalg
 显示“编辑文件标签”	Vis menyen for redigering av merkelapper
 显示以英文句点 (.) 开头的文件	Show dot files
-显示压缩选项	Vis komprimeringsalternativer
 显示受保护的系统文件	Vis beskyttede systemfiler
 显示工具栏	Show toolbar
 显示状态中心按钮	Show status center button
 显示状态栏	Show status bar
 显示缩略图	Vis miniatyrbilder
-智能解压	Pakk ut her (mart)
 暗灰色	Grå mørk
 更多选项...	Flere alternativer...
 替换已有的项目	Erstatt eksisterende element
@@ -14118,6 +14124,8 @@ PowerShell 文件	PowerShell files
 标签操作菜单	Tab actions menu
 格式化	Format
 正在从“{1}”中删除{0, plural, other {#个项目}}	Deleting {0, plural, one {# item} other {# items}} from "{1}"
+正在共享 {0}	Deler {0}
+正在共享 {0} {1}	Deler {0} {1}
 正在发现项目...	Discovering items...
 正在取消	Avbryter
 正在处理项目...	Behandler elementer...
@@ -14154,6 +14162,7 @@ PowerShell 文件	PowerShell files
 现在	Nå
 生成新名称	Generer nytt navn
 用选中的项目创建文件夹	Opprett mappe med merkede elementer
+目前没有可共享的内容。	Det er ingenting å dele for øyeblikket...
 砖红色	Murstein rød
 确定	OK
 确定要删除此标签吗？	Er du sikker på at du vil slette denne taggen?
@@ -14165,6 +14174,7 @@ PowerShell 文件	PowerShell files
 类型	Elementtype-kolonne
 粉鸢尾花色	Iris Pastel
 粘贴	Lim inn
+粘贴为快捷方式	Lim inn snarvei
 粘贴到选中的文件夹	Lim inn i valgt mappe
 系统	System
 红色	Rød
@@ -14194,9 +14204,6 @@ PowerShell 文件	PowerShell files
 要以管理员身份继续吗？	Vil du fortsette som administrator?
 要改为在桌面上创建快捷方式吗？	Vil du opprette snarveien på skrivebordet i stedet?
 解压	Pakk ut
-解压 	Pakk ut 
-解压到当前文件夹	Pakk ut her
-解压文件	Pakk ut filer
 解压文件到	Pakk ut arkiv
 设为默认	Angi som standard
 设置	Innstillinger
@@ -14253,6 +14260,7 @@ PowerShell 文件	PowerShell files
 1 小时前	1 uur geleden
 1 秒前	1 seconde geleden
 Git 错误	Git fout
+GitHub 仓库	GitHub Repository
 PowerShell 文件	PowerShell files
 {0, plural, other {将删除 # 个项目}}	{0, plural, one {Eén item wordt verwijderd} other {# items worden verwijderd}}
 {0, plural, other {文件名冲突}}	Conflicterende {0, plural, one {bestandsnaam} other {bestandsnamen}}
@@ -14306,6 +14314,7 @@ PowerShell 文件	PowerShell files
 全部打开	Open alles
 全部播放	Play All
 共享	Delen
+共享项目失败	Delen van items mislukt
 关于	Over
 关闭	Sluiten
 关闭所有标签页	Alle tabbladen sluiten
@@ -14322,7 +14331,6 @@ PowerShell 文件	PowerShell files
 列表	Lijst
 列视图	Kolommen
 创建	Maken
-创建 zip 压缩文件	Zip-archief aanmaken
 创建分支	Maak branch aan
 创建快捷方式	Maak een snelkoppeling
 创建新标签	Nieuw label aanmaken
@@ -14347,8 +14355,6 @@ PowerShell 文件	PowerShell files
 十进制	Decimaal
 升序	Oplopend
 卡片	Kaarten
-压缩	Archief
-压缩 	Archief 
 压缩文件	Archive files
 压缩文件密码	Archief wachtwoord
 原始文件夹	Oorspronkelijke map
@@ -14434,6 +14440,8 @@ PowerShell 文件	PowerShell files
 将{0, plural, other {#个项目}}复制到“{1}”时出错	Error copying {0, plural, one {# item} other {# items}} to "{1}"
 将{0, plural, other {#个项目}}移动到“{1}”时出错	Error moving {0, plural, one {# item} other {# items}} to "{1}"
 将“{0}”解压缩到“{1}”时出错	Fout tijdens uitpakken "{0}" naar "{1}"
+将共享你选择的项目	De geselecteerde items worden gedeeld
+将共享已选项目	Het geselecteerde item wordt gedeeld
 将文件和文件夹一同排序	Bestanden en mappen samen sorteren
 将此操作应用到所有冲突项	Deze actie toepassen op alle conflicterende items
 居中	Gecentreerd
@@ -14533,13 +14541,11 @@ PowerShell 文件	PowerShell files
 显示“用选中的项目创建文件夹”选项	Optie weergeven om map aan te maken met selectie
 显示“编辑文件标签”	Bewerk labels menu weergeven
 显示以英文句点 (.) 开头的文件	Dot files weergeven
-显示压缩选项	Compressie opties weergeven
 显示受保护的系统文件	Beveiligde systeembestanden weergeven
 显示工具栏	Werkbalk weergeven
 显示状态中心按钮	Statuscentrum knop weergeven
 显示状态栏	Statusbalk weergeven
 显示缩略图	Miniaturen weergeven
-智能解压	Hier uitpakken (slim)
 暗灰色	Donker grijs
 更多选项...	Meer opties...
 替换已有的项目	Bestaand item vervangen
@@ -14554,6 +14560,8 @@ PowerShell 文件	PowerShell files
 标签操作菜单	Tabblad acties-menu
 格式化	Formaat
 正在从“{1}”中删除{0, plural, other {#个项目}}	Deleting {0, plural, one {# item} other {# items}} from "{1}"
+正在共享 {0}	{0} delen
+正在共享 {0} {1}	{0} {1} delen
 正在发现项目...	Discovering items...
 正在取消	Annuleren
 正在处理项目...	Items verwerken...
@@ -14590,6 +14598,7 @@ PowerShell 文件	PowerShell files
 现在	Nu
 生成新名称	Nieuwe naam genereren
 用选中的项目创建文件夹	Maak map met selectie
+目前没有可共享的内容。	Er valt op dit moment niets te delen...
 砖红色	Baksteen rood
 确定	Oké
 确定要删除此标签吗？	Weet je zeker dat je dit label wilt verwijderen?
@@ -14601,6 +14610,7 @@ PowerShell 文件	PowerShell files
 类型	Itemtype kolom
 粉鸢尾花色	Iris Pastel
 粘贴	Plakken
+粘贴为快捷方式	Snelkoppeling plakken
 粘贴到选中的文件夹	Plakken naar geselecteerde map
 系统	Systeem
 红色	Rood
@@ -14630,9 +14640,6 @@ PowerShell 文件	PowerShell files
 要以管理员身份继续吗？	Wilt u doorgaan als administrator?
 要改为在桌面上创建快捷方式吗？	Wil je in plaats daarvan de snelkoppeling op het bureaublad maken?
 解压	Uitpakken
-解压 	Uitpakken 
-解压到当前文件夹	Hier uitpakken
-解压文件	Bestanden uitpakken
 解压文件到	Archief uitpakken
 设为默认	Instellen als standaard
 设置	Instellingen
@@ -14689,6 +14696,7 @@ PowerShell 文件	PowerShell files
 1 小时前	1 godzinę temu
 1 秒前	1 sekundę temu
 Git 错误	Błąd Git
+GitHub 仓库	Repozytorium GitHub
 PowerShell 文件	Pliki PowerShell
 {0, plural, other {将删除 # 个项目}}	{0, plural, one {# element zostanie usunięty} few {# elementy zostaną usunięte} many {# elementów zostanie usuniętych} other {# elementów zostanie usuniętych}}
 {0, plural, other {文件名冲突}}	Konflikt {0, plural, one {nazwy pliku} few {nazw plików} many {nazw plików} other {nazw plików}}
@@ -14742,6 +14750,7 @@ PowerShell 文件	Pliki PowerShell
 全部打开	Otwórz wszystko
 全部播放	Odtwórz wszystkie
 共享	Udostępnij
+共享项目失败	Udostępnianie nie powiodło się
 关于	O aplikacji
 关闭	Zamknij
 关闭所有标签页	Zamknij wszystkie karty
@@ -14758,7 +14767,6 @@ PowerShell 文件	Pliki PowerShell
 列表	Lista
 列视图	Kolumny
 创建	Utwórz
-创建 zip 压缩文件	Utwórz archiwum zip
 创建分支	Stwórz gałąź
 创建快捷方式	Utwórz skrót
 创建新标签	Utwórz nowy tag
@@ -14783,8 +14791,6 @@ PowerShell 文件	Pliki PowerShell
 十进制	Dziesiętny
 升序	Rosnąco
 卡片	Karty
-压缩	Archiwum
-压缩 	Archiwum 
 压缩文件	Pliki archiwalne
 压缩文件密码	Hasło do archiwum
 原始文件夹	Oryginalny folder
@@ -14870,6 +14876,8 @@ PowerShell 文件	Pliki PowerShell
 将{0, plural, other {#个项目}}复制到“{1}”时出错	Błąd kopiowania {0, plural, one {# elementu} few {# elementów} many {# elementów} other {# elementów}} do "{1}"
 将{0, plural, other {#个项目}}移动到“{1}”时出错	Błąd podczas przenoszenia {0, plural, one {# przedmiotu} few {# przedmiotów} many {# przedmiotów} other {# przedmiotów}} do "{1}"
 将“{0}”解压缩到“{1}”时出错	Błąd wypakowywania "{0}" do "{1}"
+将共享你选择的项目	Elementy, które zaznaczyłeś, zostaną udostępnione
+将共享已选项目	Zaznaczony element zostanie udostępniony
 将文件和文件夹一同排序	Posortuj razem pliki i foldery
 将此操作应用到所有冲突项	Zastosuj tę akcję do wszystkich sprzecznych elementów
 居中	Środkowy
@@ -14969,13 +14977,11 @@ PowerShell 文件	Pliki PowerShell
 显示“用选中的项目创建文件夹”选项	Pokaż opcję tworzenia folderu z zaznaczenia
 显示“编辑文件标签”	Pokaż edycję tagów
 显示以英文句点 (.) 开头的文件	Pokaż pliki rozpoczynające się kropką
-显示压缩选项	Pokaż opcje kompresji
 显示受保护的系统文件	Pokaż chronione pliki systemu
 显示工具栏	Pokaż pasek narzędzi
 显示状态中心按钮	Pokaż przycisk statusu
 显示状态栏	Pokaż pasek statusu
 显示缩略图	Pokaż miniatury
-智能解压	Wypakuj tutaj (Inteligentnie)
 暗灰色	Ciemnoszary
 更多选项...	Więcej opcji...
 替换已有的项目	Zamień istniejący element
@@ -14990,6 +14996,8 @@ PowerShell 文件	Pliki PowerShell
 标签操作菜单	Menu akcji kart
 格式化	Format
 正在从“{1}”中删除{0, plural, other {#个项目}}	Usuwanie {0, plural, one {# elementu} other {# elementów}} z "{1}"
+正在共享 {0}	Udostępnianie {0}
+正在共享 {0} {1}	Udostępnianie {0} {1}
 正在发现项目...	Odkryj przedmioty...
 正在取消	Anulowanie
 正在处理项目...	Przetwarzanie elementów...
@@ -15026,6 +15034,7 @@ PowerShell 文件	Pliki PowerShell
 现在	Teraz
 生成新名称	Wygeneruj nową nazwę
 用选中的项目创建文件夹	Utwórz folder z zaznaczonych
+目前没有可共享的内容。	Obecnie nie ma nic do udostępniania...
 砖红色	Ceglastoczerwony
 确定	OK
 确定要删除此标签吗？	Na pewno chcesz usunąć ten tag?
@@ -15037,6 +15046,7 @@ PowerShell 文件	Pliki PowerShell
 类型	Kolumna typu elementu
 粉鸢尾花色	Lawendowy
 粘贴	Wklej
+粘贴为快捷方式	Wklej skrót
 粘贴到选中的文件夹	Wklej do wybranego folderu
 系统	System
 红色	Czerwony
@@ -15066,9 +15076,6 @@ PowerShell 文件	Pliki PowerShell
 要以管理员身份继续吗？	Czy chcesz kontynuować jako administator?
 要改为在桌面上创建快捷方式吗？	Czy chcesz zamiast tego utworzyć skrót na pulpicie?
 解压	Wypakuj
-解压 	Wypakuj 
-解压到当前文件夹	Wypakuj tutaj
-解压文件	Wypakuj pliki
 解压文件到	Rozpakuj archiwum
 设为默认	Ustaw jako domyślną
 设置	Ustawienia
@@ -15125,6 +15132,7 @@ PowerShell 文件	Pliki PowerShell
 1 小时前	1 hora atrás
 1 秒前	1 segundo atrás
 Git 错误	Erro do Git
+GitHub 仓库	Repositório do GitHub
 PowerShell 文件	Arquivos do PowerShell
 {0, plural, other {将删除 # 个项目}}	{0, plural, one {Um item será excluído} other {# itens serão excluídos}}
 {0, plural, other {文件名冲突}}	{0, plural, one {nome de arquivo} other {nomes de arquivos}} com conflito
@@ -15178,6 +15186,7 @@ PowerShell 文件	Arquivos do PowerShell
 全部打开	Abrir todos
 全部播放	Reproduzir tudo
 共享	Compartilhar
+共享项目失败	Falha ao compartilhar itens
 关于	Sobre
 关闭	Fechar
 关闭所有标签页	Fechar todas as abas
@@ -15194,7 +15203,6 @@ PowerShell 文件	Arquivos do PowerShell
 列表	Lista
 列视图	Colunas
 创建	Criar
-创建 zip 压缩文件	Criar arquivo zip
 创建分支	Criar Subdivisão
 创建快捷方式	Cria um atalho
 创建新标签	Criar nova etiqueta
@@ -15219,8 +15227,6 @@ PowerShell 文件	Arquivos do PowerShell
 十进制	Decimal
 升序	Crescente
 卡片	Cartões
-压缩	Arquivo
-压缩 	Arquivo 
 压缩文件	Arquivos compactados
 压缩文件密码	Senha do arquivo
 原始文件夹	Pasta original
@@ -15306,6 +15312,8 @@ PowerShell 文件	Arquivos do PowerShell
 将{0, plural, other {#个项目}}复制到“{1}”时出错	Erro ao copiar {0, plural, one {# item} other {# itens}} para "{1}"
 将{0, plural, other {#个项目}}移动到“{1}”时出错	Erro ao mover {0, plural, one {# item} other {# itens}} para "{1}"
 将“{0}”解压缩到“{1}”时出错	Erro ao extrair "{0}" para "{1}"
+将共享你选择的项目	Os itens selecionados serão compartilhados
+将共享已选项目	O item selecionado será compartilhado
 将文件和文件夹一同排序	Classificar arquivos e pastas juntos
 将此操作应用到所有冲突项	Aplicar esta ação a todos os itens em conflito
 居中	Centralizar
@@ -15405,13 +15413,11 @@ PowerShell 文件	Arquivos do PowerShell
 显示“用选中的项目创建文件夹”选项	Exibir opção para criar uma pasta com a seleção
 显示“编辑文件标签”	Exibir etiquetas de edição de flyout
 显示以英文句点 (.) 开头的文件	Mostrar arquivos com ponto inicial
-显示压缩选项	Exibir opções de compressão
 显示受保护的系统文件	Mostrar arquivos protegidos do sistema
 显示工具栏	Mostrar barra de ferramentas
 显示状态中心按钮	Mostrar botão de status central
 显示状态栏	Mostrar barra de status
 显示缩略图	Mostrar miniaturas
-智能解压	Extraia aqui (Inteligente)
 暗灰色	Cinza Escuro
 更多选项...	Mais opções...
 替换已有的项目	Substituir item existente
@@ -15426,6 +15432,8 @@ PowerShell 文件	Arquivos do PowerShell
 标签操作菜单	Menu de ações de aba
 格式化	Formato
 正在从“{1}”中删除{0, plural, other {#个项目}}	Excluindo {0, plural, one {# item} other {# itens}} de "{1}" "
+正在共享 {0}	Compartilhando {0}
+正在共享 {0} {1}	Compartilhando {0} {1}
 正在发现项目...	Descobrindo itens...
 正在取消	Cancelando
 正在处理项目...	Processando itens...
@@ -15462,6 +15470,7 @@ PowerShell 文件	Arquivos do PowerShell
 现在	Agora
 生成新名称	Gerar novo nome
 用选中的项目创建文件夹	Criar pasta com a seleção
+目前没有可共享的内容。	Não há nada para compartilhar agora...
 砖红色	Vermelho Tijolo
 确定	OK
 确定要删除此标签吗？	Tem certeza de que deseja excluir esta tag?
@@ -15473,6 +15482,7 @@ PowerShell 文件	Arquivos do PowerShell
 类型	Coluna de tipo de item
 粉鸢尾花色	Rainbow "Arco-iris" pastel
 粘贴	Colar
+粘贴为快捷方式	Colar atalho
 粘贴到选中的文件夹	Cola na pasta selecionada
 系统	Sistema
 红色	Vermelho
@@ -15502,9 +15512,6 @@ PowerShell 文件	Arquivos do PowerShell
 要以管理员身份继续吗？	Você gostaria de continuar como administrador?
 要改为在桌面上创建快捷方式吗？	Gostaria de criar o atalho na área de trabalho ao invés disso?
 解压	Extrair
-解压 	Extrair 
-解压到当前文件夹	Extrair aqui
-解压文件	Extrair arquivos
 解压文件到	Extrair arquivo
 设为默认	Definir como padrão
 设置	Configurações
@@ -15561,6 +15568,7 @@ PowerShell 文件	Arquivos do PowerShell
 1 小时前	Há 1 hora
 1 秒前	Há 1 segundo
 Git 错误	Erro Git
+GitHub 仓库	Repositório GitHub
 PowerShell 文件	Ficheiros do PowerShell
 {0, plural, other {将删除 # 个项目}}	{0, plural, one {1 item será eliminado} other {# itens serão eliminados}}
 {0, plural, other {文件名冲突}}	Conflito {0, plural, one {nome de ficheiro} other {nomes de ficheiro}}
@@ -15614,6 +15622,7 @@ PowerShell 文件	Ficheiros do PowerShell
 全部打开	Abrir tudo
 全部播放	Reproduzir tudo
 共享	Partilhar
+共享项目失败	Falha ao partilhar itnes
 关于	Acerca
 关闭	Fechar
 关闭所有标签页	Fechar todos os separadores
@@ -15630,7 +15639,6 @@ PowerShell 文件	Ficheiros do PowerShell
 列表	Lista
 列视图	Colunas
 创建	Criar
-创建 zip 压缩文件	Criar ficheiro ZIP
 创建分支	Criar 'branch'
 创建快捷方式	Cria um atalho
 创建新标签	Criar uma etiqueta
@@ -15655,8 +15663,6 @@ PowerShell 文件	Ficheiros do PowerShell
 十进制	Decimal
 升序	Ascendente
 卡片	Cartões
-压缩	Arquivo
-压缩 	Arquivo 
 压缩文件	Ficheiros compactados
 压缩文件密码	Palavra-passe do ficheiro
 原始文件夹	Pasta original
@@ -15742,6 +15748,8 @@ PowerShell 文件	Ficheiros do PowerShell
 将{0, plural, other {#个项目}}复制到“{1}”时出错	Erro ao copiar {0, plural, one {# item} other {# itens}} para "{1}"
 将{0, plural, other {#个项目}}移动到“{1}”时出错	Erro ao mover {0, plural, one {# item} other {# itens}} para "{1}"
 将“{0}”解压缩到“{1}”时出错	Erro ao extrair "{0}" para "{1}"
+将共享你选择的项目	Os itens selecionados serão partilhados
+将共享已选项目	O item selecionado será partilhado
 将文件和文件夹一同排序	Ordenar ficheiros e pastas em conjunto
 将此操作应用到所有冲突项	Aplicar esta ação a todos os itens em conflito
 居中	Centro
@@ -15841,13 +15849,11 @@ PowerShell 文件	Ficheiros do PowerShell
 显示“用选中的项目创建文件夹”选项	Mostrar opção para criar uma pasta com a seleção
 显示“编辑文件标签”	Mostrar indicador para edição de etiquetas
 显示以英文句点 (.) 开头的文件	Mostrar ficheiros ocultos
-显示压缩选项	Mostrar opções de compressão
 显示受保护的系统文件	Mostrar ficheiros protegidos do sistema operativo
 显示工具栏	Mostrar barra de ferramentas
 显示状态中心按钮	Mostrar botão "Centro de estado"
 显示状态栏	Mostrar barra de estado
 显示缩略图	Mostrar miniaturas
-智能解压	Extrair aqui (inteligente)
 暗灰色	Cinzento escuro
 更多选项...	Mais opções...
 替换已有的项目	Substituir item existente
@@ -15862,6 +15868,8 @@ PowerShell 文件	Ficheiros do PowerShell
 标签操作菜单	Menu de ações em separadores
 格式化	Formatar
 正在从“{1}”中删除{0, plural, other {#个项目}}	A eliminar {0, plural, one {# item} other {# itens}} de "{1}"
+正在共享 {0}	A partilhar {0}
+正在共享 {0} {1}	A partilhar {0} {1}
 正在发现项目...	A procurar itens...
 正在取消	A cancelar...
 正在处理项目...	A processar itens...
@@ -15898,6 +15906,7 @@ PowerShell 文件	Ficheiros do PowerShell
 现在	Agora
 生成新名称	Gerar novo nome
 用选中的项目创建文件夹	Criar pasta com seleção
+目前没有可共享的内容。	Não há nada para partilhar agora...
 砖红色	Tijolo
 确定	OK
 确定要删除此标签吗？	Tem a certeza de que deseja eliminar esta etiqueta?
@@ -15909,6 +15918,7 @@ PowerShell 文件	Ficheiros do PowerShell
 类型	Tipo
 粉鸢尾花色	Pastel
 粘贴	Colar
+粘贴为快捷方式	Colar atalho
 粘贴到选中的文件夹	Colar na pasta selecionada
 系统	Sistema
 红色	Vermelho
@@ -15938,9 +15948,6 @@ PowerShell 文件	Ficheiros do PowerShell
 要以管理员身份继续吗？	Deseja continuar como administrador?
 要改为在桌面上创建快捷方式吗？	Gostaria de criar o atalho na área de trabalho?
 解压	Extrair
-解压 	Extrair 
-解压到当前文件夹	Extrair aqui
-解压文件	Extrair ficheiros
 解压文件到	Selecionar um destino e Extrair Ficheiros
 设为默认	Definir como predefinição
 设置	Definições
@@ -15997,6 +16004,7 @@ PowerShell 文件	Ficheiros do PowerShell
 1 小时前	O oră în urmă
 1 秒前	1 secundă în urmă
 Git 错误	Eroare Git
+GitHub 仓库	Repozitoriu GitHub
 PowerShell 文件	Fișiere PowerShell
 {0, plural, other {将删除 # 个项目}}	{0, plural, one {Un element va fi șters} few {# elemente vor fi șterse} other {# de elemente vor fi șterse}}
 {0, plural, other {文件名冲突}}	{0, plural, one {Nume de fișier} few {Nume de fișiere} other {Nume de fișiere}} în conflict
@@ -16050,6 +16058,7 @@ PowerShell 文件	Fișiere PowerShell
 全部打开	Deschideți-le pe toate
 全部播放	Redare toate
 共享	Partajare
+共享项目失败	Partajarea elementelor a eșuat
 关于	Despre
 关闭	Închidere
 关闭所有标签页	Închideți toate filele
@@ -16066,7 +16075,6 @@ PowerShell 文件	Fișiere PowerShell
 列表	Listă
 列视图	Coloane
 创建	Creare
-创建 zip 压缩文件	Creare arhivă zip
 创建分支	Creare ramură
 创建快捷方式	Creează o comandă rapidă
 创建新标签	Creare etichetă nouă
@@ -16091,8 +16099,6 @@ PowerShell 文件	Fișiere PowerShell
 十进制	Zecimal
 升序	Ascendent
 卡片	Carduri
-压缩	Arhivare
-压缩 	Arhivare 
 压缩文件	Fișiere arhivă
 压缩文件密码	Parolă arhivă
 原始文件夹	Folder original
@@ -16178,6 +16184,8 @@ PowerShell 文件	Fișiere PowerShell
 将{0, plural, other {#个项目}}复制到“{1}”时出错	Eroare la copierea a {0, plural, one {un element} few {# elemente} other {# de elemente}} la „{1}”
 将{0, plural, other {#个项目}}移动到“{1}”时出错	Eroare la mutarea a {0, plural, one {un element} few {# elemente} other {# de elemente}} la „{1}”
 将“{0}”解压缩到“{1}”时出错	Eroare la extragerea „{0}” la „{1}”
+将共享你选择的项目	Elementele pe care le-ați selectat vor fi partajate
+将共享已选项目	Elementul selectat va fi partajat
 将文件和文件夹一同排序	Sortare fișiere și foldere împreună
 将此操作应用到所有冲突项	Aplicați această acțiune tuturor elementelor contradictorii
 居中	Centrat
@@ -16277,13 +16285,11 @@ PowerShell 文件	Fișiere PowerShell
 显示“用选中的项目创建文件夹”选项	Afișați opțiunea pentru a crea un folder cu selecția
 显示“编辑文件标签”	Afișați secțiunea de editare a etichetelor
 显示以英文句点 (.) 开头的文件	Afișare fișiere punct
-显示压缩选项	Afișați opțiunile de comprimare
 显示受保护的系统文件	Afișați fișierele protejate de sistem
 显示工具栏	Afișați bara de instrumente
 显示状态中心按钮	Afișați butonul centru de stare
 显示状态栏	Afișați bara de stare
 显示缩略图	Afișați miniaturi
-智能解压	Extragere aici (Smart)
 暗灰色	Gri Închis
 更多选项...	Mai multe opțiuni...
 替换已有的项目	Înlocuiți elementul existent
@@ -16298,6 +16304,8 @@ PowerShell 文件	Fișiere PowerShell
 标签操作菜单	Meniu acțiuni filă
 格式化	Formatare
 正在从“{1}”中删除{0, plural, other {#个项目}}	{0, plural, one {Se șterge un element} few {Se șterg # elemente} other {Se șterg # de elemente}} de la „{1}”
+正在共享 {0}	Se partajează {0}
+正在共享 {0} {1}	Se partajează {0} {1}
 正在发现项目...	Se descoperă elemente...
 正在取消	Se anulează
 正在处理项目...	Se procesează elementele...
@@ -16334,6 +16342,7 @@ PowerShell 文件	Fișiere PowerShell
 现在	Acum
 生成新名称	Generare nume nou
 用选中的项目创建文件夹	Creare folder cu selecție
+目前没有可共享的内容。	Nu este nimic de partajat acum...
 砖红色	Cărămiziu
 确定	OK
 确定要删除此标签吗？	Sunteți sigur că vreți să ștergeți această etichetă?
@@ -16345,6 +16354,7 @@ PowerShell 文件	Fișiere PowerShell
 类型	Coloană tip element
 粉鸢尾花色	Iris Pastel
 粘贴	Lipire
+粘贴为快捷方式	Lipire comandă rapidă
 粘贴到选中的文件夹	Lipire în folderul selectat
 系统	Sistem
 红色	Roșu
@@ -16374,9 +16384,6 @@ PowerShell 文件	Fișiere PowerShell
 要以管理员身份继续吗？	Doriți să continuați ca administrator?
 要改为在桌面上创建快捷方式吗？	Doriți în schimb să creați o comandă rapidă pe desktop?
 解压	Extragere
-解压 	Extragere 
-解压到当前文件夹	Extragere aici
-解压文件	Extragere fișiere
 解压文件到	Extragere arhivă
 设为默认	Setare ca implicit
 设置	Setări
@@ -16433,6 +16440,7 @@ PowerShell 文件	Fișiere PowerShell
 1 小时前	1 час назад
 1 秒前	1 секунду назад
 Git 错误	Ошибка с Git
+GitHub 仓库	Репозиторий на GitHub
 PowerShell 文件	PowerShell files
 {0, plural, other {将删除 # 个项目}}	{0, plural, one {Один элемент будет удалён} few {# элемента будет удалено} other {# элементов будет удалено}}
 {0, plural, other {文件名冲突}}	Конфликт {0, plural, one {имени файла} other {имён фалов}}
@@ -16486,6 +16494,7 @@ PowerShell 文件	PowerShell files
 全部打开	Открыть все
 全部播放	Воспроизвести все
 共享	Поделиться
+共享项目失败	Не удалось поделиться элементами
 关于	О приложении
 关闭	Закрыть
 关闭所有标签页	Закрыть все вкладки
@@ -16502,7 +16511,6 @@ PowerShell 文件	PowerShell files
 列表	Список
 列视图	Столбцы
 创建	Создать
-创建 zip 压缩文件	Создать zip-архив
 创建分支	Создать ветку
 创建快捷方式	Создать ярлык
 创建新标签	Создать новую метку
@@ -16527,8 +16535,6 @@ PowerShell 文件	PowerShell files
 十进制	Десятичный
 升序	По возрастанию
 卡片	Карточки
-压缩	Archive
-压缩 	Archive 
 压缩文件	Archive files
 压缩文件密码	Пароль архива
 原始文件夹	Исходная папка
@@ -16614,6 +16620,8 @@ PowerShell 文件	PowerShell files
 将{0, plural, other {#个项目}}复制到“{1}”时出错	Ошибка копирования {0, plural, one {# элемента} few {# элементов} many {# элементов} other {# элементов}} до "{1}"
 将{0, plural, other {#个项目}}移动到“{1}”时出错	Ошибка перемещения {0, plural, one {# предмета} few {# предметов} many {# предметов} other {# предметов}} к "{1}"
 将“{0}”解压缩到“{1}”时出错	Ошибка извлечения "{0}" в "{1}"
+将共享你选择的项目	Выбранные Вами элементы будут опубликованы
+将共享已选项目	Выбранный элемент будет опубликован
 将文件和文件夹一同排序	Сортировать файлы и папки вместе
 将此操作应用到所有冲突项	Применить это действие ко всем конфликтующим элементам
 居中	По центру
@@ -16713,13 +16721,11 @@ PowerShell 文件	PowerShell files
 显示“用选中的项目创建文件夹”选项	Показать опцию создания папки из выделенных элементов
 显示“编辑文件标签”	Показать опцию редактирования меток
 显示以英文句点 (.) 开头的文件	Показать dot-файлы
-显示压缩选项	Показать опции сжатия
 显示受保护的系统文件	Показать защищённые системные файлы
 显示工具栏	Показать панель инструментов
 显示状态中心按钮	Показать кнопку статуса центра
 显示状态栏	Показать строку состояния
 显示缩略图	Показать эскизы
-智能解压	Распаковать здесь (Smart)
 暗灰色	Тёмно-серый
 更多选项...	Больше опций...
 替换已有的项目	Заменить существующий элемент
@@ -16734,6 +16740,8 @@ PowerShell 文件	PowerShell files
 标签操作菜单	Меню действий вкладки
 格式化	Форматировать
 正在从“{1}”中删除{0, plural, other {#个项目}}	Удаление {0, plural, one {# элемента} few {# элементов} many {# элементов} other {# элементов}} из "{1}"
+正在共享 {0}	Предоставляется общий доступ к {0}
+正在共享 {0} {1}	Предоставляется общий доступ к {0} {1}
 正在发现项目...	Поиск элементов...
 正在取消	Отмена
 正在处理项目...	Обработка элементов...
@@ -16770,6 +16778,7 @@ PowerShell 文件	PowerShell files
 现在	Сейчас
 生成新名称	Сгенерировать новое имя
 用选中的项目创建文件夹	Создать папку из выделенных элементов
+目前没有可共享的内容。	Сейчас нет ничего, что можно было бы опубликовать...
 砖红色	Кирпично-красный
 确定	Ок
 确定要删除此标签吗？	Вы уверены, что хотите удалить эту метку?
@@ -16781,6 +16790,7 @@ PowerShell 文件	PowerShell files
 类型	Тип
 粉鸢尾花色	Мягкий фиолетовый
 粘贴	Вставить
+粘贴为快捷方式	Вставить ярлык
 粘贴到选中的文件夹	Вставить в выбранную папку
 系统	Система
 红色	Красный
@@ -16810,9 +16820,6 @@ PowerShell 文件	PowerShell files
 要以管理员身份继续吗？	Хотели бы Вы продолжить работу в качестве администратора?
 要改为在桌面上创建快捷方式吗？	Хотите вместо этого создать ярлык на рабочем столе?
 解压	Извлечь
-解压 	Извлечь 
-解压到当前文件夹	Извлечь сюда
-解压文件	Извлечь файлы
 解压文件到	Распаковать архив
 设为默认	Установить по умолчанию
 设置	Настройки
@@ -16869,6 +16876,7 @@ PowerShell 文件	PowerShell files
 1 小时前	Pred 1 hodinou
 1 秒前	Pred 1 sekundou
 Git 错误	Git chyba
+GitHub 仓库	GitHub repozitár
 PowerShell 文件	PowerShell files
 {0, plural, other {将删除 # 个项目}}	{0, plural, one {Jedna položka bude zmazaná} few {# položky budou zmazané} other {# položiek bude zmazaných}}
 {0, plural, other {文件名冲突}}	Conflicting {0, plural, one {file name} other {file names}}
@@ -16922,6 +16930,7 @@ PowerShell 文件	PowerShell files
 全部打开	Otvoriť všetko
 全部播放	Play All
 共享	Zdielať
+共享项目失败	Položky sa nepodarilo zdieľať
 关于	O aplikácii
 关闭	Zavrieť
 关闭所有标签页	Zavrieť všetky karty
@@ -16938,7 +16947,6 @@ PowerShell 文件	PowerShell files
 列表	Zoznam
 列视图	Stĺpce
 创建	Vytvoriť
-创建 zip 压缩文件	Create zip archive
 创建分支	Vytvoriť vetvu
 创建快捷方式	Vytvorí odkaz
 创建新标签	Vytvoriť novú značku
@@ -16963,8 +16971,6 @@ PowerShell 文件	PowerShell files
 十进制	Decimal
 升序	Vzostupne
 卡片	Karty
-压缩	Archive
-压缩 	Archive 
 压缩文件	Archive files
 压缩文件密码	Heslo archívu
 原始文件夹	Pôvodný priečinok
@@ -17050,6 +17056,8 @@ PowerShell 文件	PowerShell files
 将{0, plural, other {#个项目}}复制到“{1}”时出错	Error copying {0, plural, one {# item} other {# items}} to "{1}"
 将{0, plural, other {#个项目}}移动到“{1}”时出错	Error moving {0, plural, one {# item} other {# items}} to "{1}"
 将“{0}”解压缩到“{1}”时出错	Error extracting "{0}" to "{1}"
+将共享你选择的项目	Vybrané položky budú zdielané
+将共享已选项目	Vybraná položka bude zdielaná
 将文件和文件夹一同排序	Sort files and folders together
 将此操作应用到所有冲突项	Použiť túto akciu na všetky konfliktné položky
 居中	Na stred
@@ -17149,13 +17157,11 @@ PowerShell 文件	PowerShell files
 显示“用选中的项目创建文件夹”选项	Zobraziť možnosť vytvorenia priečinka s výberom
 显示“编辑文件标签”	Zobraziť výsuvné menu pre upravenie štítkov
 显示以英文句点 (.) 开头的文件	Zobraziť dot súbory
-显示压缩选项	Zobraziť možnosti kompresie
 显示受保护的系统文件	Zobraziť chránené systémové súbory
 显示工具栏	Show toolbar
 显示状态中心按钮	Show status center button
 显示状态栏	Show status bar
 显示缩略图	Zobraziť miniatúry
-智能解压	Rozbaliť tu (chytré)
 暗灰色	Tmavosivá
 更多选项...	Ďalšie možnosti
 替换已有的项目	Nahradiť existujúcu položku
@@ -17170,6 +17176,8 @@ PowerShell 文件	PowerShell files
 标签操作菜单	Tab actions menu
 格式化	Formátovať
 正在从“{1}”中删除{0, plural, other {#个项目}}	Deleting {0, plural, one {# item} other {# items}} from "{1}"
+正在共享 {0}	Zdielam {0}
+正在共享 {0} {1}	Zdielam {0} {1}
 正在发现项目...	Discovering items...
 正在取消	Zrušenie
 正在处理项目...	Spracuvávam položky...
@@ -17206,6 +17214,7 @@ PowerShell 文件	PowerShell files
 现在	Teraz
 生成新名称	Vygenerujte nový názov
 用选中的项目创建文件夹	Vytvoriť zložku s výberom
+目前没有可共享的内容。	Práve teraz nie je čo zdielať ...
 砖红色	Tehlovo červená
 确定	OK
 确定要删除此标签吗？	Ste si istý, že chcete vymazať túto značku?
@@ -17217,6 +17226,7 @@ PowerShell 文件	PowerShell files
 类型	Stĺpec typu položky
 粉鸢尾花色	Iris Pastel
 粘贴	Vložiť
+粘贴为快捷方式	Vložiť odkaz
 粘贴到选中的文件夹	Paste to selected folder
 系统	Systém
 红色	Červená
@@ -17246,9 +17256,6 @@ PowerShell 文件	PowerShell files
 要以管理员身份继续吗？	Chcete pokračovať ako správca?
 要改为在桌面上创建快捷方式吗？	Prajete si namiesto toho vytvoriť zástupcu na ploche?
 解压	Rozbaliť
-解压 	Rozbaliť 
-解压到当前文件夹	Extrahovať tu
-解压文件	Extrahovať súbory
 解压文件到	Rozbaliť archív
 设为默认	Nastaviť ako predvolené
 设置	Nastavenia
@@ -17305,6 +17312,7 @@ PowerShell 文件	PowerShell files
 1 小时前	1 orë më parë
 1 秒前	1 sekondë më parë
 Git 错误	Gabim Git
+GitHub 仓库	depo GitHub
 PowerShell 文件	PowerShell files
 {0, plural, other {将删除 # 个项目}}	{0, plural, one {One item will be deleted} other {# items will be deleted}}
 {0, plural, other {文件名冲突}}	Conflicting {0, plural, one {emri i skedarit} other {emrat e skedarëve}}
@@ -17358,6 +17366,7 @@ PowerShell 文件	PowerShell files
 全部打开	Hap të gjitha
 全部播放	Play All
 共享	ShpÃ«rndaje
+共享项目失败	Ndarja e artikujve dështoi
 关于	Rreth kÃ«saj
 关闭	Mbylle
 关闭所有标签页	Mbyllni të gjitha skedat
@@ -17374,7 +17383,6 @@ PowerShell 文件	PowerShell files
 列表	Lista
 列视图	Kolonat
 创建	Krijo
-创建 zip 压缩文件	Create zip archive
 创建分支	Krijo degë
 创建快捷方式	Krijon një shkurtore
 创建新标签	Krijo etiketë të re
@@ -17399,8 +17407,6 @@ PowerShell 文件	PowerShell files
 十进制	dhjetore
 升序	NÃ« ngjitje
 卡片	Kartat
-压缩	Archive
-压缩 	Archive 
 压缩文件	Archive files
 压缩文件密码	Fjalëkalimi i arkivit
 原始文件夹	Dosja origjinale
@@ -17486,6 +17492,8 @@ PowerShell 文件	PowerShell files
 将{0, plural, other {#个项目}}复制到“{1}”时出错	Gabim copying {0, plural, one {# artikull} other {# artikuj}} te "{1}"
 将{0, plural, other {#个项目}}移动到“{1}”时出错	Gabim moving {0, plural, one {# artikull} other {# artikuj}} te "{1}"
 将“{0}”解压缩到“{1}”时出错	Gabim gjatë nxjerrjes së "{1}" në "{1}"
+将共享你选择的项目	Artikujt që keni zgjedhur do të ndahen
+将共享已选项目	Artikulli i zgjedhur do të ndahet
 将文件和文件夹一同排序	Rendit skedarët dhe dosjet së bashku
 将此操作应用到所有冲突项	Zbato këtë veprim për të gjithë artikujt në konflikt
 居中	Qendra
@@ -17585,13 +17593,11 @@ PowerShell 文件	PowerShell files
 显示“用选中的项目创建文件夹”选项	Shfaq opsionin për të krijuar dosje me përzgjedhje
 显示“编辑文件标签”	Shfaq etiketat e redaktimit që fluturojnë
 显示以英文句点 (.) 开头的文件	Shfaq skedarÃ«t me pikÃ«
-显示压缩选项	Shfaq opsionet e kompresimit
 显示受保护的系统文件	Shfaq skedarët e mbrojtur të sistemit
 显示工具栏	Shfaq shiritin e veglave
 显示状态中心按钮	Shfaq butonin e qendrës së statusit
 显示状态栏	Shfaq shiritin e statusit
 显示缩略图	Shfaq miniaturë
-智能解压	Ekstrakt këtu (Smart)
 暗灰色	Gri E errët
 更多选项...	Më shumë opsione...
 替换已有的项目	ZÃ«vendÃ«so elementin ekzistues
@@ -17606,6 +17612,8 @@ PowerShell 文件	PowerShell files
 标签操作菜单	Menyja e veprimeve të skedës
 格式化	Formati
 正在从“{1}”中删除{0, plural, other {#个项目}}	Deleting {0, plural, one {# artikull} other {# artikuj}} nga "{1}"
+正在共享 {0}	Ndani {0}
+正在共享 {0} {1}	Ndani {1} {1}
 正在发现项目...	Po zbulohen artikujt...
 正在取消	Duke anuluar
 正在处理项目...	Po përpunohen artikujt...
@@ -17642,6 +17650,7 @@ PowerShell 文件	PowerShell files
 现在	Tani
 生成新名称	Krijo një emër të ri
 用选中的项目创建文件夹	Krijo dosje me përzgjedhje
+目前没有可共享的内容。	Nuk ka asgjë për të ndarë tani ...
 砖红色	E kuqe me tulla
 确定	OK
 确定要删除此标签吗？	Jeni i sigurt që dëshironi ta fshini këtë etiketë?
@@ -17653,6 +17662,7 @@ PowerShell 文件	PowerShell files
 类型	Kolona e llojit të artikullit
 粉鸢尾花色	Iris Pastel
 粘贴	Ngjit
+粘贴为快捷方式	Ngjit shkurtoren
 粘贴到选中的文件夹	Ngjitni në dosjen e zgjedhur
 系统	Sistemi
 红色	E kuqe
@@ -17682,9 +17692,6 @@ PowerShell 文件	PowerShell files
 要以管理员身份继续吗？	Dëshironi të vazhdoni si administrator?
 要改为在桌面上创建快捷方式吗？	Dëshironi të krijoni shkurtoren në desktop?
 解压	Ekstrakt
-解压 	Ekstrakt 
-解压到当前文件夹	Ekstrakt këtu
-解压文件	Ekstrakt skedarët
 解压文件到	Ekstrakt arkiv
 设为默认	Cakto si parazgjedhje
 设置	Cilësimet
@@ -17741,6 +17748,7 @@ PowerShell 文件	PowerShell files
 1 小时前	Пре сат времена
 1 秒前	Пре једне секунде
 Git 错误	Git error
+GitHub 仓库	Репозиторијум на платформи GitHub
 PowerShell 文件	PowerShell files
 {0, plural, other {将删除 # 个项目}}	{0, plural, one {One item will be deleted} other {# items will be deleted}}
 {0, plural, other {文件名冲突}}	Conflicting {0, plural, one {file name} other {file names}}
@@ -17794,6 +17802,7 @@ PowerShell 文件	PowerShell files
 全部打开	Open all
 全部播放	Play All
 共享	Подели
+共享项目失败	Failed to share items
 关于	О апликацији
 关闭	Close
 关闭所有标签页	Close all tabs
@@ -17810,7 +17819,6 @@ PowerShell 文件	PowerShell files
 列表	List
 列视图	Columns
 创建	Креирај
-创建 zip 压缩文件	Create zip archive
 创建分支	Create branch
 创建快捷方式	Creates a shortcut
 创建新标签	Креирај нову ознаку
@@ -17835,8 +17843,6 @@ PowerShell 文件	PowerShell files
 十进制	Decimal
 升序	Од растућег
 卡片	Cards
-压缩	Archive
-压缩 	Archive 
 压缩文件	Archive files
 压缩文件密码	Archive password
 原始文件夹	Original folder
@@ -17922,6 +17928,8 @@ PowerShell 文件	PowerShell files
 将{0, plural, other {#个项目}}复制到“{1}”时出错	Error copying {0, plural, one {# item} other {# items}} to "{1}"
 将{0, plural, other {#个项目}}移动到“{1}”时出错	Error moving {0, plural, one {# item} other {# items}} to "{1}"
 将“{0}”解压缩到“{1}”时出错	Error extracting "{0}" to "{1}"
+将共享你选择的项目	Ставке које сте изабрали ће бити подељене
+将共享已选项目	Изабрана ставка ће бити дељена
 将文件和文件夹一同排序	Sort files and folders together
 将此操作应用到所有冲突项	Apply this action to all conflicting items
 居中	Center
@@ -18021,13 +18029,11 @@ PowerShell 文件	PowerShell files
 显示“用选中的项目创建文件夹”选项	Прикажи опцију за прављење фасцикле са изабраним датотекама
 显示“编辑文件标签”	Прикажи опције за измену ознака
 显示以英文句点 (.) 开头的文件	Прикажи фајлове који почињу са тачком
-显示压缩选项	Прикажи опције за архивирање
 显示受保护的系统文件	Прикажи заштићене системске датотеке
 显示工具栏	Show toolbar
 显示状态中心按钮	Show status center button
 显示状态栏	Show status bar
 显示缩略图	Прикажи сличице
-智能解压	Extract here (Smart)
 暗灰色	Gray Dark
 更多选项...	Остале опције...
 替换已有的项目	Замени постојећу датотеку са овом
@@ -18042,6 +18048,8 @@ PowerShell 文件	PowerShell files
 标签操作菜单	Tab actions menu
 格式化	Формат
 正在从“{1}”中删除{0, plural, other {#个项目}}	Deleting {0, plural, one {# item} other {# items}} from "{1}"
+正在共享 {0}	Дељење {0}
+正在共享 {0} {1}	Дељење {0} {1}
 正在发现项目...	Discovering items...
 正在取消	Радња се поништава
 正在处理项目...	Processing items...
@@ -18078,6 +18086,7 @@ PowerShell 文件	PowerShell files
 现在	Сада
 生成新名称	Generate new name
 用选中的项目创建文件夹	Create folder with selection
+目前没有可共享的内容。	Нема ништа да се подели тренутно...
 砖红色	Brick Red
 确定	У реду
 确定要删除此标签吗？	Are you sure you want to delete this tag?
@@ -18089,6 +18098,7 @@ PowerShell 文件	PowerShell files
 类型	Item type column
 粉鸢尾花色	Iris Pastel
 粘贴	Налепи
+粘贴为快捷方式	Пречица за лепљење
 粘贴到选中的文件夹	Paste to selected folder
 系统	Формат по систему
 红色	Red
@@ -18118,9 +18128,6 @@ PowerShell 文件	PowerShell files
 要以管理员身份继续吗？	Желиш ли да наставиш као администратор?
 要改为在桌面上创建快捷方式吗？	Would you like to create the shortcut on the desktop instead?
 解压	Отпакуј
-解压 	Отпакуј 
-解压到当前文件夹	Extract here
-解压文件	Extract files
 解压文件到	Отпакуј архиву
 设为默认	Set as default
 设置	Подешавања
@@ -18177,6 +18184,7 @@ PowerShell 文件	PowerShell files
 1 小时前	1 timme sen
 1 秒前	1 sekund sen
 Git 错误	Git fel
+GitHub 仓库	GitHub repository
 PowerShell 文件	PowerShell files
 {0, plural, other {将删除 # 个项目}}	{0, plural, one {Ett objekt kommer att raderas} other {# objekt kommer att raderas}}
 {0, plural, other {文件名冲突}}	Motstridiga {0, plural, one {filnamn} other {filnamn}}
@@ -18230,6 +18238,7 @@ PowerShell 文件	PowerShell files
 全部打开	Öppna alla
 全部播放	Play All
 共享	Dela
+共享项目失败	Misslyckades att dela objekt
 关于	Om
 关闭	Stäng
 关闭所有标签页	Stäng alla flikar
@@ -18246,7 +18255,6 @@ PowerShell 文件	PowerShell files
 列表	Lista
 列视图	Kolumner
 创建	Skapa
-创建 zip 压缩文件	Create zip archive
 创建分支	Skapa affärsenhet
 创建快捷方式	Skapar en genväg
 创建新标签	Skapa ny tagg
@@ -18271,8 +18279,6 @@ PowerShell 文件	PowerShell files
 十进制	Decimal
 升序	Stigande
 卡片	Kort
-压缩	Archive
-压缩 	Archive 
 压缩文件	Archive files
 压缩文件密码	Arkivlösenord
 原始文件夹	Ursprunglig mapp
@@ -18358,6 +18364,8 @@ PowerShell 文件	PowerShell files
 将{0, plural, other {#个项目}}复制到“{1}”时出错	Error copying {0, plural, one {# item} other {# items}} to "{1}"
 将{0, plural, other {#个项目}}移动到“{1}”时出错	Error moving {0, plural, one {# item} other {# items}} to "{1}"
 将“{0}”解压缩到“{1}”时出错	Fel vid extrahering av "{0}" till "{1}"
+将共享你选择的项目	De valda objekten kommer att delas
+将共享已选项目	Det valda objektet kommer att delas
 将文件和文件夹一同排序	Sortera filer och mappar tillsammans
 将此操作应用到所有冲突项	Tillämpa denna åtgärd på alla objekt i konflikt
 居中	Centrera
@@ -18457,13 +18465,11 @@ PowerShell 文件	PowerShell files
 显示“用选中的项目创建文件夹”选项	Visa alternativ för att skapa mapp med markering
 显示“编辑文件标签”	Visa taggredigeringsmeny
 显示以英文句点 (.) 开头的文件	Visa punktfiler
-显示压缩选项	Visa komprimeringsalternativ
 显示受保护的系统文件	Visa skyddade systemfiler
 显示工具栏	Visa verktygsfält
 显示状态中心按钮	Show status center button
 显示状态栏	Show status bar
 显示缩略图	Visa miniatyrer
-智能解压	Extrahera här (Smart)
 暗灰色	Grå mörk
 更多选项...	Fler alternativ...
 替换已有的项目	Ersätt existerande objekt
@@ -18478,6 +18484,8 @@ PowerShell 文件	PowerShell files
 标签操作菜单	Tab actions menu
 格式化	Format
 正在从“{1}”中删除{0, plural, other {#个项目}}	Deleting {0, plural, one {# item} other {# items}} from "{1}"
+正在共享 {0}	Delar {0}
+正在共享 {0} {1}	Delar {0} {1}
 正在发现项目...	Discovering items...
 正在取消	Avbryter
 正在处理项目...	Bearbetar objekt...
@@ -18514,6 +18522,7 @@ PowerShell 文件	PowerShell files
 现在	Nu
 生成新名称	Generera nytt namn
 用选中的项目创建文件夹	Skapa mapp med markering
+目前没有可共享的内容。	Det finns inget att dela just nu...
 砖红色	Tegel Röd
 确定	OK
 确定要删除此标签吗？	Är du säker på att du vill radera den här taggen?
@@ -18525,6 +18534,7 @@ PowerShell 文件	PowerShell files
 类型	Objekttypkolumn
 粉鸢尾花色	Iris pastell
 粘贴	Klistra in
+粘贴为快捷方式	Klistra in genväg
 粘贴到选中的文件夹	Paste to selected folder
 系统	systemet
 红色	Röd
@@ -18554,9 +18564,6 @@ PowerShell 文件	PowerShell files
 要以管理员身份继续吗？	Vill du fortsätta som administratör?
 要改为在桌面上创建快捷方式吗？	Vill du skapa genvägen på skrivbordet istället?
 解压	Extrahera
-解压 	Extrahera 
-解压到当前文件夹	Extrahera här
-解压文件	Extrahera filer
 解压文件到	Extrahera arkiv
 设为默认	Ange som standard
 设置	Inställningar
@@ -18613,6 +18620,7 @@ PowerShell 文件	PowerShell files
 1 小时前	1 மணிநேரம் முன்
 1 秒前	1 second ago
 Git 错误	Git பிழ
+GitHub 仓库	GitHub களஞ்சியம்
 PowerShell 文件	PowerShell files
 {0, plural, other {将删除 # 个项目}}	{0, plural, one {One item will be deleted} other {# items will be deleted}}
 {0, plural, other {文件名冲突}}	Conflicting {0, plural, one {file name} other {file names}}
@@ -18666,6 +18674,7 @@ PowerShell 文件	PowerShell files
 全部打开	எல்லாம் திற
 全部播放	Play All
 共享	பகிர்
+共享项目失败	Failed to share items
 关于	பற்றி
 关闭	மூடு
 关闭所有标签页	டæபு எல்லாம் மூடு
@@ -18682,7 +18691,6 @@ PowerShell 文件	PowerShell files
 列表	பட்டியல்
 列视图	Columns
 创建	உருவாக்கு
-创建 zip 压缩文件	Create zip archive
 创建分支	கிளையை உருவாக்கு
 创建快捷方式	ஒரு குறுக்குவழிய உருவாக்கும்
 创建新标签	புது குறிய உருவாக்கு
@@ -18707,8 +18715,6 @@ PowerShell 文件	PowerShell files
 十进制	Decimal
 升序	ஏறுவரிசை
 卡片	Cards
-压缩	Archive
-压缩 	Archive 
 压缩文件	Archive files
 压缩文件密码	Archive password
 原始文件夹	Original folder
@@ -18794,6 +18800,8 @@ PowerShell 文件	PowerShell files
 将{0, plural, other {#个项目}}复制到“{1}”时出错	Error copying {0, plural, one {# item} other {# items}} to "{1}"
 将{0, plural, other {#个项目}}移动到“{1}”时出错	Error moving {0, plural, one {# item} other {# items}} to "{1}"
 将“{0}”解压缩到“{1}”时出错	Error extracting "{0}" to "{1}"
+将共享你选择的项目	The items you've selected will be shared
+将共享已选项目	The selected item will be shared
 将文件和文件夹一同排序	Sort files and folders together
 将此操作应用到所有冲突项	Apply this action to all conflicting items
 居中	Center
@@ -18893,13 +18901,11 @@ PowerShell 文件	PowerShell files
 显示“用选中的项目创建文件夹”选项	Show option to create folder with selection
 显示“编辑文件标签”	Show edit tags flyout
 显示以英文句点 (.) 开头的文件	Show dot files
-显示压缩选项	Show compression options
 显示受保护的系统文件	பாதுகாக்கப்பட்ட ஸிஸ்டம் கோப்புங்கள காட்டு
 显示工具栏	Show toolbar
 显示状态中心按钮	Show status center button
 显示状态栏	Show status bar
 显示缩略图	Show thumbnails
-智能解压	Extract here (Smart)
 暗灰色	Gray Dark
 更多选项...	அதிக ஆப்ஷனுங்க...
 替换已有的项目	Replace existing item
@@ -18914,6 +18920,8 @@ PowerShell 文件	PowerShell files
 标签操作菜单	டைபு செயல்கள் மெஞு
 格式化	Format
 正在从“{1}”中删除{0, plural, other {#个项目}}	Deleting {0, plural, one {# item} other {# items}} from "{1}"
+正在共享 {0}	Sharing {0}
+正在共享 {0} {1}	Sharing {0} {1}
 正在发现项目...	Discovering items...
 正在取消	Canceling
 正在处理项目...	Processing items...
@@ -18950,6 +18958,7 @@ PowerShell 文件	PowerShell files
 现在	இப்போ
 生成新名称	Generate new name
 用选中的项目创建文件夹	Create folder with selection
+目前没有可共享的内容。	There's nothing to share right now...
 砖红色	Brick Red
 确定	சரி
 确定要删除此标签吗？	இந்த குறிய நிச்சயமா நீக்க வேண்டுமா?
@@ -18961,6 +18970,7 @@ PowerShell 文件	PowerShell files
 类型	Item type column
 粉鸢尾花色	Iris Pastel
 粘贴	ஒட்டு
+粘贴为快捷方式	Paste shortcut
 粘贴到选中的文件夹	Paste to selected folder
 系统	ஸிஸ்டம்
 红色	சிவப்பு
@@ -18990,9 +19000,6 @@ PowerShell 文件	PowerShell files
 要以管理员身份继续吗？	Would you like to continue as administrator?
 要改为在桌面上创建快捷方式吗？	Would you like to create the shortcut on the desktop instead?
 解压	Extract
-解压 	Extract 
-解压到当前文件夹	இங்கு பிரித்தெடு
-解压文件	கோப்புங்கள பிரித்தெடு
 解压文件到	Extract archive
 设为默认	இயல்பாக்கு
 设置	அமய்ப்புங்க
@@ -19049,6 +19056,7 @@ PowerShell 文件	PowerShell files
 1 小时前	1 hour ago
 1 秒前	1 second ago
 Git 错误	Git error
+GitHub 仓库	คลังเก็บ GitHub
 PowerShell 文件	PowerShell files
 {0, plural, other {将删除 # 个项目}}	{0, plural, one {One item will be deleted} other {# items will be deleted}}
 {0, plural, other {文件名冲突}}	Conflicting {0, plural, one {file name} other {file names}}
@@ -19102,6 +19110,7 @@ PowerShell 文件	PowerShell files
 全部打开	Open all
 全部播放	Play All
 共享	ใช้ร่วมกัน
+共享项目失败	ไม่สามารถแชร์รายการได้
 关于	เกี่ยวกับ
 关闭	ปิด
 关闭所有标签页	Close all tabs
@@ -19118,7 +19127,6 @@ PowerShell 文件	PowerShell files
 列表	รายการ
 列视图	คอลัมน์
 创建	สร้าง
-创建 zip 压缩文件	Create zip archive
 创建分支	Create branch
 创建快捷方式	สร้างทางลัด
 创建新标签	สร้างแท็กใหม่
@@ -19143,8 +19151,6 @@ PowerShell 文件	PowerShell files
 十进制	Decimal
 升序	จากน้อยไปหามาก
 卡片	Cards
-压缩	Archive
-压缩 	Archive 
 压缩文件	Archive files
 压缩文件密码	รหัสผ่านไฟล์จัดเก็บ
 原始文件夹	โฟลเดอร์ต้นฉบับ
@@ -19230,6 +19236,8 @@ PowerShell 文件	PowerShell files
 将{0, plural, other {#个项目}}复制到“{1}”时出错	Error copying {0, plural, one {# item} other {# items}} to "{1}"
 将{0, plural, other {#个项目}}移动到“{1}”时出错	Error moving {0, plural, one {# item} other {# items}} to "{1}"
 将“{0}”解压缩到“{1}”时出错	Error extracting "{0}" to "{1}"
+将共享你选择的项目	รายการเหล่านี้ที่คุณเลือกกำลังจะถูกแบ่งปัน
+将共享已选项目	รายการที่คุณเลือกกำลังจะถูกแบ่งปัน
 将文件和文件夹一同排序	เรียงไฟล์และโฟลเดอร์เข้าด้วยกัน
 将此操作应用到所有冲突项	Apply this action to all conflicting items
 居中	Center
@@ -19329,13 +19337,11 @@ PowerShell 文件	PowerShell files
 显示“用选中的项目创建文件夹”选项	แสดงตัวเลือก สร้างโฟลเดอร์จากส่วนที่เลือก
 显示“编辑文件标签”	แสดงเมนูแก้ไขแท็ก
 显示以英文句点 (.) 开头的文件	Show dot files
-显示压缩选项	แสดงตัวเลือกการบีบอัด
 显示受保护的系统文件	แสดงไฟล์ระบบที่ถูกปกป้องไว้
 显示工具栏	Show toolbar
 显示状态中心按钮	Show status center button
 显示状态栏	Show status bar
 显示缩略图	แสดงภาพขนาดย่อ
-智能解压	แยกไฟล์ที่นี้ (อัจฉริยะ)
 暗灰色	เทาเข้ม
 更多选项...	ตัวเลือกเพิ่มเติม...
 替换已有的项目	แทนที่รายการที่มีอยู่
@@ -19350,6 +19356,8 @@ PowerShell 文件	PowerShell files
 标签操作菜单	Tab actions menu
 格式化	รูปแบบ
 正在从“{1}”中删除{0, plural, other {#个项目}}	Deleting {0, plural, one {# item} other {# items}} from "{1}"
+正在共享 {0}	แบ่งปัน {0}
+正在共享 {0} {1}	แบ่งปัน {0} {1}
 正在发现项目...	Discovering items...
 正在取消	กำลังยกเลิก
 正在处理项目...	กำลังประมวลผลรายการ
@@ -19386,6 +19394,7 @@ PowerShell 文件	PowerShell files
 现在	ขณะนี้
 生成新名称	สุ่มชื่อใหม่ขึ้นมา
 用选中的项目创建文件夹	สร้างโฟลเดอร์จากส่วนที่เลือก
+目前没有可共享的内容。	ยังไม่มีอะไรจะแบ่งปัน ณ ตอนนี้...
 砖红色	อิฐแดง
 确定	ตกลง
 确定要删除此标签吗？	คุณแน่ใจแล้วใช่ไหมที่จะลบแท็กนี้?
@@ -19397,6 +19406,7 @@ PowerShell 文件	PowerShell files
 类型	แถวประเภทแฟ้ม
 粉鸢尾花色	Iris Pastel
 粘贴	วาง
+粘贴为快捷方式	Paste shortcut
 粘贴到选中的文件夹	Paste to selected folder
 系统	ระบบ
 红色	แดง
@@ -19426,9 +19436,6 @@ PowerShell 文件	PowerShell files
 要以管理员身份继续吗？	คุณต้องการขอสิทธิ์ผู้ดูแลเลยไหม?
 要改为在桌面上创建快捷方式吗？	Would you like to create the shortcut on the desktop instead?
 解压	แยกไฟล์
-解压 	แยกไฟล์ 
-解压到当前文件夹	แยกไฟล์ที่นี่
-解压文件	แยกไฟล์ออกมา
 解压文件到	การแยกไฟล์
 设为默认	ตั้งเป็นค่าเริ่มต้น
 设置	ตั้งค่า
@@ -19485,6 +19492,7 @@ PowerShell 文件	PowerShell files
 1 小时前	1 saat önce
 1 秒前	1 saniye önce
 Git 错误	Git hatası
+GitHub 仓库	GitHub deposu
 PowerShell 文件	PowerShell dosyaları
 {0, plural, other {将删除 # 个项目}}	{0, plural, one {1 öğe silinecek} other {# öğe silinecek}}
 {0, plural, other {文件名冲突}}	Çakışan {0, plural, one {dosya adı} other {dosya adları}}
@@ -19538,6 +19546,7 @@ PowerShell 文件	PowerShell dosyaları
 全部打开	Tümünü aç
 全部播放	Hepsini Oynat
 共享	Paylaş
+共享项目失败	Öğeler paylaşılamadı
 关于	Hakkında
 关闭	Kapat
 关闭所有标签页	Tüm sekmeleri kapat
@@ -19554,7 +19563,6 @@ PowerShell 文件	PowerShell dosyaları
 列表	Liste
 列视图	Sütunlar
 创建	Oluştur
-创建 zip 压缩文件	Zip arşivi oluştur
 创建分支	Branch oluştur
 创建快捷方式	Kısayol oluşturur
 创建新标签	Yeni etiket oluştur
@@ -19579,8 +19587,6 @@ PowerShell 文件	PowerShell dosyaları
 十进制	Ondalık
 升序	Artan
 卡片	Kartlar
-压缩	Arşiv
-压缩 	Arşiv 
 压缩文件	Arşiv dosyaları
 压缩文件密码	Arşiv şifresi
 原始文件夹	Orjinal klasör
@@ -19666,6 +19672,8 @@ PowerShell 文件	PowerShell dosyaları
 将{0, plural, other {#个项目}}复制到“{1}”时出错	{0, plural,one {# öğenin}other {# öğenin}} "{1}" konumuna kopyalanma hatası
 将{0, plural, other {#个项目}}移动到“{1}”时出错	{0, plural,one {# öğenin}other {# öğenin}} "{1}" konumuna taşınma hatası
 将“{0}”解压缩到“{1}”时出错	"{0}", "{1}" öğesine çıkarılırken hata oluştu
+将共享你选择的项目	Seçilmiş ögeler paylaşılacak
+将共享已选项目	Seçilmiş öge paylaşılacak
 将文件和文件夹一同排序	Dosyaları ve klasörleri birlikte sırala
 将此操作应用到所有冲突项	Bu eylemi tüm çakışan öğelere uygula
 居中	Merkez
@@ -19765,13 +19773,11 @@ PowerShell 文件	PowerShell dosyaları
 显示“用选中的项目创建文件夹”选项	Seçimle klasör oluşturma seçeneğini göster
 显示“编辑文件标签”	Etiketleri düzenle açılır penceresini göster
 显示以英文句点 (.) 开头的文件	dot dosyalarını göster
-显示压缩选项	Sıkıştırma seçeneklerini göster
 显示受保护的系统文件	Korunan sistem dosyalarını göster
 显示工具栏	Araç çubuğunu göster
 显示状态中心按钮	Durum merkezi düğmesini göster
 显示状态栏	Durum çubuğunu göster
 显示缩略图	Küçük resimleri göster
-智能解压	Buraya çıkart (Akıllı)
 暗灰色	Koyu Gri
 更多选项...	Diğer seçenekler...
 替换已有的项目	Var olan ögeyi değiştir
@@ -19786,6 +19792,8 @@ PowerShell 文件	PowerShell dosyaları
 标签操作菜单	Sekme aksiyonları menüsü
 格式化	Biçim
 正在从“{1}”中删除{0, plural, other {#个项目}}	"{1}" konumundaki {0, plural,one {# öğe}other {# öğe}} siliniyor
+正在共享 {0}	{0} paylaşılıyor
+正在共享 {0} {1}	{0} {1} paylaşılıyor
 正在发现项目...	Ögeler bulunuyor...
 正在取消	İptal ediliyor
 正在处理项目...	Öğeler işleniyor...
@@ -19822,6 +19830,7 @@ PowerShell 文件	PowerShell dosyaları
 现在	Şimdi
 生成新名称	Yeni ad oluştur
 用选中的项目创建文件夹	Seçimle klasör oluştur
+目前没有可共享的内容。	Şu anda paylaşılacak bir şey yok...
 砖红色	Tuğla kırmızısı
 确定	Tamam
 确定要删除此标签吗？	Bu etiketi silmek istediğinize emin misiniz?
@@ -19833,6 +19842,7 @@ PowerShell 文件	PowerShell dosyaları
 类型	Öğe türü sütunu
 粉鸢尾花色	İris Pastel
 粘贴	Yapıştır
+粘贴为快捷方式	Kısayol yapıştır
 粘贴到选中的文件夹	Seçili klasöre yapıştır
 系统	Sistem
 红色	Kırmızı
@@ -19862,9 +19872,6 @@ PowerShell 文件	PowerShell dosyaları
 要以管理员身份继续吗？	Yönetici olarak devam etmek ister misiniz?
 要改为在桌面上创建快捷方式吗？	Bunun yerine masaüstünde kısayol oluşturmak ister misiniz?
 解压	Ayıkla
-解压 	Ayıkla 
-解压到当前文件夹	Buraya ayıkla
-解压文件	Dosyaları ayıkla
 解压文件到	Arşivi çıkart
 设为默认	Varsayılan olarak ayarla
 设置	Ayarlar
@@ -19921,6 +19928,7 @@ PowerShell 文件	PowerShell dosyaları
 1 小时前	1 годину тому
 1 秒前	1 секунду тому
 Git 错误	Помилка git
+GitHub 仓库	Репозиторій GitHub
 PowerShell 文件	Файли PowerShell
 {0, plural, other {将删除 # 个项目}}	{0, plural, one {Один елемент буде видалено} few {# елементи буде видалено} many {# елементів буде видалено} other {# елементів буде видалено}}
 {0, plural, other {文件名冲突}}	Конфлікт {0, plural, one {ім'я файлу} few {імен файлів} many {імен файлів} other {ім'я файлу}}
@@ -19974,6 +19982,7 @@ PowerShell 文件	Файли PowerShell
 全部打开	Відкрити все
 全部播放	Відтворити все
 共享	Поділитися
+共享项目失败	Не вдалося поділитися елементами
 关于	Про програму
 关闭	Закрити
 关闭所有标签页	Закрити всі вкладки
@@ -19990,7 +19999,6 @@ PowerShell 文件	Файли PowerShell
 列表	Список
 列视图	Стовпці
 创建	Створити
-创建 zip 压缩文件	Створити zip-архів
 创建分支	Створити гілку
 创建快捷方式	Створює комбінацію клавіш
 创建新标签	Створити нову мітку
@@ -20015,8 +20023,6 @@ PowerShell 文件	Файли PowerShell
 十进制	Десятковий
 升序	За зростанням
 卡片	Картки
-压缩	Архів
-压缩 	Архів 
 压缩文件	Архівні файли
 压缩文件密码	Пароль архіву
 原始文件夹	Початкова папка
@@ -20102,6 +20108,8 @@ PowerShell 文件	Файли PowerShell
 将{0, plural, other {#个项目}}复制到“{1}”时出错	Помилка копіювання {0, plural, one {# елемент} few {# елементи} many {# елементів} other {# елементів}} до «{1}»
 将{0, plural, other {#个项目}}移动到“{1}”时出错	Помилка переміщення {0, plural, one {# елемент} few {# елементи} many {# елементів} other {# елементів}} до «{1}»
 将“{0}”解压缩到“{1}”时出错	Помилка видобування "{0}" до "{1}"
+将共享你选择的项目	Вибраним елементам буде надано загальний доступ
+将共享已选项目	Вибраному елементу буде надано загальний доступ
 将文件和文件夹一同排序	Сортувати папки та файли разом
 将此操作应用到所有冲突项	Застосувати цю дію до всіх конфліктуючих елементів
 居中	По центру
@@ -20201,13 +20209,11 @@ PowerShell 文件	Файли PowerShell
 显示“用选中的项目创建文件夹”选项	Показувати параметр створення теки з обраними елементами
 显示“编辑文件标签”	Показати віджет редагування міток
 显示以英文句点 (.) 开头的文件	Показувати файли, які починаються з крапки
-显示压缩选项	Показати параметри стиснення
 显示受保护的系统文件	Показати захищені системні файли
 显示工具栏	Показати панель інструментів
 显示状态中心按钮	Показати кнопку «Центр стану»
 显示状态栏	Показувати рядок стану
 显示缩略图	Відображати ескізи
-智能解压	Видобути тут (Smart)
 暗灰色	Темно-сірий
 更多选项...	Додаткові параметри...
 替换已有的项目	Замінити існуючий елемент
@@ -20222,6 +20228,8 @@ PowerShell 文件	Файли PowerShell
 标签操作菜单	Меню дій вкладки
 格式化	Формат
 正在从“{1}”中删除{0, plural, other {#个项目}}	Видалення {0, plural, one {# елемент} few {# елементи} many {# елементів} other {# елементів}} з «{1}»
+正在共享 {0}	Надається спільний доступ до ресурсу "{0}"
+正在共享 {0} {1}	Спільний доступ до {0} {1}
 正在发现项目...	Виявлення елементів...
 正在取消	Скасування
 正在处理项目...	Опрацювання елементів...
@@ -20258,6 +20266,7 @@ PowerShell 文件	Файли PowerShell
 现在	Щойно
 生成新名称	Згенерувати нове ім'я
 用选中的项目创建文件夹	Створити папку з виділення
+目前没有可共享的内容。	Наразі нема до чого надавати спільний доступ...
 砖红色	Цегляний
 确定	ОК
 确定要删除此标签吗？	Ви впевнені, що хочете видалити цю мітку?
@@ -20269,6 +20278,7 @@ PowerShell 文件	Файли PowerShell
 类型	Стовпець типу елемента
 粉鸢尾花色	Пастельно-ірисовий
 粘贴	Вставити
+粘贴为快捷方式	Вставити ярлик
 粘贴到选中的文件夹	Вставити до вибраної теки
 系统	Система
 红色	Червоний
@@ -20298,9 +20308,6 @@ PowerShell 文件	Файли PowerShell
 要以管理员身份继续吗？	Бажаєте продовжити як адміністратор?
 要改为在桌面上创建快捷方式吗？	Бажаєте створити ярлик на робочому столі натомість?
 解压	Видобути
-解压 	Видобути 
-解压到当前文件夹	Видобути тут
-解压文件	Видобути файли
 解压文件到	Розпакувати архів
 设为默认	Зробити типовим
 设置	Налаштування
@@ -20357,6 +20364,7 @@ PowerShell 文件	Файли PowerShell
 1 小时前	1 giờ trước
 1 秒前	1 giây trước
 Git 错误	Lỗi Git
+GitHub 仓库	Kho lưu trữ GitHub
 PowerShell 文件	Tệp PowerShell
 {0, plural, other {将删除 # 个项目}}	{0, plural, other {# khoản mục sẽ bị xóa bỏ}}
 {0, plural, other {文件名冲突}}	Xung đột {0, plural, other {tên tệp}}
@@ -20410,6 +20418,7 @@ PowerShell 文件	Tệp PowerShell
 全部打开	Mở tất cả
 全部播放	Phát tất cả
 共享	Chia sẻ
+共享项目失败	Không thể chia sẻ khoản mục
 关于	Giới thiệu
 关闭	Đóng
 关闭所有标签页	Đóng tất cả các thẻ
@@ -20426,7 +20435,6 @@ PowerShell 文件	Tệp PowerShell
 列表	D.sách
 列视图	Cột
 创建	Tạo
-创建 zip 压缩文件	Tạo tệp nén zip
 创建分支	Tạo nhánh
 创建快捷方式	Tạo lối tắt
 创建新标签	Tạo nhãn mới
@@ -20451,8 +20459,6 @@ PowerShell 文件	Tệp PowerShell
 十进制	Thập phân
 升序	Tăng dần
 卡片	Thẻ
-压缩	Tệp nén
-压缩 	Tệp nén 
 压缩文件	Tệp nén
 压缩文件密码	Mật khẩu tệp nén
 原始文件夹	Thư mục gốc
@@ -20538,6 +20544,8 @@ PowerShell 文件	Tệp PowerShell
 将{0, plural, other {#个项目}}复制到“{1}”时出错	Đã xảy ra lỗi khi sao chép {0, plural, other {# khoản mục}} đến "{1}"
 将{0, plural, other {#个项目}}移动到“{1}”时出错	Đã xảy ra lỗi khi di chuyển {0, plural, other {# khoản mục}} đến "{1}"
 将“{0}”解压缩到“{1}”时出错	Đã xảy ra lỗi khi giải nén "{0}" vào "{1}"
+将共享你选择的项目	Các khoản mục bạn đã chọn sẽ được chia sẻ
+将共享已选项目	Khoản mục đã chọn sẽ được chia sẻ
 将文件和文件夹一同排序	Sắp xếp tệp chung với thư mục
 将此操作应用到所有冲突项	Áp dụng hành động này với mọi khoản mục xung đột
 居中	Chính giữa
@@ -20637,13 +20645,11 @@ PowerShell 文件	Tệp PowerShell
 显示“用选中的项目创建文件夹”选项	Hiện tùy chọn tạo thư mục từ lựa chọn
 显示“编辑文件标签”	Hiện tùy chọn chỉnh sửa nhãn
 显示以英文句点 (.) 开头的文件	Hiện tệp có tên bắt đầu bằng dấu chấm
-显示压缩选项	Hiện tùy chọn nén
 显示受保护的系统文件	Hiện tệp hệ thống được bảo vệ
 显示工具栏	Hiện thanh công cụ
 显示状态中心按钮	Hiện nút trung tâm trạng thái
 显示状态栏	Hiện thanh trạng thái
 显示缩略图	Hiện hình xem trước
-智能解压	Giải nén tại đây (thông minh)
 暗灰色	Xám tối
 更多选项...	Nhiều tùy chọn hơn...
 替换已有的项目	Thay thế khoản mục đã tồn tại
@@ -20658,6 +20664,8 @@ PowerShell 文件	Tệp PowerShell
 标签操作菜单	Menu tác vụ
 格式化	Định dạng
 正在从“{1}”中删除{0, plural, other {#个项目}}	Đang xóa {0, plural, other {# khoản mục}} khỏi "{1}"
+正在共享 {0}	Đang chia sẻ {0}
+正在共享 {0} {1}	Đang chia sẻ {0} {1}
 正在发现项目...	Đang quét tìm khoản mục...
 正在取消	Đang hủy bỏ
 正在处理项目...	Đang xử lý khoản mục...
@@ -20694,6 +20702,7 @@ PowerShell 文件	Tệp PowerShell
 现在	Vừa xong
 生成新名称	Tạo tên mới
 用选中的项目创建文件夹	Tạo thư mục từ lựa chọn
+目前没有可共享的内容。	Hiện không có gì để chia sẻ...
 砖红色	Đỏ gạch
 确定	OK
 确定要删除此标签吗？	Bạn có chắc chắn muốn xóa nhãn này không?
@@ -20705,6 +20714,7 @@ PowerShell 文件	Tệp PowerShell
 类型	Cột loại khoản mục
 粉鸢尾花色	Tím pastel
 粘贴	Dán
+粘贴为快捷方式	Dán dưới dạng lối tắt
 粘贴到选中的文件夹	Dán vào thư mục đã chọn
 系统	Hệ thống
 红色	Đỏ
@@ -20734,9 +20744,6 @@ PowerShell 文件	Tệp PowerShell
 要以管理员身份继续吗？	Bạn có muốn tiếp tục với quyền quản trị viên không?
 要改为在桌面上创建快捷方式吗？	Thay vào đó, bạn có muốn tạo lối tắt ở màn hình chính không?
 解压	Giải nén
-解压 	Giải nén 
-解压到当前文件夹	Giải nén tại đây
-解压文件	Giải nén tệp
 解压文件到	Giải nén tệp
 设为默认	Đặt làm mặc định
 设置	Cài đặt
@@ -20791,6 +20798,7 @@ PowerShell 文件	Tệp PowerShell
 1 分钟前	1 分鐘前
 1 小时前	1 小時前
 Git 错误	Git 錯誤
+GitHub 仓库	GitHub 軟體源
 PowerShell 文件	PowerShell 檔案
 {0, plural, other {将删除 # 个项目}}	{0, plural,other {即將刪除 # 個檔案}}
 {0, plural, other {文件名冲突}}	{0, plural, other {檔案名稱衝突}}
@@ -20839,6 +20847,7 @@ PowerShell 文件	PowerShell 檔案
 全部打开	開啟所有
 全部播放	播放全部
 共享	分享
+共享项目失败	分享檔案失敗
 关于	關於
 关闭	關閉
 关闭所有标签页	關閉所有分頁
@@ -20855,7 +20864,6 @@ PowerShell 文件	PowerShell 檔案
 列表	清單
 列视图	欄
 创建	新增
-创建 zip 压缩文件	建立 zip 壓縮檔案
 创建分支	建立分支
 创建快捷方式	建立捷徑
 创建新标签	新增新的標籤
@@ -20879,8 +20887,6 @@ PowerShell 文件	PowerShell 檔案
 剪切	剪下
 十进制	十進位
 升序	遞增
-压缩	壓縮
-压缩 	壓縮 
 压缩文件	壓縮檔案
 压缩文件密码	壓縮檔案密碼
 原始文件夹	原始資料夾
@@ -20960,6 +20966,8 @@ PowerShell 文件	PowerShell 檔案
 将{0, plural, other {#个项目}}复制到“{1}”时出错	複製 {0, plural, other{# 個項目}}到「{1}」時發生錯誤
 将{0, plural, other {#个项目}}移动到“{1}”时出错	將 {0, plural, other{# 個項目}}移至「{1}」時發生錯誤
 将“{0}”解压缩到“{1}”时出错	將「{0}」解壓縮到「{1}」時發生錯誤
+将共享你选择的项目	您即將分享已選取項目
+将共享已选项目	即將分享已選取項目
 将文件和文件夹一同排序	同時排序檔案和資料夾
 将此操作应用到所有冲突项	套用至所有衝突的項目
 居中	置中
@@ -21053,13 +21061,11 @@ PowerShell 文件	PowerShell 檔案
 显示“用选中的项目创建文件夹”选项	顯示「為選取的項目建立資料夾」選項
 显示“编辑文件标签”	顯示「編輯檔案標籤」選單
 显示以英文句点 (.) 开头的文件	顯示以點開頭的隱藏配置文件(Dot files)
-显示压缩选项	顯示「壓縮」選項
 显示受保护的系统文件	顯示受保護的系統檔案
 显示工具栏	顯示工具列
 显示状态中心按钮	顯示狀態中心按鈕
 显示状态栏	顯示狀態欄
 显示缩略图	顯示縮圖
-智能解压	解壓縮至此（智慧）
 暗灰色	深灰色
 更多选项...	更多選項...
 替换已有的项目	覆蓋現有檔案
@@ -21071,6 +21077,8 @@ PowerShell 文件	PowerShell 檔案
 标签 	標籤 
 标签操作菜单	索引標籤功能表
 正在从“{1}”中删除{0, plural, other {#个项目}}	正在從「{1}」刪除 {0, plural, other{# 個項目}}
+正在共享 {0}	正在分享 {0}
+正在共享 {0} {1}	正在分享 {0} {1}
 正在发现项目...	正在探索項目...
 正在取消	取消中
 正在处理项目...	正在處理檔案...
@@ -21103,6 +21111,7 @@ PowerShell 文件	PowerShell 檔案
 现在	剛剛
 生成新名称	自動重新命名
 用选中的项目创建文件夹	為選取的項目建立資料夾
+目前没有可共享的内容。	目前沒有任何可分享的項目…
 砖红色	磚紅色
 确定	確定
 确定要删除此标签吗？	您確定要刪除這個標籤？
@@ -21113,6 +21122,7 @@ PowerShell 文件	PowerShell 檔案
 类型	項目類型
 粉鸢尾花色	淡紫羅蘭
 粘贴	貼上
+粘贴为快捷方式	貼上捷徑
 粘贴到选中的文件夹	貼上至選取的資料夾
 系统	系統
 红色	紅色
@@ -21142,9 +21152,6 @@ PowerShell 文件	PowerShell 檔案
 要以管理员身份继续吗？	是否要以系統管理員身分繼續？
 要改为在桌面上创建快捷方式吗？	要改為在桌面上建立捷徑嗎？
 解压	解壓縮
-解压 	解壓縮 
-解压到当前文件夹	解壓縮至此
-解压文件	解壓縮檔案
 解压文件到	解壓縮檔案
 设为默认	設為預設值
 设置	設定

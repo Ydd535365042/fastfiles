@@ -2,6 +2,8 @@
 #include "Lang.h"
 #include "resource.h"
 #include <cmath>
+namespace Gdiplus { using std::min; using std::max; }
+#include <gdiplus.h>
 
 // Files' TabBar (UserControls/TabBar/TabBar.xaml over a WinUI TabView): tabs between 100 and 240 px, scroll buttons
 // when they overflow, wheel selects the next/previous tab, a tab dragged out becomes a window (or moves to the window
@@ -163,6 +165,41 @@ void TabStrip::Insert(int index, const std::wstring& text, int icon)
     if (m_active >= index)
         ++m_active;
     Relayout();
+}
+
+void TabStrip::SetLoading(int index, bool loading)
+{
+    if (index < 0 || index >= Count() || m_items[index].loading == loading)
+        return;
+    m_items[index].loading = loading;
+    if (loading)
+        SetTimer(m_hwnd, kSpinTimer, 33, nullptr);
+    // Tests read how many tabs show the ring (window property, like MainWindow's FastFiles.Tray)
+    const auto spinning = std::count_if(m_items.begin(), m_items.end(), [](const Item& i) { return i.loading; });
+    if (spinning)
+        SetPropW(m_hwnd, L"FastFiles.Loading", reinterpret_cast<HANDLE>(static_cast<INT_PTR>(spinning)));
+    else
+        RemovePropW(m_hwnd, L"FastFiles.Loading");
+    Invalidate();
+}
+
+// WinUI ProgressRing (indeterminate): an accent arc that turns and grows / shrinks, over a 16px icon box
+void TabStrip::DrawProgressRing(HDC hdc, const RECT& r) const
+{
+    const Theme& t = *m_theme;
+    StartGdiplus();
+    Gdiplus::Graphics g(hdc);
+    g.SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
+    const float stroke = static_cast<float>(t.S(2)) * 0.8f + 0.4f;
+    const float size = static_cast<float>(std::min(r.right - r.left, r.bottom - r.top)) - stroke;
+    const Gdiplus::RectF box(r.left + stroke / 2, r.top + stroke / 2, size, size);
+    const double ms = static_cast<double>(GetTickCount64() % 2000);
+    const float start = static_cast<float>(ms / 2000.0 * 720.0 - 90.0);
+    const float sweep = static_cast<float>(30.0 + 240.0 * (0.5 - 0.5 * std::cos(ms / 2000.0 * 2.0 * 3.14159265358979)));
+    Gdiplus::Pen pen(Gdiplus::Color(255, GetRValue(t.accent), GetGValue(t.accent), GetBValue(t.accent)), stroke);
+    pen.SetStartCap(Gdiplus::LineCapRound);
+    pen.SetEndCap(Gdiplus::LineCapRound);
+    g.DrawArc(&pen, box, start, sweep);
 }
 
 void TabStrip::Set(int index, const std::wstring& text, int icon)
@@ -426,7 +463,9 @@ void TabStrip::Paint(HDC hdc, const RECT& rc)
         const int iconSize = GetSystemMetrics(SM_CXSMICON);
         const int cy = (r.top + r.bottom - (active ? 0 : t.S(2))) / 2;
         int x = r.left + t.S(10);
-        if (item.icon == kSettingsIcon) // Files: FontIconSource Glyph E713 for the Settings tab
+        if (item.loading) // Files' LoadingStates.Loading: the ProgressRing in the icon's place
+            DrawProgressRing(hdc, { x, cy - iconSize / 2, x + iconSize, cy - iconSize / 2 + iconSize });
+        else if (item.icon == kSettingsIcon) // Files: FontIconSource Glyph E713 for the Settings tab
             DrawGlyph(hdc, t.icons, Glyph::Settings, { x, cy - iconSize / 2, x + iconSize, cy + iconSize / 2 }, active ? t.ink : t.chromeInk);
         else if (item.icon == kHomeIcon) // Files: SidebarSectionIcons.For(SectionType.Home) for the Home tab
             DrawSectionIcon(hdc, 0, { x, cy - iconSize / 2, x + iconSize, cy - iconSize / 2 + iconSize }, t.dpi);
@@ -916,6 +955,13 @@ LRESULT TabStrip::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
                 ScrollBy(m_pressed.part == Part::ScrollLeft ? -m_tabWidth : m_tabWidth);
             else
                 KillTimer(m_hwnd, kScrollTimer);
+        }
+        else if (wp == kSpinTimer)
+        {
+            if (std::any_of(m_items.begin(), m_items.end(), [](const Item& i) { return i.loading; }))
+                Invalidate();
+            else
+                KillTimer(m_hwnd, kSpinTimer);
         }
         else if (wp == kHoverTimer)
         {

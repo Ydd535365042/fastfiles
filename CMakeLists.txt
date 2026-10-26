@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(FastFiles VERSION 1.0.0.0 LANGUAGES CXX)
+project(FastFiles VERSION 1.0.0.1 LANGUAGES CXX)
 
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
@@ -57,6 +57,8 @@ src/ContentDialog.cpp src/NewItem.cpp src/MainWindowNewItem.cpp src/SevenZip.cpp
     src/Compat.cpp
     src/SearchSuggest.cpp
     src/Session.cpp
+    src/Update.cpp
+    src/Share.cpp
     src/app.manifest
     src/FastFiles.rc
 )
@@ -67,7 +69,7 @@ target_include_directories(FastFiles PRIVATE ${CMAKE_BINARY_DIR}/generated)
 target_compile_features(FastFiles PRIVATE cxx_std_20)
 target_compile_definitions(FastFiles PRIVATE UNICODE _UNICODE NOMINMAX _WIN32_WINNT=0x0A00 WINVER=0x0A00 "FASTFILES_VERSION=L\"${PROJECT_VERSION}\"")
 target_compile_options(FastFiles PRIVATE /W4 /permissive- /utf-8 /EHsc)
-target_link_libraries(FastFiles PRIVATE comctl32 shell32 shlwapi ole32 oleaut32 uuid uxtheme gdiplus propsys msimg32 dwmapi comdlg32 rstrtmgr oleacc dwrite)
+target_link_libraries(FastFiles PRIVATE comctl32 shell32 shlwapi ole32 oleaut32 uuid uxtheme gdiplus propsys msimg32 dwmapi comdlg32 rstrtmgr oleacc dwrite winhttp version runtimeobject)
 
 # Rust core: built by cargo as a static lib (release profile, static CRT to match /MT) and linked in
 set(CORE_DIR ${CMAKE_SOURCE_DIR}/core)

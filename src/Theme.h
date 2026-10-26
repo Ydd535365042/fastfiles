@@ -166,4 +166,5 @@ inline constexpr wchar_t ChevronUp[] = L"\xE70E", Color[] = L"\xE771", Customize
 inline constexpr wchar_t Palette[] = L"\xE790", Keyboard[] = L"\xE765", Tag[] = L"\xE8EC", Code[] = L"\xE943", Info[] = L"\xE946", Home[] = L"\xE80F", Repair[] = L"\xE90F";
 inline constexpr wchar_t Branch[] = L"\xE943", Size[] = L"\xE9F9", Archive[] = L"\xE7B8", Extract[] = L"\xE8DE";
 inline constexpr wchar_t RestoreDeleted[] = L"\xE7A7", Sync[] = L"\xE895";
+inline constexpr wchar_t Globe[] = L"\xE774"; // Files' AboutPage 打开 GitHub 存储库 HeaderIcon
 }

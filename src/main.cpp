@@ -1,5 +1,6 @@
 #include "MainWindow.h"
 #include "Drives.h"
+#include "Update.h"
 
 namespace
 {
@@ -106,6 +107,7 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int)
     }
 
     Log::Start(); // keep the last 100 lines, record crashes
+    Update::CleanUp(); // FastFiles.exe.old and the setup download left by an update
 
     // OLE (not just COM) so the shell view gets drag-and-drop and clipboard
     if (FAILED(OleInitialize(nullptr)))

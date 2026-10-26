@@ -182,10 +182,7 @@ void MainWindow::RunCommand(int id)
     case BtnPaste: PasteHere(); break;
     case BtnRename: tab->Rename(); break;
     case BtnDelete: DeleteSelection(GetKeyState(VK_SHIFT) < 0); break;
-    case BtnShare:
-        if (!tab->InvokeVerb("Windows.ModernShare", false))
-            SetStatusText(Tr(L"此项目不支持共享"), true);
-        break;
+    case BtnShare: ShareSelection(tab); break;
     case BtnProperties:
         if (!tab->InvokeVerb("properties", tab->SelectedCount() == 0))
             SetStatusText(Tr(L"无法打开属性"), true);

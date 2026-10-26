@@ -298,6 +298,8 @@ void FileList::DrawItems(HDC hdc, const RECT& clip)
     RECT client{};
     GetClientRect(m_list, &client);
     FillSolid(hdc, clip, m_theme->content);
+    if (m_blank)
+        return; // 刷新: Files clears the items while the folder is listed again
     RECT content = clip;
     OffsetRect(&content, m_scroll.x, m_scroll.y);
     for (int g : m_layout.HeadersIn(content))

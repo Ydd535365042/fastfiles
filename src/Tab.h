@@ -46,6 +46,8 @@ struct TabEvents
     virtual void OnTabCycleLayout(Tab*, ViewLayout) {}
     // Sort / grouping changed while every folder shares one layout (Files writes LayoutSettingsService's defaults then)
     virtual void OnTabSortDefault(Tab*, const ListSort&) {}
+    // The own list started / finished listing (opening a folder, 刷新): Files' tab LoadingStates (a ProgressRing icon)
+    virtual void OnTabLoading(Tab*, bool /*loading*/) {}
 };
 
 // Tag and Created: FastFiles' own file list only (Files' SortOption.FileTag / DateCreated)
@@ -107,7 +109,8 @@ struct ViewPrefs
 // What the current selection contains, for context buttons in the command bar
 // (Files' FileExtensionHelpers: wallpaper-compatible images, executables, fonts, batch / ahk, .ps1, media, .inf, certificates)
 enum SelectionKind : unsigned { SelImage = 1, SelRunnable = 2, SelFont = 4, SelFolder = 8, SelArchive = 16, SelZip = 32,
-    SelBatch = 64, SelPowerShell = 128, SelMedia = 256, SelInf = 512, SelCertificate = 1024, SelOther = 2048 };
+    SelBatch = 64, SelPowerShell = 128, SelMedia = 256, SelInf = 512, SelCertificate = 1024, SelOther = 2048,
+    SelShareable = 4096 }; // Files' ShareItemHelpers.IsItemShareable: not hidden, not a .lnk, not a folder
 
 // One tab (or pane) = one IExplorerBrowser (the same view Explorer itself uses), created lazily on first show.
 // The Home location shows FastFiles' own HomeView instead; history treats it like any other folder.
@@ -170,7 +173,7 @@ public:
     void Back();
     void Forward();
     void Up();
-    void Refresh();
+    void Refresh(bool user = false); // user: the 刷新 command (F5, menus): the items are seen to go and come back
     void Reload(); // a new view of the same folder (view flags such as the hidden-item filter changed)
 
     bool CanBack() const { return !m_back.empty() || m_results; } // (column moves aren't history, as in Files)
@@ -229,6 +232,7 @@ public:
     void OnListUp() override;
     void OnListMenu(HWND list, POINT screen, bool background) override;
     void OnListLoaded() override {}
+    void OnListLoading(bool loading) override { m_events->OnTabLoading(this, loading); }
     void OnListColumnsDefault(unsigned hidden) override { m_events->OnTabColumnsDefault(this, hidden); }
     void OnListZoom(int direction) override { StepIconSize(direction); }
     void OnListSorted(FileList* list) override { StoreSort(list); }

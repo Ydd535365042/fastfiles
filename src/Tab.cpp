@@ -594,7 +594,7 @@ void Tab::Up()
     m_browser->BrowseToIDList(nullptr, SBSP_PARENT);
 }
 
-void Tab::Refresh()
+void Tab::Refresh(bool user)
 {
     if (OnSettings())
     {
@@ -623,7 +623,7 @@ void Tab::Refresh()
     }
     if (FileList* list = List())
     {
-        list->Reload();
+        user ? list->Refresh() : list->Reload();
         return;
     }
     if (ComPtr<IShellView> view = ShellView())

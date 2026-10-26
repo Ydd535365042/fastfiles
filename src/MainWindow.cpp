@@ -1,6 +1,7 @@
 #include "MainWindow.h"
 #include "Backdrop.h"
 #include "Sandbox.h"
+#include "Share.h"
 #include "SmoothScroll.h"
 #include "resource.h"
 
@@ -345,6 +346,12 @@ LRESULT MainWindow::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
         return 0;
     case kMsgGitDone:
         OnGitDone(reinterpret_cast<GitRunResult*>(lp));
+        return 0;
+    case Update::kMsgUpdate:
+        OnUpdateResult(reinterpret_cast<Update::Result*>(lp));
+        return 0;
+    case Share::kMsgReady:
+        Share::OnReady(m_hwnd, &m_theme, lp);
         return 0;
     case SearchSuggest::kMsgItems:
         OnSuggestItems(static_cast<unsigned>(wp), reinterpret_cast<std::vector<SearchSuggest::Entry>*>(lp));

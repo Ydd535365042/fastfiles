@@ -1,6 +1,7 @@
 #include "MainWindow.h"
 #include "Drives.h"
 #include "Lang.h"
+#include "Sandbox.h"
 #include "fastfiles_core.h"
 #include "ContentDialog.h"
 #include <commdlg.h>
@@ -12,7 +13,7 @@ namespace
 {
 // View menu items (TabViewMenu::kAppFirst..); tag items are kTagFirst..kTagLast
 enum : UINT { VNewTab = TabViewMenu::kAppFirst, VNewWindow, VOtherPane, VPin, VCopyPath, VTerminal, VRemoveTags, VFolderWithSelection, VFormat,
-    VEditNotepad,
+    VEditNotepad, VPaste, VPasteShortcut,
     VRefresh, VAscending, VDescending, VLayoutBase, VSortBase = VLayoutBase + 16 }; // (VSortBase .. + MainWindow::kSortMenuIds)
 
 void TidySeparators(HMENU menu)
@@ -407,6 +408,20 @@ void MainWindow::OnTabViewMenu(Tab* tab, TabViewMenu& menu)
         InsertMenuW(m, top++, MF_BYPOSITION | MF_POPUP, reinterpret_cast<UINT_PTR>(GroupMenu(tab, VSortBase, true)), Tr(L"分组依据"));
         InsertItem(m, top, VRefresh, Tr(L"刷新"));
         InsertSeparator(m, top);
+        // Files' 粘贴 (PasteItemToSelection: always there, greyed while the clipboard has no items) and 粘贴为快捷方式
+        // (only while it can run). The folder's own background menu has no working paste without DefView as its site.
+        for (const wchar_t* verb : { L"paste", L"pastelink" })
+            if (const int i = menu.VerbIndex(verb); i >= 0)
+                DeleteMenu(m, static_cast<UINT>(i), MF_BYPOSITION);
+        const bool clip = Sandbox::Active() ? Sandbox::HasPasteFiles()
+            : IsClipboardFormatAvailable(CF_HDROP) || IsClipboardFormatAvailable(RegisterClipboardFormatW(CFSTR_SHELLIDLIST));
+        if (fsFolder)
+        {
+            InsertItem(m, top, VPaste, Tr(L"粘贴"), clip);
+            if (clip)
+                InsertItem(m, top, VPasteShortcut, Tr(L"粘贴为快捷方式"));
+            InsertSeparator(m, top);
+        }
     }
     if (menu.background)
     {
@@ -543,7 +558,9 @@ void MainWindow::OnTabViewCommand(Tab* tab, UINT id)
     case VCopyPath: CopyPath(); break;
     case VFolderWithSelection: CreateFolderWithSelection(); break;
     case VFormat: Drives::Format(m_hwnd, m_tagMenu.drive); break;
-    case VRefresh: tab->Refresh(); break;
+    case VRefresh: tab->Refresh(true); break;
+    case VPaste: PasteHere(); break;
+    case VPasteShortcut: PasteShortcutHere(); break;
     case VAscending:
     case VDescending:
     {

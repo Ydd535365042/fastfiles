@@ -90,7 +90,8 @@ bool MainWindow::CanRun(int command, const BarState& s)
     switch (command)
     {
     case BtnNew: case ActNewFolder: case ActNewFile: case ActNewShortcut: case ActAddItem: return s.fs && !s.bin;
-    case BtnCut: case BtnCopy: case BtnDelete: case BtnShare: case BtnRename: return some;
+    case BtnCut: case BtnCopy: case BtnDelete: case BtnRename: return some;
+    case BtnShare: return every(SelShareable); // Files' ShareItemAction: every selected item shareable, not in the bin
     case BtnPaste: return s.fs && s.clip;
     case BtnRunAs: return single && every(SelRunnable);
     case BtnRotateLeft: case BtnRotateRight: return every(SelImage);

@@ -26,6 +26,7 @@ struct Options
     bool verySilent = false; // /VERYSILENT, /S: no window
     bool desktopIcon = true;
     bool launch = true;      // finish page: start FastFiles
+    bool launchAfter = false; // /LAUNCH: start FastFiles after a /SILENT or /VERYSILENT install too (online update)
     bool deleteData = false; // uninstall: also remove data\ and the legacy %APPDATA%\FastFiles (/DELETEDATA). Off keeps them for a reinstall.
     bool testUninstall = false; // /TESTUNINSTALL: tests/test-ff-h30.ps1 only, see Main.cpp
     std::wstring dir;        // install folder

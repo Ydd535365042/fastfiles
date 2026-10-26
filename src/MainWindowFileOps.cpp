@@ -1,7 +1,9 @@
 #include "MainWindow.h"
 #include "ContentDialog.h"
 #include "Lang.h"
+#include "NewItem.h"
 #include "Sandbox.h"
+#include "Share.h"
 
 // Files' FilesystemHelpers on the status center: paste (CopyItemsFromClipboard / MoveItemsFromClipboard), delete
 // (DeleteItemsAsync with its confirmation dialog), drops on the sidebar / tabs / path bar, and the conflict dialog
@@ -281,6 +283,32 @@ void MainWindow::PasteHere()
         tab->InvokeVerb("paste", true); // virtual folders, or things that aren't files (an image, text...)
 }
 
+void MainWindow::PasteShortcutHere()
+{
+    // Files' PasteItemAsShortcutAsync: one shortcut per clipboard item, named by GetShortcutNamingPreference
+    Tab* tab = Active();
+    const std::wstring dir = tab && !tab->OnHome() ? CurrentFolderPath(tab) : std::wstring();
+    if (dir.empty())
+        return;
+    std::vector<std::wstring> sources;
+    bool move = false;
+    if (!Sandbox::PasteFiles(sources, move))
+    {
+        ComPtr<IDataObject> data;
+        if (FAILED(OleGetClipboard(&data)) || !data || !DataPaths(data.Get(), sources))
+            return;
+    }
+    for (const std::wstring& source : sources)
+    {
+        NewItem::Target target;
+        target.valid = target.exists = true;
+        target.fullPath = source;
+        bool denied = false;
+        if (NewItem::CreateShortcut(dir, PathFindFileNameW(source.c_str()), target, &denied).empty())
+            ContentDialog::Notice(m_hwnd, &m_theme, L"FastFiles", denied ? Tr(L"在此位置创建快捷方式需要管理员权限") : Tr(L"无法创建快捷方式。"));
+    }
+}
+
 void MainWindow::PasteIntoSelection()
 {
     Tab* tab = Active();
@@ -504,5 +532,24 @@ bool MainWindow::OnTabVerb(Tab* tab, const wchar_t* verb, bool background)
     }
     if (_wcsicmp(verb, L"delete") == 0 && !background)
         return DeleteSelectionOf(tab, GetKeyState(VK_SHIFT) < 0);
+    // The shell's 共享 item: Files' own share (the shell's needs Explorer's view as its site)
+    if (_wcsicmp(verb, L"Windows.ModernShare") == 0 && !background)
+    {
+        ShareSelection(tab);
+        return true;
+    }
     return false;
+}
+
+void MainWindow::ShareSelection(Tab* tab)
+{
+    if (!tab)
+        return;
+    std::vector<std::wstring> paths = tab->SelectedFileSystemPaths();
+    if (paths.empty() || !std::all_of(paths.begin(), paths.end(), [](const std::wstring& p) { return Share::Shareable(p); }))
+    {
+        SetStatusText(Tr(L"此项目不支持共享"), true);
+        return;
+    }
+    Share::Show(m_hwnd, std::move(paths));
 }

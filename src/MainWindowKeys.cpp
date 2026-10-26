@@ -161,7 +161,7 @@ bool MainWindow::RunAction(int id)
     case IdBack: if (tab) tab->Back(); return true;
     case IdForward: if (tab) tab->Forward(); return true;
     case IdUp: if (tab) tab->Up(); return true;
-    case IdRefresh: if (tab) tab->Refresh(); return true;
+    case IdRefresh: if (tab) tab->Refresh(true); return true;
     case IdNewTab: OnTabNew(); return true;
     case ActCloseTab: CloseTab(m_active); return true;
     case ActReopenTab: ReopenClosedTab(); return true;

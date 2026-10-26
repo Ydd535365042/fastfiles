@@ -1210,10 +1210,101 @@ std::vector<SettingsPage> MainWindow::BuildSettingsPages()
     }
     // 关于
     {
-        // The program only: its name and version
+        // Files' AboutPage: the app card (name, version), then 打开 GitHub 存储库. The update check is Files'
+        // update service (its toolbar button); here it sits on the app card's page, as the user asked.
         SettingsPage p{ Glyph::Info, Tr(L"关于"), {} };
         p.rows.push_back(value(L"FastFiles", [] { return Tr(L"版本 ") + std::wstring(FASTFILES_VERSION); }));
+        p.rows.back().icon = Glyph::Info;
+        const bool busy = m_updateStage == UpdateStage::Checking || m_updateStage == UpdateStage::Downloading;
+        p.rows.push_back(value(Tr(L"检查更新"), [this] { return UpdateCheckText(); },
+            busy ? std::wstring() : m_updateStage == UpdateStage::Available ? Tr(L"立即更新") : Tr(L"检查更新"),
+            [this] { m_updateStage == UpdateStage::Available ? StartUpdate() : CheckForUpdates(); }));
+        p.rows.back().icon = Glyph::Sync;
+        p.rows.push_back(value(Tr(L"GitHub 仓库"), [] { return std::wstring(L"github.com/") + Update::kRepo; }, Tr(L"打开"), [] { Update::OpenRepo(); }));
+        p.rows.back().icon = Glyph::Globe;
         pages.push_back(std::move(p));
     }
     return pages;
+}
+
+// --- 检查更新 (Files' IUpdateService: check, download with progress, then the app restarts) ---
+
+std::wstring MainWindow::UpdateCheckText() const
+{
+    switch (m_updateStage)
+    {
+    case UpdateStage::Checking: return Tr(L"正在检查更新…");
+    case UpdateStage::Latest: return Tr(L"已是最新版本");
+    case UpdateStage::Available: return Tr(L"发现新版本 ") + m_updateRelease.version;
+    case UpdateStage::Downloading: return Tr(L"正在下载更新… ") + std::to_wstring(m_updatePercent) + L"%";
+    case UpdateStage::Failed: return m_updateError;
+    default: return {};
+    }
+}
+
+void MainWindow::CheckForUpdates()
+{
+    if (m_updateStage == UpdateStage::Checking || m_updateStage == UpdateStage::Downloading)
+        return;
+    m_updateStage = UpdateStage::Checking;
+    Update::TestLog(L"stage checking");
+    Update::CheckAsync(m_hwnd);
+    ForEachPane([](Tab* tab) { tab->RebuildSettings(); });
+}
+
+void MainWindow::StartUpdate()
+{
+    if (m_updateStage != UpdateStage::Available)
+        return;
+    m_updateStage = UpdateStage::Downloading;
+    m_updatePercent = 0;
+    Update::TestLog(L"stage downloading " + m_updateRelease.version);
+    Update::DownloadAsync(m_hwnd, m_updateRelease);
+    ForEachPane([](Tab* tab) { tab->RebuildSettings(); });
+}
+
+void MainWindow::OnUpdateResult(Update::Result* result)
+{
+    std::unique_ptr<Update::Result> r(result);
+    switch (r->kind)
+    {
+    case Update::Result::Kind::Checked:
+        m_updateRelease = r->release;
+        m_updateStage = r->release.version.empty() ? UpdateStage::Latest : UpdateStage::Available;
+        break;
+    case Update::Result::Kind::Progress:
+        if (m_updateStage != UpdateStage::Downloading || r->percent == m_updatePercent)
+            return;
+        m_updatePercent = r->percent;
+        break;
+    case Update::Result::Kind::Downloaded:
+    {
+        // The update closes FastFiles: running copies / moves are asked about first (as closing the window)
+        m_quitting = true;
+        std::wstring error;
+        if (!ConfirmCloseWithOperations())
+        {
+            DeleteFileW(r->file.c_str());
+            m_updateStage = UpdateStage::Available;
+            break;
+        }
+        if (Update::Apply(m_hwnd, r->file, error))
+        {
+            Update::TestLog(L"stage applied");
+            ExitApp();
+            return;
+        }
+        m_quitting = false;
+        DeleteFileW(r->file.c_str());
+        m_updateError = error;
+        m_updateStage = UpdateStage::Failed;
+        break;
+    }
+    case Update::Result::Kind::Failed:
+        m_updateError = r->error;
+        m_updateStage = UpdateStage::Failed;
+        break;
+    }
+    Update::TestLog(L"status " + UpdateCheckText());
+    ForEachPane([](Tab* tab) { tab->RebuildSettings(); });
 }

@@ -191,10 +191,14 @@ bool FileList::Open(PCIDLIST_ABSOLUTE folder, const std::wstring& select)
         m_path = path;
         m_shellFolder = shellFolder;
         Watch();
+        m_blank = false; // (a refresh of the last folder is over)
+        m_held.reset();
+        KillTimer(m_hwnd, kRevealTimer);
+        RemovePropW(m_list, L"FastFiles.Refreshing");
     }
     m_pendingSelect = select;
     m_pendingTries = 0;
-    StartListing();
+    StartListing(true);
     return true;
 }
 
@@ -204,10 +208,31 @@ void FileList::Reload()
         StartListing();
 }
 
-void FileList::StartListing()
+void FileList::Refresh()
+{
+    // Files' RefreshItems: the items go (filesAndFolders.Clear) and come back as the folder is listed again, the
+    // tab's icon a ProgressRing meanwhile. FastFiles keeps them in memory (selection, scroll and pictures survive)
+    // and only stops drawing them, at least kBlankMs so the refresh is seen even when the listing is instant.
+    if (!m_folder)
+        return;
+    if (m_edit)
+        CommitRename(true);
+    m_blank = true;
+    m_blankSince = GetTickCount64();
+    SetPropW(m_list, L"FastFiles.Refreshing", reinterpret_cast<HANDLE>(1)); // (tests)
+    KillTimer(m_hwnd, kRevealTimer);
+    m_held.reset();
+    InvalidateRect(m_list, nullptr, FALSE);
+    UpdateWindow(m_list);
+    StartListing(true);
+}
+
+void FileList::StartListing(bool shown)
 {
     const unsigned generation = m_generation->fetch_add(1) + 1;
     m_loading = true;
+    if (shown)
+        m_events->OnListLoading(true);
     KillTimer(m_hwnd, 1); // a pending change notification reload: this is it
     std::thread(&FileList::ListWorker, m_hwnd, m_path, generation, m_generation, std::wstring(Tr(L"文件夹"))).detach();
 }
@@ -217,6 +242,20 @@ void FileList::TakeListing(Listing* raw)
     std::unique_ptr<Listing> listing(raw);
     if (listing->generation != m_generation->load())
         return; // a later listing is under way
+    if (m_blank)
+    {
+        // 刷新: the items stay away for kBlankMs at least
+        const ULONGLONG shown = GetTickCount64() - m_blankSince;
+        if (shown < kBlankMs)
+        {
+            m_held = std::move(listing);
+            SetTimer(m_hwnd, kRevealTimer, static_cast<UINT>(kBlankMs - shown), nullptr);
+            return;
+        }
+        m_blank = false;
+    }
+    RemovePropW(m_list, L"FastFiles.Refreshing");
+    m_events->OnListLoading(false);
     const bool fresh = !m_listed;
     const Kept kept = fresh ? Kept{} : Keep();
     // The same folder again: pictures and card details of unchanged items stay (a new folder starts without)

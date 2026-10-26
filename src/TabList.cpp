@@ -200,8 +200,8 @@ void Tab::OnListMenu(HWND list, POINT screen, bool background)
         handled = from->OpenSelection();
     if (alive && !handled && _wcsicmp(verb, L"rename") == 0)
         handled = from->BeginRename(); // Files' rename box (the shell's needs a folder view to edit in)
-    // 粘贴 / 删除: Files runs them itself (status center, its own dialogs)
-    if (alive && !handled && (_wcsicmp(verb, L"paste") == 0 || _wcsicmp(verb, L"delete") == 0))
+    // 粘贴 / 删除 / 共享: Files runs them itself (status center, its own dialogs, its share sheet)
+    if (alive && !handled && (_wcsicmp(verb, L"paste") == 0 || _wcsicmp(verb, L"delete") == 0 || _wcsicmp(verb, L"Windows.ModernShare") == 0))
         handled = m_events->OnTabVerb(this, verb, background);
     if (alive && !handled && fromShell && Sandbox::VerbAllowed(verb))
     {

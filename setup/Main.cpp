@@ -29,6 +29,8 @@ void Parse(Options& o)
             o.uninstall = true;
         else if (is(L"/DELETEDATA"))
             o.deleteData = true;
+        else if (is(L"/LAUNCH"))
+            o.launchAfter = true; // FastFiles' online update: start it again after a silent install
         else if (std::wstring d = value(L"/DIR="); !d.empty())
             o.dir = d;
         else if (std::wstring f = value(L"/uninstall-from="); !f.empty())
@@ -181,6 +183,8 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int)
         std::wstring error;
         const Progress none = [](int, const std::wstring&) {};
         code = (o.uninstall ? RunUninstall(o, none, error) : RunInstall(o, none, error)) ? ExitOk : ExitFailed;
+        if (code == ExitOk && !o.uninstall && o.launchAfter)
+            LaunchAsUser(Join(o.dir, kAppExe));
     }
     else
         code = RunUi(o);

@@ -21,6 +21,7 @@
 #include "Theme.h"
 #include "Toolbar.h"
 #include "RoundFrame.h"
+#include "Update.h"
 
 std::wstring FindGitExe(); // git.exe on PATH or in the usual install folders; empty when Git isn't installed
 struct DroppedFiles;       // MainWindowFileOps.cpp: a drop RouteFileDrop handed to the window
@@ -57,6 +58,7 @@ public:
     bool PreTranslate(MSG* msg);
 
     void OnTabNavigated(Tab* tab) override;
+    void OnTabLoading(Tab* tab, bool loading) override;
     void OnTabNavigationFailed(Tab* tab) override;
     void OnTabOpen(Tab* tab, PCIDLIST_ABSOLUTE pidl, OpenMode mode, bool activate) override;
     void OnTabHomeAction(Tab* tab, HomeAction action, const std::wstring& key, PCIDLIST_ABSOLUTE pidl, int section) override;
@@ -357,6 +359,8 @@ private:
     void OnTabLayoutSize(Tab* tab, int mode, int size) override;
     void OnTabCycleLayout(Tab* tab, ViewLayout layout) override;
     void PasteHere();                                  // Files' PasteItem: the clipboard into the current folder
+    void PasteShortcutHere();                          // Files' PasteItemAsShortcut: a .lnk here for each clipboard item
+    void ShareSelection(Tab* tab);                     // Files' ShareItem (Share.h)
     bool PasteTo(const std::wstring& destination);     // false: nothing for us (virtual items): the shell's paste
     bool DeleteSelectionOf(Tab* tab, bool permanently); // false: not file system items: the shell's delete
     void DeleteSelection(bool permanently);
@@ -402,6 +406,17 @@ private:
     void ShowTrayMenu(POINT pt);
     void ExitApp();
     void RestartApp(); // Files' RestartCommand (language change): a new process once this one has quit
+
+    // MainWindowSettings.cpp: 关于 > 检查更新 (Update.h: the GitHub releases of the repository)
+    enum class UpdateStage { Idle, Checking, Latest, Available, Downloading, Failed };
+    void CheckForUpdates();
+    void StartUpdate();
+    void OnUpdateResult(Update::Result* result);
+    std::wstring UpdateCheckText() const;
+    UpdateStage m_updateStage = UpdateStage::Idle;
+    Update::Release m_updateRelease;
+    int m_updatePercent = 0;
+    std::wstring m_updateError;
 
     HWND m_hwnd = nullptr;
     HWND m_address = nullptr;

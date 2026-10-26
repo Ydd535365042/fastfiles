@@ -226,7 +226,7 @@ void Ui::Finish(int code)
 {
     // Like Inno's postinstall entry: start the app as the signed-in user, not elevated. Never in preview: it must
     // not launch the real FastFiles.exe either.
-    if (code == ExitOk && !m_o.uninstall && m_o.launch && !m_o.silent && !m_o.preview)
+    if (code == ExitOk && !m_o.uninstall && !m_o.preview && (m_o.silent ? m_o.launchAfter : m_o.launch))
         LaunchAsUser(Join(m_o.dir, kAppExe));
     m_exit = code;
     DestroyWindow(m_hwnd);

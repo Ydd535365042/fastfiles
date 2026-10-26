@@ -45,6 +45,7 @@ public:
     RECT ItemRect(int index) const;
     void Relayout();
     void SetActionsVisible(bool visible); // Files: 在标题栏中显示标签操作按钮 (default on)
+    void SetLoading(int index, bool loading); // Files' LoadingStates: a ProgressRing instead of the tab's icon
     // Clipboard format of a dragged tab (registered; shared by every FastFiles process)
     static CLIPFORMAT TabFormat();
 
@@ -70,11 +71,13 @@ private:
         std::wstring text;
         int icon = -1;
         std::wstring tip;
+        bool loading = false;
         RECT rc{};   // client coordinates (already scrolled)
         RECT close{};
     };
     enum class DropKind { None, Tab, Files, NewTab };
-    static constexpr UINT_PTR kScrollTimer = 1, kHoverTimer = 2;
+    static constexpr UINT_PTR kScrollTimer = 1, kHoverTimer = 2, kSpinTimer = 3;
+    void DrawProgressRing(HDC hdc, const RECT& r) const;
     static constexpr UINT kHoverMs = 1300; // Files: Constants.DragAndDrop.HoverToOpenTimespan
     static constexpr UINT kTipMask = 0x8000; // TCM_GETITEMW mask bit (tests): pszText receives the tooltip instead
 

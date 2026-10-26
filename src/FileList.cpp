@@ -206,6 +206,11 @@ LRESULT CALLBACK FileList::HostProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
         }
         if (self && wp == kDragOpenTimer)
             self->OpenDropRow();
+        if (self && wp == kRevealTimer && self->m_held)
+        {
+            self->m_blank = false;
+            self->TakeListing(self->m_held.release());
+        }
         if (self && wp == kHoverTimer && self->m_hot >= 0 && self->SelectedCount() <= 1 && self->m_hot < self->Count())
             self->FocusRow(self->m_hot, true, false, false); // Files' SelectFilesOnHover: a second on the same item selects it
         return 0;

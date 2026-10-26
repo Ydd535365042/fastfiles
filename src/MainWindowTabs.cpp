@@ -365,7 +365,28 @@ void MainWindow::UpdateTabLabel(int index)
     }
     PCIDLIST_ABSOLUTE where = slot.panes[0]->Location();
     slot.icon = IsSettingsPidl(where) ? TabStrip::kSettingsIcon : where && IsHomePidl(where) ? TabStrip::kHomeIcon : PidlIcon(where);
+    // The ring goes with the listing: a pane that left its list (Home, another view) isn't loading any more
+    bool loading = false;
+    for (int i = 0; i < (slot.Split() ? 2 : 1); ++i)
+        if (const Tab* pane = slot.panes[i].Get(); pane && pane->List() && pane->List()->Loading())
+            loading = true;
+    if (!loading)
+        m_strip.SetLoading(index, false);
     RefreshTabHeaders();
+}
+
+void MainWindow::OnTabLoading(Tab* tab, bool loading)
+{
+    // Files' TabBar LoadingStates: the tab's icon is a ProgressRing while its folder loads (a split tab: either pane)
+    const int index = IndexOf(tab);
+    if (index < 0)
+        return;
+    const TabSlot& slot = m_tabList[index];
+    if (!loading)
+        for (int i = 0; i < (slot.Split() ? 2 : 1); ++i)
+            if (const Tab* pane = slot.panes[i].Get(); pane && pane != tab && pane->List() && pane->List()->Loading())
+                loading = true;
+    m_strip.SetLoading(index, loading);
 }
 
 void MainWindow::RefreshTabHeaders()

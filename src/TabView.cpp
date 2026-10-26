@@ -1,5 +1,6 @@
 #include "Tab.h"
 #include "DarkMode.h"
+#include "Share.h"
 #include <mutex>
 #include <shared_mutex>
 
@@ -545,6 +546,14 @@ unsigned Tab::SelectionKinds(unsigned* every) const
                     k = SelInf;
                 else if (HasExt(ext, { L".cer", L".crt", L".der", L".pfx" }))
                     k = SelCertificate;
+                // Files' IsItemShareable: a file (a zip too), not hidden, not a .lnk (a .url shares its link)
+                PWSTR path = nullptr;
+                if (SUCCEEDED(item->GetDisplayName(SIGDN_FILESYSPATH, &path)))
+                {
+                    if (Share::Shareable(path))
+                        k |= SelShareable;
+                    CoTaskMemFree(path);
+                }
             }
         }
         kinds |= k;

@@ -60,6 +60,10 @@ private:
     const COLORREF* m_background = nullptr;
     int m_hot = -1;
     int m_pressed = -1;
+    int m_flash = -1;          // a quick click's button, still drawn pressed until kFlashTimer
+    ULONGLONG m_pressedAt = 0;
+    static constexpr UINT_PTR kFlashTimer = 1;
+    static constexpr ULONGLONG kFlashMs = 120;
     bool m_tracking = false;
     bool m_sidebarLook = false;
     bool m_buttonLook = false;

@@ -154,7 +154,7 @@ void Breadcrumb::Paint(HDC hdc)
     if (m_first > 0)
     {
         if (hot(Part::Overflow, -1) || down(Part::Overflow, -1))
-            FillRound(hdc, m_overflow, t.S(4), down(Part::Overflow, -1) ? t.pressed : t.hover);
+            FillRound(hdc, m_overflow, t.S(4), Mix(t.field, t.ink, down(Part::Overflow, -1) ? t.buttonPressedPct : t.buttonHoverPct));
         DrawGlyph(hdc, t.iconsSmall, kEllipsis, m_overflow, down(Part::Overflow, -1) ? pressedInk : t.muted);
     }
     const int last = static_cast<int>(m_segments.size()) - 1;
@@ -162,10 +162,10 @@ void Breadcrumb::Paint(HDC hdc)
     {
         const auto& seg = m_segments[i];
         if (hot(Part::Text, i) || down(Part::Text, i) || (i == m_dropIndex && m_itemTarget))
-            FillRound(hdc, seg.text, t.S(4), down(Part::Text, i) ? t.pressed : t.hover);
+            FillRound(hdc, seg.text, t.S(4), Mix(t.field, t.ink, down(Part::Text, i) ? t.buttonPressedPct : t.buttonHoverPct));
         DrawLabel(hdc, t.ui, seg.name, seg.text, down(Part::Text, i) ? pressedInk : i == last ? t.ink : Mix(t.ink, t.muted, 45), DT_CENTER);
         if (hot(Part::Chevron, i) || down(Part::Chevron, i))
-            FillRound(hdc, seg.chevron, t.S(4), down(Part::Chevron, i) ? t.pressed : t.hover);
+            FillRound(hdc, seg.chevron, t.S(4), Mix(t.field, t.ink, down(Part::Chevron, i) ? t.buttonPressedPct : t.buttonHoverPct));
         DrawGlyph(hdc, t.iconsSmall, kChevron, seg.chevron, down(Part::Chevron, i) ? pressedInk : t.muted);
     }
 }
@@ -505,6 +505,7 @@ LRESULT Breadcrumb::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
         {
             SetCapture(m_hwnd);
             InvalidateRect(m_hwnd, nullptr, FALSE);
+            UpdateWindow(m_hwnd); // the pressed look now
         }
         return 0;
     case WM_CAPTURECHANGED:

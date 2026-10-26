@@ -64,7 +64,7 @@ void ButtonBar::SetItems(std::vector<Item> items)
             SendMessageW(m_tooltip, TTM_DELTOOLW, 0, reinterpret_cast<LPARAM>(&ti));
         }
     m_items = std::move(items);
-    m_hot = m_pressed = -1;
+    m_hot = m_pressed = m_flash = -1;
     for (size_t i = 0; m_tooltip && i < m_items.size(); ++i)
     {
         if (m_items[i].id <= 0 || m_items[i].tip.empty())
@@ -305,7 +305,7 @@ void ButtonBar::Paint(HDC hdc, const RECT& rc)
         if (item.id < 0)
             continue;
         const bool hot = item.enabled && static_cast<int>(i) == m_hot;
-        const bool down = item.enabled && static_cast<int>(i) == m_pressed;
+        const bool down = item.enabled && (static_cast<int>(i) == m_pressed || static_cast<int>(i) == m_flash);
         if (m_sidebarLook)
         {
             // Files' footer SettingsButton is a SidebarItem: the same states as Sidebar::Paint's rows (subtle fills
@@ -323,18 +323,20 @@ void ButtonBar::Paint(HDC hdc, const RECT& rc)
         }
         else if (m_buttonLook)
         {
-            // Files' AddressToolbarButtonStyle (DefaultButtonStyle on a transparent rest): ControlFillColorSecondary with
-            // the elevation border under the mouse, ControlFillColorTertiary and no border while pressed
+            // Files' AddressToolbarButtonStyle: a fill and the elevation border under the mouse, a deeper fill (no
+            // border) while pressed
             if (down)
-                FillRound(hdc, r, t.S(4), t.controlFillPressed);
+                FillRound(hdc, r, t.S(4), Mix(background, t.ink, t.buttonPressedPct));
             else if (hot)
             {
-                FillRound(hdc, r, t.S(4), t.controlFillHover);
+                FillRound(hdc, r, t.S(4), Mix(background, t.ink, t.buttonHoverPct));
                 FrameRound(hdc, r, t.S(4), t.controlStroke);
             }
         }
-        else if (down || hot || item.checked)
-            FillRound(hdc, r, t.S(5), down ? t.pressed : item.checked ? (hot ? Mix(t.selected, t.ink, 6) : t.selected) : t.hover);
+        else if (item.checked && !down)
+            FillRound(hdc, r, t.S(5), hot ? Mix(t.selected, t.ink, 6) : t.selected);
+        else if (down || hot)
+            FillRound(hdc, r, t.S(5), Mix(background, t.ink, down ? t.buttonPressedPct : t.buttonHoverPct)); // AppBarButton states
         // ButtonForegroundPressed / AppBarButtonForegroundPressed: TextFillColorSecondary (the toolbar's buttons too)
         const COLORREF ink = !item.enabled ? Mix(t.ink, background, 62)
             : down && !m_sidebarLook ? Mix(background, t.secondaryText, t.secondaryTextPct) : t.ink;
@@ -403,7 +405,11 @@ LRESULT ButtonBar::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
         if (index < 0 || !m_items[index].enabled)
             return 0;
         m_pressed = index;
+        m_pressedAt = GetTickCount64();
+        KillTimer(m_hwnd, kFlashTimer);
+        m_flash = -1;
         InvalidateRect(m_hwnd, nullptr, FALSE);
+        UpdateWindow(m_hwnd); // the pressed look now, not after whatever the click runs
         if (m_items[index].dropdown)
         {
             UpdateWindow(m_hwnd);
@@ -416,12 +422,26 @@ LRESULT ButtonBar::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
         SetCapture(m_hwnd);
         return 0;
     }
+    case WM_TIMER:
+        if (wp == kFlashTimer)
+        {
+            KillTimer(m_hwnd, kFlashTimer);
+            m_flash = -1;
+            InvalidateRect(m_hwnd, nullptr, FALSE);
+        }
+        return 0;
     case WM_LBUTTONUP:
     {
         const int pressed = m_pressed;
         if (GetCapture() == m_hwnd)
             ReleaseCapture();
         m_pressed = -1;
+        // A quick click still shows its pressed look for a moment (the button-up can come before the screen updated)
+        if (pressed >= 0 && GetTickCount64() - m_pressedAt < kFlashMs)
+        {
+            m_flash = pressed;
+            SetTimer(m_hwnd, kFlashTimer, static_cast<UINT>(kFlashMs - (GetTickCount64() - m_pressedAt)), nullptr);
+        }
         InvalidateRect(m_hwnd, nullptr, FALSE);
         // Dropdowns already opened on the press; a late button-up (after the menu, or a dialog it led to) must not reopen them
         if (pressed >= 0 && pressed < static_cast<int>(m_items.size()) && !m_items[pressed].dropdown && HitTest(pt) == pressed)

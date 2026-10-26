@@ -74,6 +74,9 @@ struct Theme
     COLORREF subtleHover = 0, subtlePressed = 0;                          // SubtleFillColorSecondary / Tertiary
     COLORREF controlFill = 0, controlFillHover = 0, controlFillPressed = 0; // ControlFillColorDefault / Secondary / Tertiary
     COLORREF controlStroke = 0;                                          // ButtonBorderBrush (ControlElevationBorder)
+    // Buttons on the toolbar / nav row / address bar: the ink mixed into what's under them on hover / press. Files'
+    // subtle fills (#09000000 / #06000000) were hardly visible here, so these are stronger, the press darker than the hover
+    int buttonHoverPct = 0, buttonPressedPct = 0;
     COLORREF card = 0, cardHover = 0, cardPressed = 0, cardStroke = 0;   // SettingsCard over `content`
     bool dark = false;
 

@@ -273,6 +273,8 @@ void Theme::SetPalette(bool darkPalette)
         controlFillHover = Mix(layer, white, 8);   // #15FFFFFF
         controlFillPressed = Mix(layer, white, 3); // #08FFFFFF
         controlStroke = Mix(layer, white, 8);      // #12FFFFFF..#18FFFFFF
+        buttonHoverPct = 9;
+        buttonPressedPct = 15;
         card = Mix(content, white, 5);             // SettingsCard: CardBackgroundFillColorDefault over the file area
         cardHover = Mix(content, white, 8);
         cardPressed = Mix(content, white, 3);
@@ -286,6 +288,8 @@ void Theme::SetPalette(bool darkPalette)
         controlFillHover = Mix(layer, white, 50);  // #80F9F9F9
         controlFillPressed = Mix(layer, white, 30); // #4DF9F9F9
         controlStroke = Mix(layer, black, 9);      // #0F000000..#29000000
+        buttonHoverPct = 6;
+        buttonPressedPct = 11;
         card = RGB(0xFF, 0xFF, 0xFF);              // Files' settings cards (measured)
         cardHover = RGB(0xFA, 0xFA, 0xFA);
         cardPressed = RGB(0xF7, 0xF7, 0xF7);

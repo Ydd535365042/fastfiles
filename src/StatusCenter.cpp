@@ -291,6 +291,7 @@ LRESULT StatusCenter::ButtonMessage(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
         m_down = true;
         SetCapture(hwnd);
         InvalidateRect(hwnd, nullptr, FALSE);
+        UpdateWindow(hwnd); // the pressed look before the flyout opens
         return 0;
     case WM_LBUTTONUP:
     {
@@ -327,7 +328,7 @@ void StatusCenter::PaintButton(HDC hdc, const RECT& rc)
     FillSolid(hdc, rc, t.layer);
     // AddressToolbarButtonStyle: subtle fill on hover / press, kept while the flyout is open
     if (m_down || m_hot || Open())
-        FillRound(hdc, rc, t.S(4), m_down ? t.subtlePressed : t.subtleHover);
+        FillRound(hdc, rc, t.S(4), Mix(t.layer, t.ink, m_down ? t.buttonPressedPct : t.buttonHoverPct));
     const float cx = (rc.left + rc.right) / 2.0f, cy = (rc.top + rc.bottom) / 2.0f;
     const int state = InfoState();
     const bool ring = m_ring && !m_views.empty();

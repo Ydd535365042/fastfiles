@@ -340,8 +340,10 @@ void StatusCenter::PaintButton(HDC hdc, const RECT& rc)
         {
             // App.ThemedIcons.StatusCenter (16px outline): a rounded panel, a divider, one row on top and two below
             const float k = t.S(16) / 16.0f, x = cx - 8 * k, y = cy - 8 * k;
-            Gdiplus::Pen pen(color(t.ink), k);
-            Gdiplus::SolidBrush brush(color(t.ink));
+            // ButtonForegroundPressed: TextFillColorSecondary while the button is held
+            const COLORREF ink = m_down ? Mix(t.layer, t.secondaryText, t.secondaryTextPct) : t.ink;
+            Gdiplus::Pen pen(color(ink), k);
+            Gdiplus::SolidBrush brush(color(ink));
             Gdiplus::GraphicsPath panel;
             const float r = 1.5f * k, l = x + 2.5f * k, tp = y + 0.5f * k, w = 11 * k, h = 15 * k;
             panel.AddArc(l, tp, 2 * r, 2 * r, 180, 90);
@@ -503,8 +505,12 @@ void StatusCenter::Toggle()
     m_ring = Running() > 0 || InfoState() == 3;
     m_scroll = 0;
     Resize();
+    // The window keeps its active look meanwhile; painted at once (no frame of the flyout's previous content)
+    m_showing = true;
     ShowWindow(m_flyout, SW_SHOW);
+    UpdateWindow(m_flyout);
     SetFocus(m_flyout);
+    m_showing = false;
     InvalidateRect(m_button, nullptr, FALSE);
 }
 
@@ -641,8 +647,13 @@ void StatusCenter::Resize()
     x = std::clamp(x, static_cast<int>(mi.rcWork.left), std::max(static_cast<int>(mi.rcWork.left), static_cast<int>(mi.rcWork.right) - w));
     y = std::min(y, std::max(static_cast<int>(mi.rcWork.top), static_cast<int>(mi.rcWork.bottom) - h));
     SetWindowPos(m_flyout, HWND_TOP, x, y, w, h, SWP_NOACTIVATE);
-    // OverlayCornerRadius 8
-    SetWindowRgn(m_flyout, CreateRoundRectRgn(0, 0, w + 1, h + 1, t.S(16), t.S(16)), TRUE);
+    // OverlayCornerRadius 8. Only when the size changed: a new region repaints the whole flyout and its shadow, which
+    // flickered on every progress tick while it was open
+    if (w != m_region.cx || h != m_region.cy)
+    {
+        SetWindowRgn(m_flyout, CreateRoundRectRgn(0, 0, w + 1, h + 1, t.S(16), t.S(16)), IsWindowVisible(m_flyout));
+        m_region = { w, h };
+    }
     const RECT list = ListRect();
     const int maxScroll = std::max(0, content - static_cast<int>(list.bottom - list.top));
     m_smooth.ClampTarget(maxScroll);
@@ -941,7 +952,12 @@ LRESULT StatusCenter::FlyoutMessage(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
         return 1;
     case WM_ACTIVATE:
         if (LOWORD(wp) == WA_INACTIVE)
+        {
             Hide(); // Files' light-dismiss flyout
+            // The window kept its active look (KeepsWindowActive): it is inactive now, unless it took the activation back
+            if (reinterpret_cast<HWND>(lp) != m_parent && m_button)
+                SendMessageW(m_parent, WM_COMMAND, MAKEWPARAM(m_id, kWindowInactive), reinterpret_cast<LPARAM>(m_button));
+        }
         break;
     case WM_MOUSEMOVE:
     {

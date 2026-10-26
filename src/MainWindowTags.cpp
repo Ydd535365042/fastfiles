@@ -4,6 +4,7 @@
 #include "Sandbox.h"
 #include "fastfiles_core.h"
 #include "ContentDialog.h"
+#include "Share.h"
 #include <commdlg.h>
 
 // File tags (Files: Settings > Tags, the "Tags" item of the right-click menu, the details pane's tag row, the sidebar's
@@ -13,7 +14,7 @@ namespace
 {
 // View menu items (TabViewMenu::kAppFirst..); tag items are kTagFirst..kTagLast
 enum : UINT { VNewTab = TabViewMenu::kAppFirst, VNewWindow, VOtherPane, VPin, VCopyPath, VTerminal, VRemoveTags, VFolderWithSelection, VFormat,
-    VEditNotepad, VPaste, VPasteShortcut,
+    VEditNotepad, VPaste, VPasteShortcut, VShareFolder,
     VRefresh, VAscending, VDescending, VLayoutBase, VSortBase = VLayoutBase + 16 }; // (VSortBase .. + MainWindow::kSortMenuIds)
 
 void TidySeparators(HMENU menu)
@@ -481,8 +482,25 @@ void MainWindow::OnTabViewMenu(Tab* tab, TabViewMenu& menu)
         InsertSeparator(m, at);
     }
 
-    // 复制项目路径 and 用选中的项目创建文件夹 right after the shell's 复制 (Files: CopyItemPath, CreateFolderWithSelection)
+    // 共享 for folders (the shell's own 共享 is for files): the system's network sharing, just before its 授予访问权限
     m_tagMenu.paths = tab->SelectedFileSystemPaths();
+    if (!m_tagMenu.paths.empty() && !tab->InResults() &&
+        std::all_of(m_tagMenu.paths.begin(), m_tagMenu.paths.end(), [](const std::wstring& p) { return Share::FolderShareable(p); }))
+    {
+        const std::wstring give = Share::GiveAccessText(m_tagMenu.paths);
+        int at = -1;
+        for (int i = 0; !give.empty() && i < GetMenuItemCount(m) && at < 0; ++i)
+        {
+            wchar_t text[128]{};
+            if (GetSubMenu(m, i) && GetMenuStringW(m, i, text, ARRAYSIZE(text), MF_BYPOSITION) && give == text)
+                at = i;
+        }
+        const int props = menu.VerbIndex(L"properties");
+        UINT pos = static_cast<UINT>(at >= 0 ? at : props >= 0 ? props : GetMenuItemCount(m));
+        InsertItem(m, pos, VShareFolder, Tr(L"共享"));
+    }
+
+    // 复制项目路径 and 用选中的项目创建文件夹 right after the shell's 复制 (Files: CopyItemPath, CreateFolderWithSelection)
     if (!m_tagMenu.paths.empty())
     {
         const int copy = menu.VerbIndex(L"copy");
@@ -561,6 +579,10 @@ void MainWindow::OnTabViewCommand(Tab* tab, UINT id)
     case VRefresh: tab->Refresh(true); break;
     case VPaste: PasteHere(); break;
     case VPasteShortcut: PasteShortcutHere(); break;
+    case VShareFolder:
+        if (!Share::GiveAccess(m_hwnd, m_tagMenu.paths))
+            ContentDialog::Notice(m_hwnd, &m_theme, Tr(L"共享项目失败"), Tr(L"无法打开共享窗口。"));
+        break;
     case VAscending:
     case VDescending:
     {

@@ -321,9 +321,23 @@ void ButtonBar::Paint(HDC hdc, const RECT& rc)
             else if (down || hot)
                 FillRound(hdc, r, radius, down ? t.subtlePressed : t.subtleHover);
         }
+        else if (m_buttonLook)
+        {
+            // Files' AddressToolbarButtonStyle (DefaultButtonStyle on a transparent rest): ControlFillColorSecondary with
+            // the elevation border under the mouse, ControlFillColorTertiary and no border while pressed
+            if (down)
+                FillRound(hdc, r, t.S(4), t.controlFillPressed);
+            else if (hot)
+            {
+                FillRound(hdc, r, t.S(4), t.controlFillHover);
+                FrameRound(hdc, r, t.S(4), t.controlStroke);
+            }
+        }
         else if (down || hot || item.checked)
             FillRound(hdc, r, t.S(5), down ? t.pressed : item.checked ? (hot ? Mix(t.selected, t.ink, 6) : t.selected) : t.hover);
-        const COLORREF ink = item.enabled ? t.ink : Mix(t.ink, background, 62);
+        // ButtonForegroundPressed / AppBarButtonForegroundPressed: TextFillColorSecondary (the toolbar's buttons too)
+        const COLORREF ink = !item.enabled ? Mix(t.ink, background, 62)
+            : down && !m_sidebarLook ? Mix(background, t.secondaryText, t.secondaryTextPct) : t.ink;
         const bool label = !item.label.empty() && (r.right - r.left) > t.S(48);
         int x = r.left + (label ? t.S(10) : 0);
         if (item.glyph)

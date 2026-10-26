@@ -75,5 +75,6 @@ private:
     int m_first = 0; // first visible segment; earlier ones live in the overflow menu
     RECT m_overflow{};
     Hit m_hot;
+    Hit m_pressed; // the part the left button went down on (its pressed look)
     bool m_tracking = false;
 };

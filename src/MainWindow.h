@@ -295,6 +295,7 @@ private:
     // MainWindowSettings.cpp
     void ApplySettings();
     void ApplyTheme(bool force);
+    void SetLooksActive(bool active); // the tab row and the backdrop's active / inactive look (WM_ACTIVATE)
     void SaveAndBroadcast();
     void OpenSettings(int page = 0);
     void SetDefaultLayout(int layout); // also what the layout menu calls when "same layout everywhere" is on
@@ -445,6 +446,7 @@ private:
     std::wstring m_sizeText;
     long long m_sizeKey = -1;
     HWND m_lastFocus = nullptr;
+    int m_looksActive = -1; // SetLooksActive's last state (-1 none yet)
 
     Sidebar* m_sidebar = nullptr;
     std::unique_ptr<InfoPane> m_info;

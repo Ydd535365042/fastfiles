@@ -185,10 +185,13 @@ LRESULT MainWindow::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
         m_round.Update();
         break;
     case WM_NCACTIVATE:
-        m_strip.SetWindowActive(wp != FALSE);
-        m_round.SetActive(wp != FALSE);
+    {
+        const bool active = wp != FALSE || m_center.KeepsWindowActive();
+        m_strip.SetWindowActive(active);
+        m_round.SetActive(active);
         // lParam -1 stops DefWindowProc from repainting a caption we no longer have
-        return DefWindowProcW(m_hwnd, msg, wp, -1);
+        return DefWindowProcW(m_hwnd, msg, active, -1);
+    }
     case WM_SETTEXT:
     case WM_SETICON:
         // Rounded by a region (Windows 8 / 10) DWM no longer draws the frame, and DefWindowProc paints the classic caption
@@ -299,6 +302,12 @@ LRESULT MainWindow::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
         {
             Layout();
         }
+        else if (LOWORD(wp) == IdStatusCenter && from == m_center.Button() && code == StatusCenter::kWindowInactive)
+        {
+            // The flyout lost the activation to another program: the look it kept goes now
+            SetLooksActive(false);
+            SendMessageW(m_hwnd, WM_NCACTIVATE, FALSE, 0);
+        }
         else if (LOWORD(wp) == IdStatusCenter && from == m_center.Button() && code == StatusCenter::kTipShown)
         {
             // Files' ShowStatusCenterTeachingTip: once
@@ -351,7 +360,7 @@ LRESULT MainWindow::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
         OnUpdateResult(reinterpret_cast<Update::Result*>(lp));
         return 0;
     case Share::kMsgReady:
-        Share::OnReady(m_hwnd, &m_theme, lp);
+        Share::OnReady(m_hwnd, &m_theme, wp, lp);
         return 0;
     case SearchSuggest::kMsgItems:
         OnSuggestItems(static_cast<unsigned>(wp), reinterpret_cast<std::vector<SearchSuggest::Entry>*>(lp));
@@ -543,14 +552,8 @@ LRESULT MainWindow::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
         break;
     }
     case WM_ACTIVATE:
-        m_strip.SetWindowActive(LOWORD(wp) != WA_INACTIVE);
-        // Files' AppSystemBackdrop.SetInputActive: an inactive window shows the solid fallback (test mode keeps the
-        // material: test windows are never the foreground one)
-        if (m_settings.themeBackdrop != Backdrop::Solid)
-        {
-            Backdrop::SetActive(LOWORD(wp) != WA_INACTIVE || Sandbox::Active());
-            ApplyTheme(false);
-        }
+        // The status center's flyout taking the activation leaves the window's look as it is (Files' flyout is in the window)
+        SetLooksActive(LOWORD(wp) != WA_INACTIVE || m_center.KeepsWindowActive());
         if (LOWORD(wp) == WA_INACTIVE && m_paletteOpen)
             ClosePalette(false);
         if (LOWORD(wp) == WA_INACTIVE)

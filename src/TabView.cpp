@@ -518,7 +518,17 @@ unsigned Tab::SelectionKinds(unsigned* every) const
         {
             item->GetAttributes(SFGAO_FOLDER | SFGAO_STREAM, &attrs);
             if ((attrs & SFGAO_FOLDER) && !(attrs & SFGAO_STREAM))
+            {
                 k = SelFolder;
+                // 共享 on a folder: the system's network sharing (授予访问权限 > 特定用户...), for a real disk folder
+                PWSTR path = nullptr;
+                if (SUCCEEDED(item->GetDisplayName(SIGDN_FILESYSPATH, &path)))
+                {
+                    if (Share::FolderShareable(path))
+                        k |= SelShareFolder;
+                    CoTaskMemFree(path);
+                }
+            }
             else if (SUCCEEDED(item->GetDisplayName(SIGDN_PARENTRELATIVEPARSING, &name)))
             {
                 const std::wstring ext = PathFindExtensionW(name);

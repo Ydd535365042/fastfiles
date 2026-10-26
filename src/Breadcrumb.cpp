@@ -147,22 +147,26 @@ void Breadcrumb::Paint(HDC hdc)
         ImageList_Draw(m_images, m_icon, hdc, m_iconRect.left, (rc.bottom - size) / 2, ILD_TRANSPARENT);
     }
     auto hot = [&](Part part, int index) { return m_hot.part == part && m_hot.index == index; };
+    // Files' BreadcrumbBar items: SubtleFillColorSecondary under the mouse, SubtleFillColorTertiary and the secondary
+    // text color while pressed
+    auto down = [&](Part part, int index) { return m_pressed.part == part && m_pressed.index == index && (hot(part, index) || m_hot.part == Part::None); };
+    const COLORREF pressedInk = Mix(t.field, t.secondaryText, t.secondaryTextPct);
     if (m_first > 0)
     {
-        if (hot(Part::Overflow, -1))
-            FillRound(hdc, m_overflow, t.S(4), t.hover);
-        DrawGlyph(hdc, t.iconsSmall, kEllipsis, m_overflow, t.muted);
+        if (hot(Part::Overflow, -1) || down(Part::Overflow, -1))
+            FillRound(hdc, m_overflow, t.S(4), down(Part::Overflow, -1) ? t.pressed : t.hover);
+        DrawGlyph(hdc, t.iconsSmall, kEllipsis, m_overflow, down(Part::Overflow, -1) ? pressedInk : t.muted);
     }
     const int last = static_cast<int>(m_segments.size()) - 1;
     for (int i = m_first; i <= last; ++i)
     {
         const auto& seg = m_segments[i];
-        if (hot(Part::Text, i) || (i == m_dropIndex && m_itemTarget))
-            FillRound(hdc, seg.text, t.S(4), t.hover);
-        DrawLabel(hdc, t.ui, seg.name, seg.text, i == last ? t.ink : Mix(t.ink, t.muted, 45), DT_CENTER);
-        if (hot(Part::Chevron, i))
-            FillRound(hdc, seg.chevron, t.S(4), t.hover);
-        DrawGlyph(hdc, t.iconsSmall, kChevron, seg.chevron, t.muted);
+        if (hot(Part::Text, i) || down(Part::Text, i) || (i == m_dropIndex && m_itemTarget))
+            FillRound(hdc, seg.text, t.S(4), down(Part::Text, i) ? t.pressed : t.hover);
+        DrawLabel(hdc, t.ui, seg.name, seg.text, down(Part::Text, i) ? pressedInk : i == last ? t.ink : Mix(t.ink, t.muted, 45), DT_CENTER);
+        if (hot(Part::Chevron, i) || down(Part::Chevron, i))
+            FillRound(hdc, seg.chevron, t.S(4), down(Part::Chevron, i) ? t.pressed : t.hover);
+        DrawGlyph(hdc, t.iconsSmall, kChevron, seg.chevron, down(Part::Chevron, i) ? pressedInk : t.muted);
     }
 }
 Breadcrumb::Hit Breadcrumb::HitTest(POINT pt) const
@@ -492,10 +496,38 @@ LRESULT Breadcrumb::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
         SetCursor(LoadCursorW(nullptr, HitTest(pt).part == Part::Blank ? IDC_IBEAM : IDC_HAND));
         return TRUE;
     }
+    case WM_LBUTTONDOWN:
+        // The pressed look until the button comes up (the click itself still acts on the button-up, as before)
+        m_pressed = HitTest({ GET_X_LPARAM(lp), GET_Y_LPARAM(lp) });
+        if (m_pressed.part == Part::Blank)
+            m_pressed = {};
+        if (m_pressed.part != Part::None)
+        {
+            SetCapture(m_hwnd);
+            InvalidateRect(m_hwnd, nullptr, FALSE);
+        }
+        return 0;
+    case WM_CAPTURECHANGED:
+        if (m_pressed.part != Part::None)
+        {
+            m_pressed = {};
+            InvalidateRect(m_hwnd, nullptr, FALSE);
+        }
+        return 0;
     case WM_LBUTTONUP:
     case WM_MBUTTONUP:
     {
         const Hit hit = HitTest({ GET_X_LPARAM(lp), GET_Y_LPARAM(lp) });
+        if (msg == WM_LBUTTONUP && m_pressed.part != Part::None)
+        {
+            const Hit pressed = m_pressed;
+            m_pressed = {};
+            if (GetCapture() == m_hwnd)
+                ReleaseCapture();
+            InvalidateRect(m_hwnd, nullptr, FALSE);
+            if (hit.part != pressed.part || hit.index != pressed.index)
+                return 0; // released somewhere else: no click
+        }
         const bool middle = msg == WM_MBUTTONUP;
         if (hit.part == Part::Text)
         {

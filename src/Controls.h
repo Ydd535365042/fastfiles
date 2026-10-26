@@ -35,6 +35,7 @@ public:
     void SetVisible(int id, bool visible);
     void SetItems(std::vector<Item> items); // replace everything (customized toolbar), tooltips included
     void SetSidebarLook(bool on) { m_sidebarLook = on; } // SidebarItem states (the sidebar footer's 设置), see Paint
+    void SetButtonLook(bool on) { m_buttonLook = on; }   // DefaultButtonStyle states (the nav row's buttons), see Paint
     int ItemAt(POINT client) const;         // id of the button there, 0 for none
     bool IsEnabled(int id) const;
     RECT ScreenRect(int id) const;
@@ -61,6 +62,7 @@ private:
     int m_pressed = -1;
     bool m_tracking = false;
     bool m_sidebarLook = false;
+    bool m_buttonLook = false;
 };
 
 // Single-line status area: "left\tright" puts the part after the tab on the right edge. An optional Git branch chip

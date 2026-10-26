@@ -15,6 +15,7 @@ public:
     static constexpr int kVisibilityChanged = 1; // Wanted() changed: lay the address bar out again
     static constexpr int kTipShown = 2;          // the teaching tip was shown (save ShowStatusCenterTeachingTip = false)
     static constexpr int kClearCompleted = 0xC1; // WM_COMMAND to the flyout: Files' 清除已完成的条目 (tests)
+    static constexpr int kWindowInactive = 3;    // the flyout lost the activation to another window than the parent
 
     ~StatusCenter();
     bool Create(HWND parent, int id, const Theme* theme, Operations* ops);
@@ -26,6 +27,9 @@ public:
     void Refresh();       // operations changed (also the timer): cards, speed, ring, taskbar
     void Toggle();        // the button: open / close the flyout
     bool Open() const { return m_flyout && IsWindowVisible(m_flyout); }
+    // Files' flyout is part of the window, which stays active under it: the window keeps its active look (tab row,
+    // border) while this one has the activation, instead of turning inactive and back on every open and close
+    bool KeepsWindowActive() const { return m_showing || Open(); }
     void Hide();
     void Relayout();      // DPI / fonts / theme
 
@@ -85,6 +89,8 @@ private:
     int m_scroll = 0;
     SmoothScroll m_smooth; // the flyout's wheel animation
     ULONGLONG m_hiddenAt = 0;   // the flyout closed (a click on the button that closed it doesn't reopen it)
+    SIZE m_region{};            // the flyout's size its rounded region was made for
+    bool m_showing = false;     // Toggle is showing the flyout (the window must keep its active look meanwhile)
     ComPtr<ITaskbarList3> m_taskbar;
     int m_taskbarState = -1, m_taskbarValue = -1;
     std::wstring m_text, m_cardTipText;

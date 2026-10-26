@@ -546,6 +546,13 @@ void MainWindow::ShareSelection(Tab* tab)
     if (!tab)
         return;
     std::vector<std::wstring> paths = tab->SelectedFileSystemPaths();
+    // Folders: 授予访问权限 > 特定用户... (the system's 网络访问 window)
+    if (!paths.empty() && std::all_of(paths.begin(), paths.end(), [](const std::wstring& p) { return Share::FolderShareable(p); }))
+    {
+        if (!Share::GiveAccess(m_hwnd, paths))
+            ContentDialog::Notice(m_hwnd, &m_theme, Tr(L"共享项目失败"), Tr(L"无法打开共享窗口。"));
+        return;
+    }
     if (paths.empty() || !std::all_of(paths.begin(), paths.end(), [](const std::wstring& p) { return Share::Shareable(p); }))
     {
         SetStatusText(Tr(L"此项目不支持共享"), true);

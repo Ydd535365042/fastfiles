@@ -73,6 +73,7 @@ void MainWindow::CreateChildren()
         { IdForward, Glyph::Forward, L"", Tr(L"前进 (Alt+→)") },
         { IdUp, Glyph::Up, L"", Tr(L"上一级 (Alt+↑)") },
         { IdRefresh, Glyph::Refresh, L"", Tr(L"刷新 (F5)") } }, &m_theme.layer);
+    m_nav.SetButtonLook(true);
 
     m_address = MakeEdit(m_hwnd, IdAddress, &m_theme);
     SHAutoComplete(m_address, SHACF_FILESYS_DIRS | SHACF_URLHISTORY | SHACF_AUTOSUGGEST_FORCE_ON | SHACF_AUTOAPPEND_FORCE_OFF);

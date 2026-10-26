@@ -110,7 +110,8 @@ struct ViewPrefs
 // (Files' FileExtensionHelpers: wallpaper-compatible images, executables, fonts, batch / ahk, .ps1, media, .inf, certificates)
 enum SelectionKind : unsigned { SelImage = 1, SelRunnable = 2, SelFont = 4, SelFolder = 8, SelArchive = 16, SelZip = 32,
     SelBatch = 64, SelPowerShell = 128, SelMedia = 256, SelInf = 512, SelCertificate = 1024, SelOther = 2048,
-    SelShareable = 4096 }; // Files' ShareItemHelpers.IsItemShareable: not hidden, not a .lnk, not a folder
+    SelShareable = 4096,   // Files' ShareItemHelpers.IsItemShareable: not hidden, not a .lnk, not a folder
+    SelShareFolder = 8192 }; // a disk folder: 共享 opens the system's network sharing for it (Share::GiveAccess)
 
 // One tab (or pane) = one IExplorerBrowser (the same view Explorer itself uses), created lazily on first show.
 // The Home location shows FastFiles' own HomeView instead; history treats it like any other folder.

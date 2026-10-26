@@ -245,6 +245,21 @@ void MainWindow::ApplyHiddenSettings()
 
 // --- Applying ---
 
+void MainWindow::SetLooksActive(bool active)
+{
+    if (m_looksActive == static_cast<int>(active))
+        return; // (the flyout's open and close: nothing to repaint)
+    m_looksActive = active;
+    m_strip.SetWindowActive(active);
+    // Files' AppSystemBackdrop.SetInputActive: an inactive window shows the solid fallback (test mode keeps the
+    // material: test windows are never the foreground one)
+    if (m_settings.themeBackdrop != Backdrop::Solid)
+    {
+        Backdrop::SetActive(active || Sandbox::Active());
+        ApplyTheme(false);
+    }
+}
+
 void MainWindow::ApplyTheme(bool force)
 {
     bool dark = m_settings.theme == AppSettings::ThemeMode::Dark;

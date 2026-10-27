@@ -509,6 +509,17 @@ LRESULT CALLBACK FileList::HeaderProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
         return 0;
     case WM_ERASEBKGND:
         return 1;
+    case WM_TIMER:
+        if (wp != kSortTurnTimer)
+            break;
+        // The sort icon's next frame; the last one draws it at rest
+        if (self->m_sortTurnStart && GetTickCount64() - self->m_sortTurnStart >= static_cast<ULONGLONG>(kSortTurnMs))
+        {
+            self->m_sortTurnStart = 0;
+            KillTimer(hwnd, kSortTurnTimer);
+        }
+        InvalidateRect(hwnd, nullptr, FALSE);
+        return 0;
     case WM_MOUSEMOVE:
     {
         const POINT pt{ GET_X_LPARAM(lp), GET_Y_LPARAM(lp) };

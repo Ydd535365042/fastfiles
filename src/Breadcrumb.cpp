@@ -37,6 +37,9 @@ void Breadcrumb::SetLocation(PCIDLIST_ABSOLUTE pidl)
     ClearDrop(); // a drag in progress re-targets on its next DragOver
     m_segments.clear();
     m_hot = {};
+    m_fades.clear(); // indices into the old segments
+    m_turnIndex = -1;
+    m_turnStart = 0;
     for (UniquePidl cur = ClonePidl(pidl); cur && !ILIsEmpty(cur.get());)
     {
         Segment seg;
@@ -151,23 +154,62 @@ void Breadcrumb::Paint(HDC hdc)
     // text color while pressed
     auto down = [&](Part part, int index) { return m_pressed.part == part && m_pressed.index == index && (hot(part, index) || m_hot.part == Part::None); };
     const COLORREF pressedInk = Mix(t.field, t.secondaryText, t.secondaryTextPct);
+    // The fill fades between states (BrushTransition 83 ms); a press and a drag's target show at once
+    auto fill = [&](Part part, int index, const RECT& r, bool target)
+    {
+        const bool d = down(part, index);
+        const int level = Fill(part, index, d ? 200 : hot(part, index) || target ? 100 : 0, d || target);
+        if (level > 0)
+            FillRound(hdc, r, t.S(4), FadeFill(t.field, Mix(t.field, t.ink, t.buttonHoverPct), Mix(t.field, t.ink, t.buttonPressedPct), level));
+    };
     if (m_first > 0)
     {
-        if (hot(Part::Overflow, -1) || down(Part::Overflow, -1))
-            FillRound(hdc, m_overflow, t.S(4), Mix(t.field, t.ink, down(Part::Overflow, -1) ? t.buttonPressedPct : t.buttonHoverPct));
+        fill(Part::Overflow, -1, m_overflow, false);
         DrawGlyph(hdc, t.iconsSmall, kEllipsis, m_overflow, down(Part::Overflow, -1) ? pressedInk : t.muted);
     }
     const int last = static_cast<int>(m_segments.size()) - 1;
     for (int i = m_first; i <= last; ++i)
     {
         const auto& seg = m_segments[i];
-        if (hot(Part::Text, i) || down(Part::Text, i) || (i == m_dropIndex && m_itemTarget))
-            FillRound(hdc, seg.text, t.S(4), Mix(t.field, t.ink, down(Part::Text, i) ? t.buttonPressedPct : t.buttonHoverPct));
+        fill(Part::Text, i, seg.text, i == m_dropIndex && m_itemTarget);
         DrawLabel(hdc, t.ui, seg.name, seg.text, down(Part::Text, i) ? pressedInk : i == last ? t.ink : Mix(t.ink, t.muted, 45), DT_CENTER);
-        if (hot(Part::Chevron, i) || down(Part::Chevron, i))
-            FillRound(hdc, seg.chevron, t.S(4), Mix(t.field, t.ink, down(Part::Chevron, i) ? t.buttonPressedPct : t.buttonHoverPct));
-        DrawGlyph(hdc, t.iconsSmall, kChevron, seg.chevron, down(Part::Chevron, i) ? pressedInk : t.muted);
+        fill(Part::Chevron, i, seg.chevron, false);
+        const COLORREF chevronInk = down(Part::Chevron, i) ? pressedInk : t.muted;
+        if (const float turn = ChevronTurn(i); turn == 90.0f)
+            DrawGlyph(hdc, t.iconsSmall, Glyph::ChevronDown, seg.chevron, chevronInk); // its flyout is open
+        else
+            DrawGlyphTurned(hdc, t.iconsSmall, kChevron, seg.chevron, chevronInk, turn);
     }
+    // Faded out: forget it. Still on its way: the next frame (WM_TIMER)
+    bool fading = false;
+    m_fades.erase(std::remove_if(m_fades.begin(), m_fades.end(), [&](const Fade& f)
+        {
+            if (f.fade.Running())
+                fading = true;
+            return !f.fade.Running() && f.fade.to == 0;
+        }), m_fades.end());
+    if (m_turnStart && GetTickCount64() - m_turnStart >= static_cast<ULONGLONG>(kTurnMs))
+    {
+        m_turnStart = 0; // the chevron has arrived
+        if (!m_turnOpen)
+            m_turnIndex = -1;
+    }
+    if (fading || m_turnStart)
+        SetTimer(m_hwnd, kFadeTimer, 15, nullptr);
+}
+
+int Breadcrumb::Fill(Part part, int index, int level, bool snap)
+{
+    auto it = std::find_if(m_fades.begin(), m_fades.end(), [&](const Fade& f) { return f.hit.part == part && f.hit.index == index; });
+    if (it == m_fades.end())
+    {
+        if (level == 0)
+            return 0;
+        m_fades.push_back({ { part, index }, {} });
+        it = m_fades.end() - 1;
+    }
+    it->fade.Set(level, snap);
+    return it->fade.Level();
 }
 Breadcrumb::Hit Breadcrumb::HitTest(POINT pt) const
 {
@@ -226,10 +268,37 @@ void Breadcrumb::ShowChildren(int index)
         AppendMenuW(menu, MF_STRING | MF_GRAYED, 0, Tr(L"没有子文件夹"));
     POINT pt{ m_segments[index].chevron.left, m_segments[index].chevron.bottom };
     ClientToScreen(m_hwnd, &pt);
+    // Files' ChevronNormalOn / Off: the chevron turns to point down while its flyout is open and back after (0.2 s,
+    // CubicEase EaseIn); the menu's modal loop still delivers the frames (WM_TIMER)
+    TurnChevron(index, true);
     const int cmd = TrackPopupMenu(menu, TPM_RETURNCMD | TPM_LEFTALIGN | TPM_TOPALIGN, pt.x, pt.y, 0, m_hwnd, nullptr);
     DestroyMenu(menu);
+    TurnChevron(index, false);
     if (cmd > 0)
         Navigate(children[cmd - 1].second.get(), false);
+}
+
+void Breadcrumb::TurnChevron(int index, bool open)
+{
+    const float from = index == m_turnIndex ? ChevronTurn(index) : 0.0f;
+    m_turnIndex = index;
+    m_turnOpen = open;
+    m_turnFrom = from;
+    m_turnStart = AnimationsEnabled() ? GetTickCount64() : 0;
+    InvalidateRect(m_hwnd, nullptr, FALSE);
+    if (m_turnStart)
+        SetTimer(m_hwnd, kFadeTimer, 15, nullptr);
+}
+
+float Breadcrumb::ChevronTurn(int index) const
+{
+    if (index != m_turnIndex)
+        return 0.0f;
+    const float to = m_turnOpen ? 90.0f : 0.0f;
+    if (!m_turnStart)
+        return to;
+    const double x = std::min(1.0, static_cast<double>(GetTickCount64() - m_turnStart) / kTurnMs);
+    return m_turnFrom + (to - m_turnFrom) * static_cast<float>(x * x * x); // CubicEase EaseIn
 }
 
 void Breadcrumb::ShowOverflow()
@@ -439,6 +508,12 @@ LRESULT Breadcrumb::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
     switch (msg)
     {
     case WM_TIMER:
+        if (wp == kFadeTimer)
+        {
+            KillTimer(m_hwnd, kFadeTimer); // Paint sets it again while a fill is still on its way
+            InvalidateRect(m_hwnd, nullptr, FALSE);
+            return 0;
+        }
         if (wp == kHoverTimer)
         {
             // Hovered long enough while dragging: open that folder (Files' ItemDraggedOverPathItem)

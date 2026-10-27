@@ -370,6 +370,12 @@ private:
     std::wstring m_filter;
     SortKey m_sortKey;
     bool m_sortDesc = false;
+    // The sort icon turning after the direction changed (SetSort): from m_sortTurnFrom degrees to 0 / -180
+    float m_sortTurnFrom = 0;
+    ULONGLONG m_sortTurnStart = 0;
+    static constexpr int kSortTurnMs = 200;
+    static constexpr UINT_PTR kSortTurnTimer = 0x5F01; // on the header (clear of the header control's own timers)
+    float SortTurn() const; // the icon's angle now
     ULONG m_notify = 0;
     ComPtr<IShellItemArray> m_selection; // cached Selection()
     bool m_selectionDirty = true;

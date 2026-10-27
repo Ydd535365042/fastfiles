@@ -492,6 +492,16 @@ void FileList::SetSort(SortKey key, bool descending)
 {
     if (key == m_sortKey && descending == m_sortDesc)
         return;
+    // Files' SortStates: the same column's icon turns 0 <-> -180 in 0.2 s (DoubleAnimation, linear); another
+    // column's appears already turned
+    if (key == m_sortKey && m_header && AnimationsEnabled())
+    {
+        m_sortTurnFrom = SortTurn();
+        m_sortTurnStart = GetTickCount64();
+        SetTimer(m_header, kSortTurnTimer, 15, nullptr);
+    }
+    else
+        m_sortTurnStart = 0;
     m_sortKey = key;
     m_sortDesc = descending;
     Rearrange();

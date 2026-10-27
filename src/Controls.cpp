@@ -65,6 +65,7 @@ void ButtonBar::SetItems(std::vector<Item> items)
         }
     m_items = std::move(items);
     m_hot = m_pressed = m_flash = -1;
+    m_fades.assign(m_items.size(), {});
     for (size_t i = 0; m_tooltip && i < m_items.size(); ++i)
     {
         if (m_items[i].id <= 0 || m_items[i].tip.empty())
@@ -290,12 +291,17 @@ void ButtonBar::Paint(HDC hdc, const RECT& rc)
     const Theme& t = *m_theme;
     const COLORREF background = *m_background;
     FillSolid(hdc, rc, background);
+    m_fades.resize(m_items.size());
+    bool fading = false;
     for (size_t i = 0; i < m_items.size(); ++i)
     {
         const Item& item = m_items[i];
         const RECT& r = item.rc;
         if (!item.visible || IsRectEmpty(&r))
+        {
+            m_fades[i] = {};
             continue;
+        }
         if (item.id == 0)
         {
             const int x = (r.left + r.right) / 2;
@@ -306,6 +312,13 @@ void ButtonBar::Paint(HDC hdc, const RECT& rc)
             continue;
         const bool hot = item.enabled && static_cast<int>(i) == m_hot;
         const bool down = item.enabled && (static_cast<int>(i) == m_pressed || static_cast<int>(i) == m_flash);
+        // The hover / pressed fill fades between states (BrushTransition); the sidebar look and checked buttons
+        // switch at once (SidebarItem and the toggle's checked brushes have no transition)
+        StateFade& fade = m_fades[i];
+        fade.Set(down ? 200 : hot ? 100 : 0, down || m_sidebarLook || item.checked);
+        const int level = fade.Level();
+        if (fade.Running())
+            fading = true;
         if (m_sidebarLook)
         {
             // Files' footer SettingsButton is a SidebarItem: the same states as Sidebar::Paint's rows (subtle fills
@@ -325,18 +338,17 @@ void ButtonBar::Paint(HDC hdc, const RECT& rc)
         {
             // Files' AddressToolbarButtonStyle: a fill and the elevation border under the mouse, a deeper fill (no
             // border) while pressed
-            if (down)
-                FillRound(hdc, r, t.S(4), Mix(background, t.ink, t.buttonPressedPct));
-            else if (hot)
-            {
-                FillRound(hdc, r, t.S(4), Mix(background, t.ink, t.buttonHoverPct));
+            if (level > 0)
+                FillRound(hdc, r, t.S(4),
+                    FadeFill(background, Mix(background, t.ink, t.buttonHoverPct), Mix(background, t.ink, t.buttonPressedPct), level));
+            if (hot && !down)
                 FrameRound(hdc, r, t.S(4), t.controlStroke);
-            }
         }
         else if (item.checked && !down)
             FillRound(hdc, r, t.S(5), hot ? Mix(t.selected, t.ink, 6) : t.selected);
-        else if (down || hot)
-            FillRound(hdc, r, t.S(5), Mix(background, t.ink, down ? t.buttonPressedPct : t.buttonHoverPct)); // AppBarButton states
+        else if (level > 0) // AppBarButton states
+            FillRound(hdc, r, t.S(5),
+                FadeFill(background, Mix(background, t.ink, t.buttonHoverPct), Mix(background, t.ink, t.buttonPressedPct), level));
         // ButtonForegroundPressed / AppBarButtonForegroundPressed: TextFillColorSecondary (the toolbar's buttons too)
         const COLORREF ink = !item.enabled ? Mix(t.ink, background, 62)
             : down && !m_sidebarLook ? Mix(background, t.secondaryText, t.secondaryTextPct) : t.ink;
@@ -353,6 +365,9 @@ void ButtonBar::Paint(HDC hdc, const RECT& rc)
         if (item.dropdown)
             DrawGlyph(hdc, t.iconsSmall, Glyph::ChevronDown, { r.right - t.S(label ? 22 : 16), r.top, r.right - t.S(label ? 6 : 2), r.bottom }, Mix(ink, background, 25));
     }
+    // Next frame of a fade (WM_TIMER repaints until every fill has arrived)
+    if (fading)
+        SetTimer(m_hwnd, kFadeTimer, 15, nullptr);
 }
 
 LRESULT CALLBACK ButtonBar::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
@@ -427,6 +442,12 @@ LRESULT ButtonBar::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
         {
             KillTimer(m_hwnd, kFlashTimer);
             m_flash = -1;
+            InvalidateRect(m_hwnd, nullptr, FALSE);
+        }
+        else if (wp == kFadeTimer)
+        {
+            // Paint sets it again while a fill is still on its way; the last frame draws the final state
+            KillTimer(m_hwnd, kFadeTimer);
             InvalidateRect(m_hwnd, nullptr, FALSE);
         }
         return 0;

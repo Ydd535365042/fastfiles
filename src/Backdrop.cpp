@@ -3,6 +3,7 @@
 #include <shobjidl.h>
 #include <thread>
 #include <cmath>
+#include <unordered_map>
 
 namespace Gdiplus { using std::min; using std::max; }
 #include <gdiplus.h>
@@ -32,10 +33,29 @@ struct State
     bool loading = false;
     std::unique_ptr<Image> image;
     std::vector<uint32_t> material32; // the recipe applied: 0x00RRGGBB per image pixel
+    unsigned version = 0;             // bumped whenever material32 / the image change (the Sampled caches go stale)
     std::vector<Backdrop::Layer> layers;
     COLORREF base = 0;                // the solid page color (no material)
 };
 static State g;
+
+// The material sampled for one window's client area at one screen position: Compose reads these pixels instead of
+// sampling the 1/8 image bilinearly for every pixel of every frame (scrolling repaints a whole list ~60 times a
+// second while the material under it doesn't change). Same arithmetic as before, so the same pixels.
+struct Sampled
+{
+    POINT origin{ LONG_MIN, LONG_MIN }; // the client area's top-left on the screen these rows are for
+    POINT seen{ LONG_MIN, LONG_MIN };   // the origin of the last paint (a window being moved never caches)
+    unsigned version = ~0u;
+    int stride = 0;                     // pixels per row: a little wider than the window, so a resize keeps the rows
+    std::vector<uint32_t> px;
+    std::vector<int> filled;            // per row: columns 0..filled[y] are sampled
+};
+std::unordered_map<HWND, Sampled>& SampledCache()
+{
+    static std::unordered_map<HWND, Sampled> cache;
+    return cache;
+}
 
 // The background image, decoded (0x00RRGGBB, at most 2560 px on its long side)
 struct Picture
@@ -296,6 +316,7 @@ void LuminosityColor(const Recipe& r, float* out)
 // tint on top, then Files' background color (App.Theme.BackgroundBrush) at its alpha.
 void ApplyRecipe()
 {
+    ++g.version;
     g.material32.clear();
     if (!g.image || g.material == Backdrop::Solid)
         return;
@@ -445,6 +466,67 @@ bool PictureAt(const RECT& placed, int x, int y, uint32_t& out)
         out |= static_cast<uint32_t>(((top * (256 - ay) + bottom * ay) >> 16) & 0xFF) << shift;
     }
     return true;
+}
+}
+
+namespace
+{
+// One row of the material under a client area whose top-left is at `origin` on the screen: Compose's bilinear step
+// (the same arithmetic as before, so the same pixels), columns x0..x1
+void SampleRow(POINT origin, int y, int x0, int x1, uint32_t* out)
+{
+    const Image& img = *g.image;
+    const float fy = std::clamp((origin.y + y - img.screen.top) / static_cast<float>(kScale) - 0.5f, 0.0f, static_cast<float>(img.h - 1));
+    const int r0 = static_cast<int>(fy);
+    const uint32_t* top = g.material32.data() + static_cast<ptrdiff_t>(r0) * img.w;
+    const uint32_t* bottom = g.material32.data() + static_cast<ptrdiff_t>(std::min(r0 + 1, img.h - 1)) * img.w;
+    const int ay = static_cast<int>((fy - r0) * 256);
+    for (int x = x0; x < x1; ++x)
+    {
+        const float fx = std::clamp((origin.x + x - img.screen.left) / static_cast<float>(kScale) - 0.5f, 0.0f, static_cast<float>(img.w - 1));
+        const int a0 = static_cast<int>(fx), a1 = std::min(a0 + 1, img.w - 1), cw = static_cast<int>((fx - a0) * 256);
+        const uint32_t c00 = top[a0], c10 = top[a1], c01 = bottom[a0], c11 = bottom[a1];
+        uint32_t m = 0;
+        for (int shift = 16; shift >= 0; shift -= 8)
+        {
+            const int a = (c00 >> shift) & 0xFF, b = (c10 >> shift) & 0xFF, cc = (c01 >> shift) & 0xFF, d = (c11 >> shift) & 0xFF;
+            const int t = a * (256 - cw) + b * cw, u = cc * (256 - cw) + d * cw;
+            m |= static_cast<uint32_t>(((t * (256 - ay) + u * ay) >> 16) & 0xFF) << shift;
+        }
+        out[x - x0] = m;
+    }
+}
+
+// The material under `hwnd`'s rows: from the cache once the window has painted twice at the same screen position
+// with the same material (rows filled as they're first needed, kept across resizes); a window being moved has no
+// cache and gets nullptr (Compose samples those rows itself, as it always did)
+Sampled* SampledFor(HWND hwnd, POINT origin, int width, int height)
+{
+    auto& cache = SampledCache();
+    Sampled& s = cache[hwnd];
+    const bool same = s.seen.x == origin.x && s.seen.y == origin.y;
+    s.seen = origin;
+    if (s.origin.x == origin.x && s.origin.y == origin.y && s.version == g.version && width <= s.stride)
+    {
+        if (static_cast<int>(s.filled.size()) < height)
+        {
+            s.px.resize(static_cast<size_t>(s.stride) * height);
+            s.filled.resize(static_cast<size_t>(height), 0);
+        }
+        return &s;
+    }
+    if (!same)
+        return nullptr; // moving (or the first paint here): no cache to build yet
+    // Windows that are gone: their entries go (the map only ever holds the few windows that compose)
+    for (auto it = cache.begin(); it != cache.end();)
+        it = it->first != hwnd && !IsWindow(it->first) ? cache.erase(it) : std::next(it);
+    Sampled& e = cache[hwnd];
+    e.origin = origin;
+    e.version = g.version;
+    e.stride = (width + width / 4 + 63) & ~63; // room for a resize wider (beyond it: built again, once)
+    e.px.assign(static_cast<size_t>(e.stride) * height, 0);
+    e.filled.assign(static_cast<size_t>(height), 0);
+    return &e;
 }
 }
 
@@ -601,35 +683,39 @@ void Compose(HWND hwnd, uint32_t* bits, int width, const RECT& rc, const std::ve
             tables[i].ch[1][v] = static_cast<uint8_t>(m >> 8);
             tables[i].ch[2][v] = static_cast<uint8_t>(m);
         }
-    // Sample()'s bilinear step per column / row, computed once (same arithmetic, so the same result)
+    // The material under this window, sampled once for its position and size (SampledFor)
     const int x0 = std::max(0L, rc.left), x1 = std::min<int>(rc.right, width);
-    struct Col { int a, b, w; };
-    std::vector<Col> cols;
+    Sampled* sampled = nullptr;
+    std::vector<uint32_t> direct; // the rows of a window that has no cache (being moved), sampled as before
     if (live && x1 > x0)
     {
-        const Image& img = *g.image;
-        cols.resize(static_cast<size_t>(x1 - x0));
-        for (int x = x0; x < x1; ++x)
-        {
-            const float fx = std::clamp((origin.x + x - img.screen.left) / static_cast<float>(kScale) - 0.5f, 0.0f, static_cast<float>(img.w - 1));
-            const int a = static_cast<int>(fx);
-            cols[static_cast<size_t>(x - x0)] = { a, std::min(a + 1, img.w - 1), static_cast<int>((fx - a) * 256) };
-        }
+        RECT client{};
+        GetClientRect(hwnd, &client);
+        // Sized by the window, not by `width` (the paint buffer's row stride, which can be wider: PaintBuffer)
+        sampled = SampledFor(hwnd, origin, std::max<int>(client.right, x1), std::max<int>(client.bottom, rc.bottom));
+        if (!sampled)
+            direct.resize(static_cast<size_t>(x1 - x0));
     }
     for (int y = std::max(0L, rc.top); y < rc.bottom; ++y)
     {
         uint32_t* row = bits + static_cast<ptrdiff_t>(y) * width;
-        const uint32_t* top = nullptr;
-        const uint32_t* bottom = nullptr;
-        int ay = 0;
-        if (live)
+        const uint32_t* under = nullptr;
+        if (sampled)
         {
-            const Image& img = *g.image;
-            const float fy = std::clamp((origin.y + y - img.screen.top) / static_cast<float>(kScale) - 0.5f, 0.0f, static_cast<float>(img.h - 1));
-            const int r0 = static_cast<int>(fy);
-            top = g.material32.data() + static_cast<ptrdiff_t>(r0) * img.w;
-            bottom = g.material32.data() + static_cast<ptrdiff_t>(std::min(r0 + 1, img.h - 1)) * img.w;
-            ay = static_cast<int>((fy - r0) * 256);
+            // The columns this paint needs that no earlier paint sampled (the next paints read them)
+            uint32_t* cached = sampled->px.data() + static_cast<ptrdiff_t>(y) * sampled->stride;
+            int& done = sampled->filled[static_cast<size_t>(y)];
+            if (done < x1)
+            {
+                SampleRow(origin, y, done, x1, cached + done);
+                done = x1;
+            }
+            under = cached;
+        }
+        else if (!direct.empty())
+        {
+            SampleRow(origin, y, x0, x1, direct.data());
+            under = direct.data() - x0;
         }
         uint32_t lastKey = 0xFF000000; // (no pixel has it: the masked colors are 24-bit)
         int lastHit = -1;
@@ -650,19 +736,7 @@ void Compose(HWND hwnd, uint32_t* bits, int width, const RECT& rc, const std::ve
             if (lastHit < 0)
                 continue;
             // The material (or the solid page color), the image over it at its opacity, then the layers
-            uint32_t m = base;
-            if (live)
-            {
-                const Col& col = cols[static_cast<size_t>(x - x0)];
-                const uint32_t c00 = top[col.a], c10 = top[col.b], c01 = bottom[col.a], c11 = bottom[col.b];
-                m = 0;
-                for (int shift = 16; shift >= 0; shift -= 8)
-                {
-                    const int a = (c00 >> shift) & 0xFF, b = (c10 >> shift) & 0xFF, cc = (c01 >> shift) & 0xFF, d = (c11 >> shift) & 0xFF;
-                    const int t = a * (256 - col.w) + b * col.w, u = cc * (256 - col.w) + d * col.w;
-                    m |= static_cast<uint32_t>(((t * (256 - ay) + u * ay) >> 16) & 0xFF) << shift;
-                }
-            }
+            uint32_t m = under ? under[x] : base;
             if (uint32_t img = 0; gi.picture && PictureAt(placed, origin.x + x - main.x, origin.y + y - main.y, img))
                 m = mix(m, RGB((img >> 16) & 0xFF, (img >> 8) & 0xFF, img & 0xFF), gi.opacity);
             const Table& t = tables[static_cast<size_t>(lastHit)];

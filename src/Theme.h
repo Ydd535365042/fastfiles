@@ -117,6 +117,21 @@ bool AnimationsEnabled();
 // Eased 0..1 for an animation started at GetTickCount64() value `start` (0 = finished)
 double AnimProgress(ULONGLONG start, int ms);
 
+// A control's hover / pressed fill moving between states the way WinUI's BrushTransition does (Duration 0:0:0.083
+// on Files' toolbar buttons, the breadcrumb chevron and DefaultButtonStyle): linear, from wherever it is now.
+// Levels: 0 none, 100 hover, 200 pressed. A press snaps (it shows at once, before what the click runs).
+struct StateFade
+{
+    static constexpr int kMs = 83;
+    int from = 0, to = 0;
+    ULONGLONG start = 0;
+    int Level() const;
+    bool Running() const { return from != to && Level() != to; }
+    void Set(int level, bool snap = false);
+};
+// The fill for a fade level: none (`base`), hover, pressed, and the mixes between
+COLORREF FadeFill(COLORREF base, COLORREF hover, COLORREF pressed, int level);
+
 // Anti-aliased shapes through GDI+; text stays on GDI so ClearType and font linking keep working
 void FillRound(HDC hdc, const RECT& rc, int radius, COLORREF color);
 void FrameRound(HDC hdc, const RECT& rc, int radius, COLORREF color);
@@ -126,6 +141,8 @@ void FillSolid(HDC hdc, const RECT& rc, COLORREF color);
 // corner anti-aliased (unlike SelectClipRgn's hard edge) — the color picker's checkerboard swatch
 void FillRoundPattern(HDC hdc, const RECT& rc, int radius, void (*paint)(HDC, const RECT&, void*), void* context);
 void DrawGlyph(HDC hdc, HFONT font, const wchar_t* glyph, const RECT& rc, COLORREF color);
+// DrawGlyph turned `degrees` clockwise about rc's center (a RotateTransform in an animation); 0 is DrawGlyph itself
+void DrawGlyphTurned(HDC hdc, HFONT font, const wchar_t* glyph, const RECT& rc, COLORREF color, float degrees);
 void DrawLabel(HDC hdc, HFONT font, const std::wstring& text, const RECT& rc, COLORREF color, UINT format = DT_LEFT);
 int TextWidth(HDC hdc, HFONT font, const std::wstring& text);
 // Files' sidebar section icon (res/sidebar, Sidebar::Section order) at the closest scale, drawn into rc
@@ -133,24 +150,41 @@ void DrawSectionIcon(HDC hdc, int section, const RECT& rc, UINT dpi);
 void DrawEjectIcon(HDC hdc, const RECT& rc, COLORREF color); // Files' 12px eject glyph centered in rc
 void DrawPaneIcon(HDC hdc, const RECT& rc, COLORREF color);  // Files' 16px Panes.Single icon filling rc (16 units)
 
+// A 32bpp top-down DIB to paint one frame into. The UI thread reuses one (grown to the largest client seen) instead
+// of a fresh CreateDIBSection per WM_PAINT, which cost ~0.7 ms at window size: `clear` is zeroed like a new DIB, the
+// DC's state is saved and restored around each use. A nested paint (one already in use) gets its own bitmap.
+class PaintBuffer
+{
+public:
+    PaintBuffer(HDC target, int width, int height, const RECT& clear);
+    ~PaintBuffer();
+    HDC dc = nullptr;
+    uint32_t* bits = nullptr; // nullptr if no DIB could be made (dc then holds a compatible bitmap)
+    int width = 0;            // the row stride in pixels (>= the width asked for)
+
+private:
+    struct Shared;
+    Shared* m_shared = nullptr; // the reused buffer, or nullptr for an own bitmap
+    HBITMAP m_bmp = nullptr;
+    HGDIOBJ m_old = nullptr;
+    int m_saved = 0;
+};
+
 // Flicker-free painting: draw into a memory bitmap, blit on destruction
 class BufferedPaint
 {
 public:
     BufferedPaint(HWND hwnd);
     ~BufferedPaint();
-    HDC dc() const { return m_mem; }
+    HDC dc() const { return m_buffer->dc; }
     const RECT& rect() const { return m_rc; }
 
 private:
     HWND m_hwnd;
     PAINTSTRUCT m_ps{};
     HDC m_target = nullptr;
-    HDC m_mem = nullptr;
-    HBITMAP m_bmp = nullptr;
-    HGDIOBJ m_old = nullptr;
     RECT m_rc{};
-    uint32_t* m_bits = nullptr; // DIB pixels (0x00RRGGBB, top-down)
+    std::unique_ptr<PaintBuffer> m_buffer;
 };
 
 namespace Glyph

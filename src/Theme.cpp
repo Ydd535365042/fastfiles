@@ -487,6 +487,34 @@ double AnimProgress(ULONGLONG start, int ms)
     return 1.0 - inv * inv * inv; // cubic ease-out (WinUI's decelerate curve)
 }
 
+int StateFade::Level() const
+{
+    if (!start || from == to)
+        return to;
+    const ULONGLONG t = GetTickCount64() - start;
+    if (t >= kMs)
+        return to;
+    return from + static_cast<int>((to - from) * static_cast<long long>(t) / kMs);
+}
+
+void StateFade::Set(int level, bool snap)
+{
+    if (level == to)
+        return;
+    from = snap || !AnimationsEnabled() ? level : Level();
+    to = level;
+    start = from == to ? 0 : GetTickCount64();
+}
+
+COLORREF FadeFill(COLORREF base, COLORREF hover, COLORREF pressed, int level)
+{
+    if (level <= 0)
+        return base;
+    if (level <= 100)
+        return level == 100 ? hover : Mix(base, hover, level);
+    return level >= 200 ? pressed : Mix(hover, pressed, level - 100);
+}
+
 void FillRound(HDC hdc, const RECT& rc, int radius, COLORREF color) { FillPath(hdc, rc, radius, color, true); }
 void FillTopRound(HDC hdc, const RECT& rc, int radius, COLORREF color) { FillPath(hdc, rc, radius, color, false); }
 
@@ -553,6 +581,59 @@ void DrawGlyph(HDC hdc, HFONT font, const wchar_t* glyph, const RECT& rc, COLORR
     DrawLabel(hdc, font, glyph, rc, color, DT_CENTER);
 }
 
+void DrawGlyphTurned(HDC hdc, HFONT font, const wchar_t* glyph, const RECT& rc, COLORREF color, float degrees)
+{
+    const int w = rc.right - rc.left, h = rc.bottom - rc.top;
+    if (degrees == 0.0f || w <= 0 || h <= 0)
+    {
+        DrawGlyph(hdc, font, glyph, rc, color);
+        return;
+    }
+    // The glyph's coverage (white on black, the same text path as DrawGlyph), then the color through it, turned
+    // about the rect's center with bilinear filtering. A square around that center: a narrow rect (the 8px sort
+    // icon's) would clip the glyph before it turns
+    const int side = std::max(w, h) + 4;
+    const int cx2 = rc.left + rc.right, cy2 = rc.top + rc.bottom; // twice the center
+    const RECT box{ (cx2 - side) / 2, (cy2 - side) / 2, (cx2 - side) / 2 + side, (cy2 - side) / 2 + side };
+    const RECT inner{ rc.left - box.left, rc.top - box.top, rc.right - box.left, rc.bottom - box.top }; // rc in the square
+    HDC mem = CreateCompatibleDC(hdc);
+    BITMAPINFO bi{};
+    bi.bmiHeader = { sizeof(BITMAPINFOHEADER), side, -side, 1, 32, BI_RGB };
+    void* p = nullptr;
+    HBITMAP bmp = CreateDIBSection(hdc, &bi, DIB_RGB_COLORS, &p, nullptr, 0);
+    if (!bmp)
+    {
+        DeleteDC(mem);
+        DrawGlyph(hdc, font, glyph, rc, color);
+        return;
+    }
+    HGDIOBJ old = SelectObject(mem, bmp);
+    FillSolid(mem, { 0, 0, side, side }, RGB(0, 0, 0));
+    DrawGlyph(mem, font, glyph, inner, RGB(255, 255, 255));
+    GdiFlush();
+    const uint32_t r = GetRValue(color), g = GetGValue(color), b = GetBValue(color);
+    for (uint32_t* px = static_cast<uint32_t*>(p), *end = px + static_cast<size_t>(side) * side; px < end; ++px)
+    {
+        const uint32_t a = std::max({ (*px >> 16) & 0xFF, (*px >> 8) & 0xFF, *px & 0xFF });
+        *px = a << 24 | (r * a / 255) << 16 | (g * a / 255) << 8 | (b * a / 255); // premultiplied
+    }
+    EnsureGdiplus();
+    {
+        Gdiplus::Bitmap image(side, side, side * 4, PixelFormat32bppPARGB, static_cast<BYTE*>(p));
+        Gdiplus::Graphics gr(hdc);
+        gr.SetInterpolationMode(Gdiplus::InterpolationModeHighQualityBilinear);
+        gr.SetPixelOffsetMode(Gdiplus::PixelOffsetModeHalf);
+        const float cx = cx2 / 2.0f, cy = cy2 / 2.0f;
+        gr.TranslateTransform(cx, cy);
+        gr.RotateTransform(degrees);
+        gr.TranslateTransform(-cx, -cy);
+        gr.DrawImage(&image, Gdiplus::Rect(box.left, box.top, side, side));
+    }
+    SelectObject(mem, old);
+    DeleteObject(bmp);
+    DeleteDC(mem);
+}
+
 void DrawLabel(HDC hdc, HFONT font, const std::wstring& text, const RECT& rc, COLORREF color, UINT format)
 {
     if (DWriteText::Available())
@@ -612,34 +693,117 @@ int TextWidth(HDC hdc, HFONT font, const std::wstring& text)
     return size.cx;
 }
 
+struct PaintBuffer::Shared
+{
+    HDC dc = nullptr;
+    HBITMAP bmp = nullptr;
+    HGDIOBJ old = nullptr;
+    uint32_t* bits = nullptr;
+    int width = 0, height = 0;
+    bool busy = false;
+    ~Shared()
+    {
+        if (dc)
+        {
+            SelectObject(dc, old);
+            DeleteDC(dc);
+        }
+        if (bmp)
+            DeleteObject(bmp);
+    }
+};
+
+namespace
+{
+HBITMAP MakeDib(HDC target, int width, int height, uint32_t** bits)
+{
+    BITMAPINFO bi{};
+    bi.bmiHeader = { sizeof(BITMAPINFOHEADER), width, -height, 1, 32, BI_RGB };
+    void* p = nullptr;
+    HBITMAP bmp = CreateDIBSection(target, &bi, DIB_RGB_COLORS, &p, nullptr, 0);
+    *bits = bmp ? static_cast<uint32_t*>(p) : nullptr;
+    return bmp;
+}
+}
+
+PaintBuffer::PaintBuffer(HDC target, int w, int h, const RECT& clear)
+{
+    w = std::max(1, w), h = std::max(1, h);
+    thread_local PaintBuffer::Shared shared;
+    if (!shared.busy)
+    {
+        if (w > shared.width || h > shared.height)
+        {
+            // Grow with some room so a window being resized wider doesn't reallocate on every step
+            const int nw = std::max(shared.width, (w + w / 8 + 63) & ~63), nh = std::max(shared.height, (h + h / 8 + 63) & ~63);
+            uint32_t* p = nullptr;
+            if (HBITMAP bmp = MakeDib(target, nw, nh, &p))
+            {
+                if (!shared.dc)
+                    shared.dc = CreateCompatibleDC(nullptr);
+                HGDIOBJ prev = SelectObject(shared.dc, bmp);
+                if (shared.bmp)
+                    DeleteObject(shared.bmp);
+                else
+                    shared.old = prev;
+                shared.bmp = bmp, shared.bits = p, shared.width = nw, shared.height = nh;
+            }
+        }
+        if (shared.bits && w <= shared.width && h <= shared.height)
+        {
+            m_shared = &shared;
+            shared.busy = true;
+            dc = shared.dc, bits = shared.bits, width = shared.width;
+            m_saved = SaveDC(dc);
+            // What a fresh DIB would hold: zeros where this paint draws (the blit and the backdrop read nothing else).
+            // GdiFlush first: the last paint's batched blit out of these pixels may not have run yet.
+            GdiFlush();
+            RECT z{};
+            const RECT all{ 0, 0, w, h };
+            if (IntersectRect(&z, &clear, &all))
+                for (int y = z.top; y < z.bottom; ++y)
+                    memset(bits + static_cast<size_t>(y) * width + z.left, 0, static_cast<size_t>(z.right - z.left) * 4);
+            return;
+        }
+    }
+    dc = CreateCompatibleDC(target);
+    width = w;
+    m_bmp = MakeDib(target, w, h, &bits);
+    if (!m_bmp)
+        m_bmp = CreateCompatibleBitmap(target, w, h);
+    m_old = SelectObject(dc, m_bmp);
+}
+
+PaintBuffer::~PaintBuffer()
+{
+    if (m_shared)
+    {
+        RestoreDC(dc, m_saved);
+        m_shared->busy = false;
+        return;
+    }
+    SelectObject(dc, m_old);
+    DeleteObject(m_bmp);
+    DeleteDC(dc);
+}
+
 BufferedPaint::BufferedPaint(HWND hwnd) : m_hwnd(hwnd)
 {
     m_target = BeginPaint(hwnd, &m_ps);
     GetClientRect(hwnd, &m_rc);
-    m_mem = CreateCompatibleDC(m_target);
     // A top-down 32bpp DIB: the backdrop material is composed into its pixels before the blit
-    BITMAPINFO bi{};
-    bi.bmiHeader = { sizeof(BITMAPINFOHEADER), std::max(1L, m_rc.right), -std::max(1L, m_rc.bottom), 1, 32, BI_RGB };
-    m_bmp = CreateDIBSection(m_target, &bi, DIB_RGB_COLORS, reinterpret_cast<void**>(&m_bits), nullptr, 0);
-    if (!m_bmp)
-    {
-        m_bits = nullptr;
-        m_bmp = CreateCompatibleBitmap(m_target, std::max(1L, m_rc.right), std::max(1L, m_rc.bottom));
-    }
-    m_old = SelectObject(m_mem, m_bmp);
+    m_buffer = std::make_unique<PaintBuffer>(m_target, m_rc.right, m_rc.bottom, m_ps.rcPaint);
 }
 
 BufferedPaint::~BufferedPaint()
 {
     const RECT& p = m_ps.rcPaint;
-    if (m_bits && Backdrop::Active())
+    if (m_buffer->bits && Backdrop::Active())
     {
         GdiFlush();
-        Backdrop::Compose(m_hwnd, m_bits, std::max(1L, m_rc.right), p);
+        Backdrop::Compose(m_hwnd, m_buffer->bits, m_buffer->width, p);
     }
-    BitBlt(m_target, p.left, p.top, p.right - p.left, p.bottom - p.top, m_mem, p.left, p.top, SRCCOPY);
-    SelectObject(m_mem, m_old);
-    DeleteObject(m_bmp);
-    DeleteDC(m_mem);
+    BitBlt(m_target, p.left, p.top, p.right - p.left, p.bottom - p.top, m_buffer->dc, p.left, p.top, SRCCOPY);
+    m_buffer.reset();
     EndPaint(m_hwnd, &m_ps);
 }

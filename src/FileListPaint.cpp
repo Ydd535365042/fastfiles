@@ -11,35 +11,6 @@
 // dimmed (hidden) items at 0.4; tag pills 24 high, Padding 8,0, CornerRadius 12, Spacing 8 (16px tag icon).
 // Row background and selection pill: WinUI ListViewItem (corner 4, inset 4,2; pill 3x16 in the accent color).
 
-namespace
-{
-// A 32bpp top-down buffer for one paint (the backdrop composes into its pixels)
-struct Canvas
-{
-    HDC dc = nullptr;
-    HBITMAP bmp = nullptr;
-    HGDIOBJ old = nullptr;
-    uint32_t* bits = nullptr;
-    int width = 0;
-    Canvas(HDC target, int w, int h) : width(std::max(1, w))
-    {
-        BITMAPINFO bi{};
-        bi.bmiHeader = { sizeof(BITMAPINFOHEADER), width, -std::max(1, h), 1, 32, BI_RGB };
-        dc = CreateCompatibleDC(target);
-        void* p = nullptr;
-        bmp = CreateDIBSection(target, &bi, DIB_RGB_COLORS, &p, nullptr, 0);
-        bits = static_cast<uint32_t*>(p);
-        old = SelectObject(dc, bmp);
-    }
-    ~Canvas()
-    {
-        SelectObject(dc, old);
-        DeleteObject(bmp);
-        DeleteDC(dc);
-    }
-};
-}
-
 void FileList::CacheColumns()
 {
     for (int i = 0; i < kColumnCount; ++i)
@@ -72,7 +43,8 @@ void FileList::Paint(HWND hwnd, bool header)
     RECT client{};
     GetClientRect(hwnd, &client);
     {
-        Canvas c(target, client.right, client.bottom);
+        // The backdrop composes into its pixels; nothing to clear (FillSolid covers the client)
+        PaintBuffer c(target, client.right, client.bottom, RECT{});
         if (c.bits)
         {
             FillSolid(c.dc, client, m_theme->content);
@@ -223,6 +195,17 @@ void FileList::DrawRow(HDC hdc, int row, const RECT& rc)
         text(ColSize, Format::Size(item.size));
 }
 
+float FileList::SortTurn() const
+{
+    const float to = m_sortDesc ? -180.0f : 0.0f;
+    if (!m_sortTurnStart)
+        return to;
+    const ULONGLONG t = GetTickCount64() - m_sortTurnStart;
+    if (t >= static_cast<ULONGLONG>(kSortTurnMs))
+        return to;
+    return m_sortTurnFrom + (to - m_sortTurnFrom) * static_cast<float>(t) / kSortTurnMs;
+}
+
 void FileList::DrawHeader(HDC hdc, const RECT& client)
 {
     const Theme& t = *m_theme;
@@ -248,6 +231,11 @@ void FileList::DrawHeader(HDC hdc, const RECT& client)
             continue;
         // Files' SortIcon (EDDB, 8px), turned 180 degrees when descending
         const RECT g{ br - t.S(20), t.S(12), br - t.S(12), client.bottom - line };
+        if (const float turn = SortTurn(); turn != 0.0f && turn != -180.0f)
+        {
+            DrawGlyphTurned(hdc, m_glyphFont, L"\xEDDB", g, text, turn); // on its way (SetSort)
+            continue;
+        }
         const int mode = SetGraphicsMode(hdc, GM_ADVANCED);
         if (m_sortDesc)
         {

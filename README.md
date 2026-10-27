@@ -94,11 +94,11 @@
 
 ## 下载
 
-当前版本：**1.0.0.4**（[更新日志](CHANGELOG.md)）
+当前版本：**1.0.0.5**（[更新日志](CHANGELOG.md)）
 
 在 [Releases](https://github.com/Ydd535365042/fastfiles/releases/latest) 页面下载：
 
-- `FastFiles_1.0.0.4_x64_Setup.exe`：安装版，创建开始菜单快捷方式（桌面快捷方式可选），支持卸载。
+- `FastFiles_1.0.0.5_x64_Setup.exe`：安装版，创建开始菜单快捷方式（桌面快捷方式可选），支持卸载。
 - `FastFiles.exe`：单文件便携版，下载即用。
 
 已经安装的 FastFiles 可以在“设置 → 关于”里点“检查更新”直接升级。

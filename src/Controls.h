@@ -64,6 +64,8 @@ private:
     ULONGLONG m_pressedAt = 0;
     static constexpr UINT_PTR kFlashTimer = 1;
     static constexpr ULONGLONG kFlashMs = 120;
+    std::vector<StateFade> m_fades; // per item: the hover / pressed fill easing between states
+    static constexpr UINT_PTR kFadeTimer = 2;
     bool m_tracking = false;
     bool m_sidebarLook = false;
     bool m_buttonLook = false;

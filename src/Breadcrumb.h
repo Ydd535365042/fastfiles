@@ -77,4 +77,17 @@ private:
     Hit m_hot;
     Hit m_pressed; // the part the left button went down on (its pressed look)
     bool m_tracking = false;
+    // The parts whose hover / pressed fill is fading (BrushTransition 83 ms, see Paint); a few at most
+    struct Fade { Hit hit; StateFade fade; };
+    std::vector<Fade> m_fades;
+    int Fill(Part part, int index, int level, bool snap); // its fill's level now (Paint)
+    static constexpr UINT_PTR kFadeTimer = 2; // also the chevron's turn
+    // The segment whose chevron turns for its flyout (ShowChildren): to 90 degrees while open, back to 0 after
+    int m_turnIndex = -1;
+    bool m_turnOpen = false;
+    float m_turnFrom = 0;
+    ULONGLONG m_turnStart = 0;
+    static constexpr int kTurnMs = 200;
+    void TurnChevron(int index, bool open);
+    float ChevronTurn(int index) const; // degrees now
 };

@@ -171,6 +171,11 @@ void MainWindow::RunCommand(int id)
         OpenSettings();
         return;
     }
+    if (id == BtnUpdate)
+    {
+        StartUpdate(); // Files' UpdateCommand (no tab needed)
+        return;
+    }
     Tab* tab = Active();
     if (!tab)
         return;

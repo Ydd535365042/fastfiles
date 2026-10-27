@@ -74,6 +74,10 @@ void MainWindow::CreateChildren()
         { IdUp, Glyph::Up, L"", Tr(L"上一级 (Alt+↑)") },
         { IdRefresh, Glyph::Refresh, L"", Tr(L"刷新 (F5)") } }, &m_theme.layer);
     m_nav.SetButtonLook(true);
+    // Files' UpdateAppButton (AddressToolbarButtonStyle), hidden until a newer release is found
+    m_updateBar.Create(m_hwnd, IdUpdateBar, &m_theme, this, { { BtnUpdate, Glyph::Download, L"", Tr(L"更新 FastFiles") } }, &m_theme.layer);
+    m_updateBar.SetButtonLook(true);
+    ShowWindow(m_updateBar.Hwnd(), SW_HIDE);
 
     m_address = MakeEdit(m_hwnd, IdAddress, &m_theme);
     SHAutoComplete(m_address, SHACF_FILESYS_DIRS | SHACF_URLHISTORY | SHACF_AUTOSUGGEST_FORCE_ON | SHACF_AUTOAPPEND_FORCE_OFF);
@@ -156,11 +160,25 @@ void MainWindow::Layout()
     const int searchW = std::clamp(width / 4, t.S(160), t.S(300));
     // Files' RightSideActionsStackPanel: the status center button (36x32) right of the omnibar, 4 apart
     const bool center = m_center.Button() && m_center.Wanted();
-    const int searchRight = width - t.S(10) - (center ? t.S(36) + t.S(4) : 0);
+    int navRight = width - t.S(10);
     if (center)
-        Place(m_center.Button(), searchRight + t.S(4), mid - boxH / 2, t.S(36), boxH);
+    {
+        Place(m_center.Button(), navRight - t.S(36), mid - boxH / 2, t.S(36), boxH);
+        navRight -= t.S(36) + t.S(4);
+    }
     if (m_center.Button())
         ShowWindow(m_center.Button(), center ? SW_SHOWNA : SW_HIDE);
+    // Files' UpdateAppButton: in the same row, left of the status center
+    const bool update = m_updateBar.Hwnd() && UpdateButtonShown();
+    if (update)
+    {
+        const int w = m_updateBar.IdealWidth();
+        Place(m_updateBar.Hwnd(), navRight - w, title, w, nav - line);
+        navRight -= w + t.S(4);
+    }
+    if (m_updateBar.Hwnd())
+        ShowWindow(m_updateBar.Hwnd(), update ? SW_SHOWNA : SW_HIDE);
+    const int searchRight = navRight;
     m_searchFrame = { searchRight - searchW, mid - boxH / 2, searchRight, mid + boxH / 2 };
     m_omni = { t.S(4) + navW + t.S(6), m_searchFrame.top, m_searchFrame.left - t.S(8), m_searchFrame.bottom };
 

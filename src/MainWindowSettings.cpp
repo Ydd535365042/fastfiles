@@ -1320,6 +1320,48 @@ void MainWindow::OnUpdateResult(Update::Result* result)
         m_updateStage = UpdateStage::Failed;
         break;
     }
+    // A background check that failed (no network): nothing to show, the next one tries again
+    if (m_updateAuto && r->kind == Update::Result::Kind::Failed)
+        m_updateStage = UpdateStage::Idle;
+    if (r->kind != Update::Result::Kind::Progress)
+        m_updateAuto = false;
     Update::TestLog(L"status " + UpdateCheckText());
+    UpdateUpdateButton();
     ForEachPane([](Tab* tab) { tab->RebuildSettings(); });
+}
+
+void MainWindow::AutoCheckForUpdates()
+{
+    // Files: IUpdateService.CheckForUpdatesAsync at startup and periodically, stopping once an update is there. Test
+    // mode only when a test asks for it (FASTFILES_TEST_AUTOUPDATE=1): other tests never reach the network
+    if (Sandbox::Active())
+    {
+        wchar_t v[4]{};
+        if (!GetEnvironmentVariableW(L"FASTFILES_TEST_AUTOUPDATE", v, ARRAYSIZE(v)) || v[0] != L'1')
+            return;
+    }
+    if (m_updateStage == UpdateStage::Checking || m_updateStage == UpdateStage::Available || m_updateStage == UpdateStage::Downloading)
+        return;
+    m_updateAuto = true;
+    Update::TestLog(L"auto check");
+    CheckForUpdates();
+}
+
+void MainWindow::UpdateUpdateButton()
+{
+    if (!m_updateBar.Hwnd())
+        return;
+    const bool shown = UpdateButtonShown();
+    // "更新到 1.0.0.4" (Files' button is an icon; the version is shown here as asked), the download's percent meanwhile
+    std::wstring label = m_updateStage == UpdateStage::Downloading
+        ? Tr(L"正在下载更新… ") + std::to_wstring(m_updatePercent) + L"%"
+        : shown ? Tr(L"更新到 ") + m_updateRelease.version : std::wstring();
+    if (label != m_updateLabel)
+    {
+        m_updateLabel = label;
+        m_updateBar.SetItems({ { BtnUpdate, Glyph::Download, label, Tr(L"更新 FastFiles") } });
+        m_updateBar.SetEnabled(BtnUpdate, m_updateStage == UpdateStage::Available);
+    }
+    if (shown != (IsWindowVisible(m_updateBar.Hwnd()) != FALSE) || shown)
+        Layout();
 }

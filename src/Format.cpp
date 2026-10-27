@@ -27,24 +27,6 @@ bool Local(const FILETIME& utc, SYSTEMTIME& local)
     SYSTEMTIME st{};
     return FileTimeToSystemTime(&utc, &st) && SystemTimeToTzSpecificLocalTime(nullptr, &st, &local);
 }
-
-// Seconds since utc (negative: the future)
-long long Elapsed(const FILETIME& utc)
-{
-    FILETIME now{};
-    GetSystemTimeAsFileTime(&now);
-    const auto a = (static_cast<long long>(now.dwHighDateTime) << 32) | now.dwLowDateTime;
-    const auto b = (static_cast<long long>(utc.dwHighDateTime) << 32) | utc.dwLowDateTime;
-    return (a - b) / 10000000;
-}
-
-std::wstring Fill(const wchar_t* pattern, long long n)
-{
-    std::wstring s = pattern;
-    if (const size_t at = s.find(L"{0}"); at != std::wstring::npos)
-        s.replace(at, 3, std::to_wstring(n));
-    return s;
-}
 }
 
 namespace Format
@@ -92,19 +74,9 @@ std::wstring DateShort(const FILETIME& utc)
         swprintf_s(buf, L"%04u-%02u-%02u %02u:%02u:%02u", st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
         return buf;
     }
-    // ApplicationDateTimeFormatter.ToShortLabel
-    const long long s = Elapsed(utc);
-    if (s < 0 || s >= 7 * 86400)
-        return Date(st, DATE_LONGDATE);
-    if (s >= 2 * 86400) return Fill(Tr(L"{0} 天前"), s / 86400);
-    if (s >= 86400) return Tr(L"1 天前");
-    if (s >= 2 * 3600) return Fill(Tr(L"{0} 小时前"), s / 3600);
-    if (s >= 3600) return Tr(L"1 小时前");
-    if (s >= 120) return Fill(Tr(L"{0} 分钟前"), s / 60);
-    if (s >= 60) return Tr(L"1 分钟前");
-    if (s >= 2) return Fill(Tr(L"{0} 秒前"), s);
-    if (s >= 1) return Tr(L"1 秒前");
-    return Tr(L"现在");
+    // 应用: the full date and time ("2026年10月27日 14:30"). Files writes "3 天前" / "5 小时前" within a week
+    // (ApplicationDateTimeFormatter.ToShortLabel); the user wants the date and time itself in every row
+    return Date(st, DATE_LONGDATE) + L" " + Time(st);
 }
 
 std::wstring DateLong(const FILETIME& utc)
@@ -112,13 +84,7 @@ std::wstring DateLong(const FILETIME& utc)
     SYSTEMTIME st{};
     if ((!utc.dwHighDateTime && !utc.dwLowDateTime) || !Local(utc, st))
         return L" ";
-    if (g_date != 0)
-        return DateShort(utc);
-    // ApplicationDateTimeFormatter.ToLongLabel: "D t", plus the relative text within a week
-    std::wstring text = Date(st, DATE_LONGDATE) + L" " + Time(st);
-    const long long s = Elapsed(utc);
-    if (s >= 0 && s < 7 * 86400)
-        text += L" (" + DateShort(utc) + L")";
-    return text;
+    // ApplicationDateTimeFormatter.ToLongLabel: "D t" (without its relative "(3 天前)" suffix, as in the list)
+    return DateShort(utc);
 }
 }

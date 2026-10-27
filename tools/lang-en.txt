@@ -381,4 +381,6 @@ GitHub 暂时拒绝了请求，请稍后再试。=>GitHub refused the request fo
 正在检查更新…=>Checking for updates…
 此版本的 Windows 不支持共享。=>This version of Windows doesn't support sharing.
 立即更新=>Update now
+更新到 =>Update to 
+更新 FastFiles=>Update FastFiles
 项=>items

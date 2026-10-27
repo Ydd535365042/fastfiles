@@ -101,8 +101,8 @@ private:
     enum : int { CmdNewTab = 200, CmdDuplicate, CmdClose, CmdCloseOthers, CmdCloseLeft, CmdCloseRight, CmdReopen, CmdMoveToWindow };
     enum : int { BtnNew = 300, BtnCut, BtnCopy, BtnPaste, BtnRename, BtnShare, BtnDelete, BtnProperties, BtnSelect, BtnSort, BtnLayout, BtnSidebar,
         BtnRunAs, BtnRotateLeft, BtnRotateRight, BtnWallpaper, BtnInstallFont, BtnEmptyBin, BtnFilter, BtnMore, BtnInfoPane, BtnDualPane, BtnSettings,
-        BtnRestoreAll, BtnRestore, BtnLast };
-    enum : int { IdSideFoot = 120 };
+        BtnRestoreAll, BtnRestore, BtnUpdate, BtnLast };
+    enum : int { IdSideFoot = 120, IdUpdateBar = 121 };
     static constexpr int kSideFoot = 44; // settings button under the sidebar (blueprint .side .foot)
     static UINT SettingsChangedMessage(); // registered: another FastFiles process saved settings
     static UINT DebugFrameCountMessage(); // registered: test mode only, SmoothFrame::DebugFrameCount() as the LRESULT
@@ -131,6 +131,7 @@ private:
     static constexpr UINT_PTR kFilterTimer = 2;
     static constexpr UINT_PTR kInfoTimer = 3; // selection polling while the details pane is open
     static constexpr UINT_PTR kMoveTimer = 4; // dragged over the live material: repaint once it rests
+    static constexpr UINT_PTR kUpdateTimer = 5; // Files' startup + periodic update check (every 5 hours)
     static constexpr int kSplitter = 6;   // 96-DPI units (SidebarResizer 4 + ContentPresenter margin 2)
     static constexpr int kTitleRow = 40;  // tab strip + caption buttons
     static constexpr int kNavRow = 48;
@@ -414,6 +415,14 @@ private:
     void StartUpdate();
     void OnUpdateResult(Update::Result* result);
     std::wstring UpdateCheckText() const;
+    // Files' UpdateAppButton: right of the omnibar only while a newer release is there (checked in the background at
+    // startup and every 5 hours, silently: no network, no button); here it also says which version
+    void AutoCheckForUpdates();
+    void UpdateUpdateButton();
+    bool UpdateButtonShown() const { return m_updateStage == UpdateStage::Available || m_updateStage == UpdateStage::Downloading; }
+    ButtonBar m_updateBar;
+    bool m_updateAuto = false;  // the running check is the background one (a failure shows nothing)
+    std::wstring m_updateLabel; // the button's text (kept: ButtonBar items point at nothing of ours)
     UpdateStage m_updateStage = UpdateStage::Idle;
     Update::Release m_updateRelease;
     int m_updatePercent = 0;

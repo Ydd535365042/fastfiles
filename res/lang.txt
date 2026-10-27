@@ -1,10 +1,6 @@
 [af]
 \n解压缩大小 	 Ongekompakteerde grootte 
  个项目	 items
-1 分钟前	1 minute ago
-1 天前	1 day ago
-1 小时前	1 hour ago
-1 秒前	1 second ago
 Git 错误	Git error
 GitHub 仓库	GitHub-bewaarplek
 PowerShell 文件	PowerShell files
@@ -13,11 +9,7 @@ PowerShell 文件	PowerShell files
 {0, plural, other {有 # 个文件名冲突}}	{0, plural, one {There is one conflicting file name} other {There are # conflicting file names}}
 {0, plural, other {有 # 个文件名冲突}}和 {1, plural, other {# 个无冲突的项目}}	{0, plural, one {There is one conflicting file name} other {There are # conflicting file names}}, and {1, plural, one {one outgoing item} other {# outgoing items}}
 {0} 个项目	{0} items
-{0} 分钟前	{0} minutes ago
-{0} 天前	{0} days ago
-{0} 小时前	{0} hours ago
 {0} 年	Jaar {0}
-{0} 秒前	{0} seconds ago
 {0}正在使用您尝试访问的文件	The file you are attempting to access is currently being used by {0}
 “创建日期”列	Datum geskep kolom
 “大小”列	Size column
@@ -341,7 +333,6 @@ PowerShell 文件	PowerShell files
 版本 	Weergawe 
 状态中心	Statussentrum
 玫瑰色	Rose Bright
-现在	Nou
 生成新名称	Genereer nuwe naam
 用选中的项目创建文件夹	Skep omslag met seleksie
 目前没有可共享的内容。	Daar is niks om nou te deel nie...
@@ -437,10 +428,6 @@ PowerShell 文件	PowerShell files
 [ar]
 \n解压缩大小 	 الحجم الغير مضغوط 
  个项目	 الأصناف
-1 分钟前	منذ دقيقة
-1 天前	منذ يوم
-1 小时前	منذ ساعة
-1 秒前	منذ ثانية
 Git 错误	خطأ في Git
 GitHub 仓库	مستودع GitHub
 PowerShell 文件	PowerShell files
@@ -449,11 +436,7 @@ PowerShell 文件	PowerShell files
 {0, plural, other {有 # 个文件名冲突}}	{0, plural, zero {}one {هناك اسم واحد متضارب للملف} two {هناك # من أسماء الملفات المتضاربة} few {هناك # من أسماء الملفات المتضاربة} many {هناك # من أسماء الملفات المتضاربة} other {هناك # من أسماء الملفات المتضاربة}}
 {0, plural, other {有 # 个文件名冲突}}和 {1, plural, other {# 个无冲突的项目}}	{0, plural, one {يوجد ملف واحد باسم متعارض} other {يوجد # ملفات بأسماء متعارضة}}, و{1, plural, one {عنصر صادر واحد} other {# عناصر صادرة}}\n```
 {0} 个项目	{0} من العناصر
-{0} 分钟前	منذ {0} دقائق
-{0} 天前	منذ {0} أيّام
-{0} 小时前	منذ {0} ساعات
 {0} 年	سنة {0}
-{0} 秒前	منذ {0} من الثواني
 {0}正在使用您尝试访问的文件	The file you are attempting to access is currently being used by {0}
 “创建日期”列	عمود تاريخ الإنشاء
 “大小”列	عمود الحجم
@@ -777,7 +760,6 @@ PowerShell 文件	PowerShell files
 版本 	الإصدار 
 状态中心	مركز الحالات
 玫瑰色	وردة مشرقة
-现在	الآن
 生成新名称	توليد اسم جديد
 用选中的项目创建文件夹	إنشاء مجلد مع العناصر المحددة
 目前没有可共享的内容。	‏‏لا يوجد شيء لمشاركته الآن.
@@ -873,10 +855,6 @@ PowerShell 文件	PowerShell files
 [be-BY]
 \n解压缩大小 	 Uncompressed size 
  个项目	 элемент(аў)
-1 分钟前	1 хвіліну таму
-1 天前	1 дзень назад
-1 小时前	1 гадзіну назад
-1 秒前	1 секунду таму
 Git 错误	Git error
 GitHub 仓库	Рэпазіторый GitHub
 PowerShell 文件	PowerShell files
@@ -885,11 +863,7 @@ PowerShell 文件	PowerShell files
 {0, plural, other {有 # 个文件名冲突}}	{0, plural, one {There is one conflicting file name} other {There are # conflicting file names}}
 {0, plural, other {有 # 个文件名冲突}}和 {1, plural, other {# 个无冲突的项目}}	{0, plural, one {There is one conflicting file name} other {There are # conflicting file names}}, and {1, plural, one {one outgoing item} other {# outgoing items}}
 {0} 个项目	{0} items
-{0} 分钟前	{0} хвілін таму
-{0} 天前	{0} дзён назад
-{0} 小时前	{0} гадзін назад
 {0} 年	Year {0}
-{0} 秒前	{0} секунд таму
 {0}正在使用您尝试访问的文件	Файл, да якога вы спрабуеце атрымаць доступ, зараз выкарыстоўваецца {0}
 “创建日期”列	Date created column
 “大小”列	Size column
@@ -1213,7 +1187,6 @@ PowerShell 文件	PowerShell files
 版本 	Версія 
 状态中心	Цэнтр стану
 玫瑰色	Rose Bright
-现在	Зараз
 生成新名称	Generate new name
 用选中的项目创建文件夹	Create folder with selection
 目前没有可共享的内容。	Зараз няма чым падзяліцца...
@@ -1309,10 +1282,6 @@ PowerShell 文件	PowerShell files
 [bg]
 \n解压缩大小 	 Некомпресиран размер 
  个项目	 елементи
-1 分钟前	1 minute ago
-1 天前	1 day ago
-1 小时前	1 hour ago
-1 秒前	1 second ago
 Git 错误	Грешка с Git
 GitHub 仓库	GitHub хранилище
 PowerShell 文件	PowerShell files
@@ -1321,11 +1290,7 @@ PowerShell 文件	PowerShell files
 {0, plural, other {有 # 个文件名冲突}}	{0, plural, one {There is one conflicting file name} other {There are # conflicting file names}}
 {0, plural, other {有 # 个文件名冲突}}和 {1, plural, other {# 个无冲突的项目}}	{0, plural, one {There is one conflicting file name} other {There are # conflicting file names}}, and {1, plural, one {one outgoing item} other {# outgoing items}}
 {0} 个项目	{0} елементи
-{0} 分钟前	{0} minutes ago
-{0} 天前	{0} days ago
-{0} 小时前	{0} hours ago
 {0} 年	Година {0}
-{0} 秒前	{0} seconds ago
 {0}正在使用您尝试访问的文件	The file you are attempting to access is currently being used by {0}
 “创建日期”列	Колона за дата на създаване
 “大小”列	Размер на колоната
@@ -1649,7 +1614,6 @@ PowerShell 文件	PowerShell files
 版本 	Версия 
 状态中心	Средище на състоянието
 玫瑰色	Светлорозово
-现在	Сега
 生成新名称	Генерирай ново име
 用选中的项目创建文件夹	Сътворение на папка с избраното
 目前没有可共享的内容。	Няма нищо за споделяне в момента...
@@ -1745,10 +1709,6 @@ PowerShell 文件	PowerShell files
 [ca]
 \n解压缩大小 	 Mida sense comprimir 
  个项目	 elements
-1 分钟前	Fa 1 minut
-1 天前	Fa 1 dia
-1 小时前	Fa 1 hora
-1 秒前	Fa 1 segon
 Git 错误	Error del Git
 GitHub 仓库	Repositori GitHub
 PowerShell 文件	Fitxers de PowerShell
@@ -1757,11 +1717,7 @@ PowerShell 文件	Fitxers de PowerShell
 {0, plural, other {有 # 个文件名冲突}}	{0, plural, one {Hi ha un nom de fitxer en conflicte} other {Hi ha # noms de fitxers en conflicte}}
 {0, plural, other {有 # 个文件名冲突}}和 {1, plural, other {# 个无冲突的项目}}	{0, plural, one {Hi ha un fitxer en conflicte} other {Hi ha # fitxers en conflicte}}, i {1, plural, one {un element sortint} other {# elements sortint}}
 {0} 个项目	{0} elements
-{0} 分钟前	Fa {0} minuts
-{0} 天前	Fa {0} dies
-{0} 小时前	Fa {0} hores
 {0} 年	Any {0}
-{0} 秒前	Fa {0} segons
 {0}正在使用您尝试访问的文件	El fitxer al qual intenteu accedir l'està utilitzant actualment {0}
 “创建日期”列	Columna de data de creació
 “大小”列	Columna de mida
@@ -2085,7 +2041,6 @@ PowerShell 文件	Fitxers de PowerShell
 版本 	Versió 
 状态中心	Centre d'estat
 玫瑰色	Rosa brillant
-现在	Ara
 生成新名称	Genera un nom nou
 用选中的项目创建文件夹	Crea una carpeta amb selecció
 目前没有可共享的内容。	No n'hi ha res per compartir ara mateix...
@@ -2181,10 +2136,6 @@ PowerShell 文件	Fitxers de PowerShell
 [cs-CZ]
 \n解压缩大小 	 Nekomprimovaná velikost 
  个项目	 položky
-1 分钟前	před 1 minutou
-1 天前	před 1 dnem
-1 小时前	před 1 hodinou
-1 秒前	před 1 sekundou
 Git 错误	Chyba Gitu
 GitHub 仓库	GitHub repozitář
 PowerShell 文件	PowerShell files
@@ -2193,11 +2144,7 @@ PowerShell 文件	PowerShell files
 {0, plural, other {有 # 个文件名冲突}}	{0, plural, one {Existuje jeden konfliktní název položky} few {Existují # konfliktní názvy položek} other {Existuje # konfliktních názvů položek}}
 {0, plural, other {有 # 个文件名冲突}}和 {1, plural, other {# 个无冲突的项目}}	{0, plural, one {Existuje jeden konfliktní název položky} few {Existují # konfliktní názvy položek} other {Existuje # konfliktních názvů položek}}, a {1, plural, one {jedna položka} few {# položky} other {# položek}} bez konfliktu
 {0} 个项目	{0} položky
-{0} 分钟前	před {0} minutami
-{0} 天前	před {0} dny
-{0} 小时前	před {0} hodinami
 {0} 年	Rok {0}
-{0} 秒前	před {0} sekundami
 {0}正在使用您尝试访问的文件	The file you are attempting to access is currently being used by {0}
 “创建日期”列	Sloupec data vytvoření
 “大小”列	Velikost sloupce
@@ -2521,7 +2468,6 @@ PowerShell 文件	PowerShell files
 版本 	Verze 
 状态中心	Stavové centrum
 玫瑰色	Jasně růžová
-现在	Nyní
 生成新名称	Generovat nové jméno
 用选中的项目创建文件夹	Vytvořit složku s výběrem
 目前没有可共享的内容。	Momentálně zde není co sdílet...
@@ -2617,10 +2563,6 @@ PowerShell 文件	PowerShell files
 [da]
 \n解压缩大小 	 Ukomprimeret størrelse 
  个项目	 emner
-1 分钟前	1 minut siden
-1 天前	1 dag siden
-1 小时前	1 time siden
-1 秒前	1 sekund siden
 Git 错误	Git-fejl
 GitHub 仓库	GitHub-repo
 PowerShell 文件	PowerShell files
@@ -2629,11 +2571,7 @@ PowerShell 文件	PowerShell files
 {0, plural, other {有 # 个文件名冲突}}	{0, plural, one {Der er ét filnavn i konflikt} other {Der er # filnavne i konflikt}}
 {0, plural, other {有 # 个文件名冲突}}和 {1, plural, other {# 个无冲突的项目}}	{0, plural, one {Der er ét filnavn i konflikt} other {Der er # filnavne i konflikt}}, og {1, plural, one {ét udgående enme} other {# udgående enmer}}
 {0} 个项目	{0} emner
-{0} 分钟前	{0} minutter siden
-{0} 天前	{0} dage siden
-{0} 小时前	{0} timer siden
 {0} 年	År {0}
-{0} 秒前	{0} sekunder siden
 {0}正在使用您尝试访问的文件	The file you are attempting to access is currently being used by {0}
 “创建日期”列	Oprettelsesdato-kolonne
 “大小”列	Størrelseskolonne
@@ -2957,7 +2895,6 @@ PowerShell 文件	PowerShell files
 版本 	Version 
 状态中心	Statuscenter
 玫瑰色	Lysrosa
-现在	Nu
 生成新名称	Generér nyt navn
 用选中的项目创建文件夹	Opret mappe med valg
 目前没有可共享的内容。	Intet at dele lige nu...
@@ -3053,10 +2990,6 @@ PowerShell 文件	PowerShell files
 [de-DE]
 \n解压缩大小 	 Unkomprimierte Größe 
  个项目	 Elemente
-1 分钟前	Vor 1 Minute
-1 天前	Vor 1 Tag
-1 小时前	Vor 1 Stunde
-1 秒前	Vor 1 Sekunde
 Git 错误	Git-Fehler
 GitHub 仓库	GitHub-Repository
 PowerShell 文件	PowerShell-Dateien
@@ -3065,11 +2998,7 @@ PowerShell 文件	PowerShell-Dateien
 {0, plural, other {有 # 个文件名冲突}}	{0, plural, one {Es gibt einen im Konflikt stehenden Dateinamen} other {Es gibt # im Konflikt stehende Dateinamen}}
 {0, plural, other {有 # 个文件名冲突}}和 {1, plural, other {# 个无冲突的项目}}	{0, plural, one {Es gibt einen im Konflikt stehenden Dateinamen} other {Es gibt # im Konflikt stehende Dateinamen}} und {1, plural, one {ein anderes Element} other {# andere Elemente}}
 {0} 个项目	{0} Dateien
-{0} 分钟前	Vor {0} Minuten
-{0} 天前	Vor {0} Tagen
-{0} 小时前	Vor {0} Stunden
 {0} 年	Jahr {0}
-{0} 秒前	Vor {0} Sekunden
 {0}正在使用您尝试访问的文件	Die Datei, auf die Sie zugreifen möchten, wird derzeit von {0} verwendet
 “创建日期”列	Erstelldatum
 “大小”列	Größenspalte
@@ -3393,7 +3322,6 @@ PowerShell 文件	PowerShell-Dateien
 版本 	Version 
 状态中心	Status Center
 玫瑰色	Helle Rose
-现在	Jetzt
 生成新名称	Neuen Namen erzeugen
 用选中的项目创建文件夹	Ordner mit Auswahl erstellen
 目前没有可共享的内容。	Zurzeit gibt es nichts zu teilen...
@@ -3489,10 +3417,6 @@ PowerShell 文件	PowerShell-Dateien
 [el]
 \n解压缩大小 	 Μη συμπιεσμένο μέγεθος 
  个项目	 στοιχεία
-1 分钟前	1 λεπτό πριν
-1 天前	1 ημέρα πριν
-1 小时前	1 ώρα πριν
-1 秒前	1 δευτερόλεπτο πριν
 Git 错误	Σφάλμα Git
 GitHub 仓库	Αποθετήριο GitHub
 PowerShell 文件	PowerShell files
@@ -3501,11 +3425,7 @@ PowerShell 文件	PowerShell files
 {0, plural, other {有 # 个文件名冲突}}	{0, plural, one {Υπάρχει ένα αντικρουόμενο όνομα αρχείου} other {Υπάρχουν # αντικρουόμενα ονόματα αρχείων}}
 {0, plural, other {有 # 个文件名冲突}}和 {1, plural, other {# 个无冲突的项目}}	{0, plural, one {Υπάρχει ένα αντικρουόμενο όνομα αρχείου} other {Υπάρχουν # αντικρουόμενα όνοματα αρχείου}} και {1, plural, one {ένα εξαγόμενο στοιχείο} other {# εξαγόμενα στοιχεία}}
 {0} 个项目	{0} στοιχεία
-{0} 分钟前	{0} λεπτά πριν
-{0} 天前	{0} ημέρες πριν
-{0} 小时前	{0} ώρες πριν
 {0} 年	Έτος {0}
-{0} 秒前	{0} δευτερόλεπτα πριν
 {0}正在使用您尝试访问的文件	The file you are attempting to access is currently being used by {0}
 “创建日期”列	Στήλη ημερομηνίας δημιουργίας
 “大小”列	Στήλη Μεγέθους
@@ -3829,7 +3749,6 @@ PowerShell 文件	PowerShell files
 版本 	Έκδοση 
 状态中心	Κέντρο κατάστασης
 玫瑰色	Ροζ φωτεινό
-现在	Τώρα
 生成新名称	Δημιουργία νέου ονόματος
 用选中的项目创建文件夹	Δημιουργία φακέλου με επιλογή
 目前没有可共享的内容。	Δεν υπάρχει τίποτα για κοινή χρήση αυτή τη στιγμή...
@@ -3925,10 +3844,6 @@ PowerShell 文件	PowerShell files
 [en-GB]
 \n解压缩大小 	 Uncompressed size 
  个项目	 items
-1 分钟前	1 minute ago
-1 天前	1 day ago
-1 小时前	1 hour ago
-1 秒前	1 second ago
 Git 错误	Git error
 GitHub 仓库	GitHub repository
 PowerShell 文件	PowerShell files
@@ -3937,11 +3852,7 @@ PowerShell 文件	PowerShell files
 {0, plural, other {有 # 个文件名冲突}}	{0, plural, one {There is one conflicting file name} other {There are # conflicting file names}}
 {0, plural, other {有 # 个文件名冲突}}和 {1, plural, other {# 个无冲突的项目}}	{0, plural, one {There is one conflicting file name} other {There are # conflicting file names}}, and {1, plural, one {one outgoing item} other {# outgoing items}}
 {0} 个项目	{0} items
-{0} 分钟前	{0} minutes ago
-{0} 天前	{0} days ago
-{0} 小时前	{0} hours ago
 {0} 年	Year {0}
-{0} 秒前	{0} seconds ago
 {0}正在使用您尝试访问的文件	The file you are attempting to access is currently being used by {0}
 “创建日期”列	Date created column
 “大小”列	Size column
@@ -4265,7 +4176,6 @@ PowerShell 文件	PowerShell files
 版本 	Version 
 状态中心	Status centre
 玫瑰色	Bright Rose
-现在	Now
 生成新名称	Generate new name
 用选中的项目创建文件夹	Create folder with selection
 目前没有可共享的内容。	There’s nothing to share at the moment.
@@ -4394,10 +4304,6 @@ PowerShell 文件	PowerShell files
  项设置。	 settings.
  项，用时 	 items in 
 + 添加标签	+ Add tag
-1 分钟前	1 minute ago
-1 天前	1 day ago
-1 小时前	1 hour ago
-1 秒前	1 second ago
 Ctrl+Alt+T 可以在浅色和深色之间快速切换。	Ctrl+Alt+T switches between light and dark.
 FastFiles 搜索（文件名）	FastFiles search (file names)
 FastFiles 搜索：按文件名查找当前文件夹及其子文件夹，不依赖索引；用空格分开多个词，* 和 ? 作为通配符。\n	FastFiles search: finds file names in this folder and its subfolders without an index; separate words with spaces, * and ? are wildcards.\n
@@ -4415,11 +4321,7 @@ Windows 搜索：使用系统索引，可以搜索文件内容。	Windows Search
 {0, plural, other {有 # 个文件名冲突}}	{0, plural, one {There is one conflicting file name} other {There are # conflicting file names}}
 {0, plural, other {有 # 个文件名冲突}}和 {1, plural, other {# 个无冲突的项目}}	{0, plural, one {There is one conflicting file name} other {There are # conflicting file names}}, and {1, plural, one {one outgoing item} other {# outgoing items}}
 {0} 个项目	{0} items
-{0} 分钟前	{0} minutes ago
-{0} 天前	{0} days ago
-{0} 小时前	{0} hours ago
 {0} 年	Year {0}
-{0} 秒前	{0} seconds ago
 {0}正在使用您尝试访问的文件	The file you are attempting to access is currently being used by {0}
 “创建日期”列	Date created column
 “大小”列	Size column
@@ -4874,6 +4776,8 @@ Windows 搜索：使用系统索引，可以搜索文件内容。	Windows Search
 暗灰色	Gray Dark
 更多	More
 更多选项...	More options...
+更新 FastFiles	Update FastFiles
+更新到 	Update to 
 更新已完成，请重新启动 FastFiles。	The update is done. Please restart FastFiles.
 替换已有的项目	Replace existing item
 最近使用的文件	Recent files
@@ -4956,7 +4860,6 @@ Windows 搜索：使用系统索引，可以搜索文件内容。	Windows Search
 状态中心	Status center
 状态栏	Status bar
 玫瑰色	Rose Bright
-现在	Now
 生成新名称	Generate new name
 用于详细信息窗格、状态栏、主页和状态中心；文件列表的“大小”列由 Windows 显示。	Used in the details pane, status bar, home page and status center; the file list's Size column is shown by Windows.
 用于详细信息窗格和主页的最近使用的文件；文件列表的日期列由 Windows 显示。	Used in the details pane and the home page's recent files; the file list's date columns are shown by Windows.
@@ -5110,10 +5013,6 @@ Windows 搜索：使用系统索引，可以搜索文件内容。	Windows Search
 [es-419]
 \n解压缩大小 	 Tamaño sin comprimir 
  个项目	 elementos
-1 分钟前	Hace 1 minuto
-1 天前	Hace 1 día
-1 小时前	Hace 1 hora
-1 秒前	Hace 1 segundo
 Git 错误	Error de Git
 GitHub 仓库	Repositorio de GitHub
 PowerShell 文件	Archivos PowerShell
@@ -5122,11 +5021,7 @@ PowerShell 文件	Archivos PowerShell
 {0, plural, other {有 # 个文件名冲突}}	{0, plural, one {Hay un nombre de archivo en conflicto} other {Hay # nombres de archivo en conflicto}}
 {0, plural, other {有 # 个文件名冲突}}和 {1, plural, other {# 个无冲突的项目}}	{0, plural, one {Hay un nombre de archivo en conflicto} other {Hay # nombres de archivo en conflicto}}, y {1, plural, one {un elemento saliente} other {# elementos salientes}}
 {0} 个项目	{0} elementos
-{0} 分钟前	Hace {0} minutos
-{0} 天前	Hace {0} días
-{0} 小时前	Hace {0} horas
 {0} 年	Año {0}
-{0} 秒前	Hace {0} segundos
 {0}正在使用您尝试访问的文件	El archivo al que intenta acceder está siendo utilizado actualmente por {0}
 “创建日期”列	fecha de creación
 “大小”列	Columna de tamaño
@@ -5450,7 +5345,6 @@ PowerShell 文件	Archivos PowerShell
 版本 	Versión 
 状态中心	Centro de actividades
 玫瑰色	Rosa brillante
-现在	Ahora
 生成新名称	Generar nuevo nombre
 用选中的项目创建文件夹	Crear carpeta con la selección
 目前没有可共享的内容。	No hay nada que compartir ahora mismo...
@@ -5546,10 +5440,6 @@ PowerShell 文件	Archivos PowerShell
 [es-ES]
 \n解压缩大小 	 Tamaño sin comprimir 
  个项目	 elementos
-1 分钟前	Hace 1 minuto
-1 天前	Hace 1 día
-1 小时前	Hace 1 hora
-1 秒前	Hace 1 segundo
 Git 错误	Error de Git
 GitHub 仓库	Repositorio GitHub
 PowerShell 文件	Archivos PowerShell
@@ -5558,11 +5448,7 @@ PowerShell 文件	Archivos PowerShell
 {0, plural, other {有 # 个文件名冲突}}	{0, plural, one {Hay un nombre de archivo en conflicto} other {Hay # nombres de archivo en conflicto}}
 {0, plural, other {有 # 个文件名冲突}}和 {1, plural, other {# 个无冲突的项目}}	{0, plural, one {Hay un nombre de archivo en conflicto} other {Hay # nombres de archivo en conflicto}}, y {1, plural, one {un elemento saliente} other {# elementos salientes}}
 {0} 个项目	{0} elementos
-{0} 分钟前	Hace {0} minutos
-{0} 天前	Hace {0} días
-{0} 小时前	Hace {0} horas
 {0} 年	Año {0}
-{0} 秒前	Hace {0} segundos
 {0}正在使用您尝试访问的文件	El archivo al que intenta acceder está siendo utilizado actualmente por {0}
 “创建日期”列	Columna de fecha de creación
 “大小”列	Columna de tamaño
@@ -5886,7 +5772,6 @@ PowerShell 文件	Archivos PowerShell
 版本 	Versión 
 状态中心	Centro de actividades
 玫瑰色	Rosa brillante
-现在	Ahora
 生成新名称	Generar nuevo nombre
 用选中的项目创建文件夹	Crear carpeta con la selección
 目前没有可共享的内容。	No hay nada que compartir ahora mismo...
@@ -5982,10 +5867,6 @@ PowerShell 文件	Archivos PowerShell
 [fa-IR]
 \n解压缩大小 	 اندازه فشرده نشده 
  个项目	 آیتم‌ها
-1 分钟前	1 دقیقه پیش
-1 天前	1 روز پیش
-1 小时前	1 ساعت پیش
-1 秒前	1 ثانیه قبل
 Git 错误	خطا Git
 GitHub 仓库	منبع GitHub
 PowerShell 文件	فایل‌های پاورشل
@@ -5994,11 +5875,7 @@ PowerShell 文件	فایل‌های پاورشل
 {0, plural, other {有 # 个文件名冲突}}	{0, plural, one {There is one conflicting file name} other {There are # conflicting file names}}
 {0, plural, other {有 # 个文件名冲突}}和 {1, plural, other {# 个无冲突的项目}}	{0, plural, one {There is one conflicting file name} other {There are # conflicting file names}}, and {1, plural, one {one outgoing item} other {# outgoing items}}
 {0} 个项目	{0} آیتم
-{0} 分钟前	{0} دقيقه پیش
-{0} 天前	{0} روز پیش
-{0} 小时前	{0} ساعت پیش
 {0} 年	سال {0}
-{0} 秒前	{0} ثانیه پیش
 {0}正在使用您尝试访问的文件	فایلی که می‌خواهید به آن دسترسی پیدا کنید در حال حاضر توسط {0} استفاده می‌شود
 “创建日期”列	ستون تاریخ تولید
 “大小”列	ستون سایز
@@ -6322,7 +6199,6 @@ PowerShell 文件	فایل‌های پاورشل
 版本 	نسخه 
 状态中心	وضعیت ها
 玫瑰色	سرخ روشن
-现在	اکنون
 生成新名称	ایجاد نام جدید
 用选中的项目创建文件夹	یک پوشه با موارد انتخابی
 目前没有可共享的内容。	در حال حاضر چیزی برای اشتراک وجود ندارد...
@@ -6418,10 +6294,6 @@ PowerShell 文件	فایل‌های پاورشل
 [fi-FI]
 \n解压缩大小 	 Pakkaamaton koko 
  个项目	 kohdetta
-1 分钟前	minuutti sitten
-1 天前	päivä sitten
-1 小时前	tunti sitten
-1 秒前	sekunti sitten
 Git 错误	Git-virhe
 GitHub 仓库	GitHub-repositorio
 PowerShell 文件	PowerShell-tiedostot
@@ -6430,11 +6302,7 @@ PowerShell 文件	PowerShell-tiedostot
 {0, plural, other {有 # 个文件名冲突}}	{0, plural, one {Yksi ristiriitainen tiedostonimi} other {# ristiriitaista tiedostonimeä}}
 {0, plural, other {有 # 个文件名冲突}}和 {1, plural, other {# 个无冲突的项目}}	{0, plural, one {Yksi ristiriitainen tiedostonimi} other {# ristiriitaista tiedostonimeä}} ja {1, plural, one {yksi lähtevä kohde} other {# lähtevää kohdetta}}
 {0} 个项目	{0} kohdetta
-{0} 分钟前	{0} minuuttia sitten
-{0} 天前	{0} päivää sitten
-{0} 小时前	{0} tuntia sitten
 {0} 年	Vuonna {0}
-{0} 秒前	{0} sekuntia sitten
 {0}正在使用您尝试访问的文件	The file you are attempting to access is currently being used by {0}
 “创建日期”列	Luontipäivämäärä -sarake
 “大小”列	Koko-sarake
@@ -6758,7 +6626,6 @@ PowerShell 文件	PowerShell-tiedostot
 版本 	Versio 
 状态中心	Tilakeskus
 玫瑰色	Kirkas ruusu
-现在	Nyt
 生成新名称	Luo uusi nimi
 用选中的项目创建文件夹	Luo kansio valinnalla
 目前没有可共享的内容。	Tällä hetkellä ei ole mitään jaettavaa...
@@ -6854,10 +6721,6 @@ PowerShell 文件	PowerShell-tiedostot
 [fil-PH]
 \n解压缩大小 	 Uncompressed na laki 
  个项目	 mga item
-1 分钟前	1 minuto ang nakaraan
-1 天前	1 araw na nakalipas
-1 小时前	1 oras na nakalipas
-1 秒前	1 second ago
 Git 错误	Git error
 GitHub 仓库	GitHub repository
 PowerShell 文件	PowerShell files
@@ -6866,11 +6729,7 @@ PowerShell 文件	PowerShell files
 {0, plural, other {有 # 个文件名冲突}}	{0, plural, one {There is one conflicting file name} other {There are # conflicting file names}}
 {0, plural, other {有 # 个文件名冲突}}和 {1, plural, other {# 个无冲突的项目}}	{0, plural, one {There is one conflicting file name} other {There are # conflicting file names}}, and {1, plural, one {one outgoing item} other {# outgoing items}}
 {0} 个项目	{0} na mga item
-{0} 分钟前	{0} minutes ago
-{0} 天前	{0} mga araw ang nakalipas
-{0} 小时前	{0} mga oras ang nakalipas
 {0} 年	Taon {0}
-{0} 秒前	{0} seconds ago
 {0}正在使用您尝试访问的文件	The file you are attempting to access is currently being used by {0}
 “创建日期”列	Kolum sa petsa ng pagkagawa
 “大小”列	Kolum ng laki
@@ -7192,7 +7051,6 @@ PowerShell 文件	PowerShell files
 版本 	Bersyon 
 状态中心	Status center
 玫瑰色	Rose Bright
-现在	Ngayon
 生成新名称	Bumuo ng bagong pangalan
 用选中的项目创建文件夹	Lumikha ng folder gamit ang mga pinili
 目前没有可共享的内容。	Walang maibabahagi ngayon...
@@ -7288,10 +7146,6 @@ PowerShell 文件	PowerShell files
 [fr-FR]
 \n解压缩大小 	 Taille décompressée 
  个项目	 éléments
-1 分钟前	Il y a 1 minute
-1 天前	Il y a 1 jour
-1 小时前	Il y a 1 heure
-1 秒前	Il y a 1 seconde
 Git 错误	Erreur Git
 GitHub 仓库	Dépôt GitHub
 PowerShell 文件	Fichiers PowerShell
@@ -7300,11 +7154,7 @@ PowerShell 文件	Fichiers PowerShell
 {0, plural, other {有 # 个文件名冲突}}	{0, plural, one {Il y a 1 nom de fichier en conflit} other {Il y a # noms de fichiers en conflit}}
 {0, plural, other {有 # 个文件名冲突}}和 {1, plural, other {# 个无冲突的项目}}	{0, plural, one {Il y a 1 nom de fichier en conflit} other {Il y a # noms de fichiers en conflit}}, et {1, plural, one {1 élément sortant} other {# éléments sortants}}
 {0} 个项目	{0} éléments
-{0} 分钟前	Il y a {0} minutes
-{0} 天前	Il y a {0} jours
-{0} 小时前	Il y a {0} heures
 {0} 年	Année {0}
-{0} 秒前	Il y a {0} secondes
 {0}正在使用您尝试访问的文件	Le fichier auquel vous tentez d'accéder est actuellement utilisé par {0}
 “创建日期”列	Date de création
 “大小”列	Taille
@@ -7628,7 +7478,6 @@ PowerShell 文件	Fichiers PowerShell
 版本 	Version 
 状态中心	Centre de statut
 玫瑰色	Rose clair
-现在	Maintenant
 生成新名称	Générer un nouveau nom
 用选中的项目创建文件夹	Créer un dossier avec la sélection
 目前没有可共享的内容。	Il n'y a rien à partager pour le moment…
@@ -7724,10 +7573,6 @@ PowerShell 文件	Fichiers PowerShell
 [he-IL]
 \n解压缩大小 	 Uncompressed size 
  个项目	 פריטים
-1 分钟前	לפני דקה
-1 天前	לפני יום
-1 小时前	לפני שעה
-1 秒前	לפני שנייה
 Git 错误	שגיאת Git
 GitHub 仓库	הפרויקט ב-GitHub
 PowerShell 文件	PowerShell files
@@ -7736,11 +7581,7 @@ PowerShell 文件	PowerShell files
 {0, plural, other {有 # 个文件名冲突}}	{0, plural, one {There is one conflicting file name} other {There are # conflicting file names}}
 {0, plural, other {有 # 个文件名冲突}}和 {1, plural, other {# 个无冲突的项目}}	{0, plural, one {There is one conflicting file name} other {There are # conflicting file names}}, and {1, plural, one {one outgoing item} other {# outgoing items}}
 {0} 个项目	{0} פריטים
-{0} 分钟前	לפני {0} דקות
-{0} 天前	לפני {0} ימים
-{0} 小时前	לפני {0} שעות
 {0} 年	שנה {0}
-{0} 秒前	לפני {0} שניות
 {0}正在使用您尝试访问的文件	The file you are attempting to access is currently being used by {0}
 “创建日期”列	Date created column
 “大小”列	Size column
@@ -8064,7 +7905,6 @@ PowerShell 文件	PowerShell files
 版本 	גירסה 
 状态中心	מרכז מצב
 玫瑰色	ורד בהיר
-现在	עכשיו
 生成新名称	צור שם חדש
 用选中的项目创建文件夹	Create folder with selection
 目前没有可共享的内容。	אין כרגע פריטים לשיתוף.
@@ -8160,10 +8000,6 @@ PowerShell 文件	PowerShell files
 [hi-IN]
 \n解压缩大小 	 Uncompressed size 
  个项目	 वस्तुओं
-1 分钟前	1 minute ago
-1 天前	1 day ago
-1 小时前	1 hour ago
-1 秒前	1 second ago
 Git 错误	Git error
 GitHub 仓库	गिटहब रिपोजिटरी
 PowerShell 文件	PowerShell files
@@ -8172,11 +8008,7 @@ PowerShell 文件	PowerShell files
 {0, plural, other {有 # 个文件名冲突}}	{0, plural, one {There is one conflicting file name} other {There are # conflicting file names}}
 {0, plural, other {有 # 个文件名冲突}}和 {1, plural, other {# 个无冲突的项目}}	{0, plural, one {There is one conflicting file name} other {There are # conflicting file names}}, and {1, plural, one {one outgoing item} other {# outgoing items}}
 {0} 个项目	{0} आइटम
-{0} 分钟前	{0} minutes ago
-{0} 天前	{0} days ago
-{0} 小时前	{0} hours ago
 {0} 年	Year {0}
-{0} 秒前	{0} seconds ago
 {0}正在使用您尝试访问的文件	The file you are attempting to access is currently being used by {0}
 “创建日期”列	Date created column
 “大小”列	Size column
@@ -8500,7 +8332,6 @@ PowerShell 文件	PowerShell files
 版本 	संस्करण 
 状态中心	Status center
 玫瑰色	Rose Bright
-现在	अभी
 生成新名称	Generate new name
 用选中的项目创建文件夹	Create folder with selection
 目前没有可共享的内容。	अभी साझा करने के लिए कुछ भी नहीं है.
@@ -8596,10 +8427,6 @@ PowerShell 文件	PowerShell files
 [hr-HR]
 \n解压缩大小 	 Nekomprimirana veličina 
  个项目	 stavki
-1 分钟前	Prije 1 minutu
-1 天前	Prije 1 dan
-1 小时前	Prije 1 sat
-1 秒前	Prije 1 sekunde
 Git 错误	Git pogreška
 GitHub 仓库	GitHub repozitorij
 PowerShell 文件	PowerShell datoteke
@@ -8608,11 +8435,7 @@ PowerShell 文件	PowerShell datoteke
 {0, plural, other {有 # 个文件名冲突}}	{0, plural, one {Pronađen je # naziv datoteke u sukobu} few {Pronađena su # naziva datoteka u sukobu} other {Pronađeno je # naziva datoteka u sukobu}}
 {0, plural, other {有 # 个文件名冲突}}和 {1, plural, other {# 个无冲突的项目}}	{0, plural, one {Pronađen je # naziv datoteke u sukobu} few {Pronađena su # naziva datoteka u sukobu} other {Pronađeno je # naziva datoteka u sukobu}}, i {1, plural, one {# odlazna stavka} few {# odlazne stavke} other {# odlaznih stavki}}
 {0} 个项目	{0} stavki
-{0} 分钟前	Prije {0} minuta
-{0} 天前	Prije {0} dana
-{0} 小时前	Prije {0} sati
 {0} 年	Godina {0}
-{0} 秒前	Prije {0} sekundi
 {0}正在使用您尝试访问的文件	Dadoteku koju pokušavate pristupiti trenutno koristi {0}
 “创建日期”列	Stupac datum stvaranja
 “大小”列	Stupac veličina
@@ -8936,7 +8759,6 @@ PowerShell 文件	PowerShell datoteke
 版本 	Verzija 
 状态中心	Status centar
 玫瑰色	Jarko ružičasta
-现在	Sada
 生成新名称	Generirajte novi naziv
 用选中的项目创建文件夹	Stvori mapu za odabrane stavke
 目前没有可共享的内容。	Trenutno nema ničeg za podijeliti...
@@ -9032,10 +8854,6 @@ PowerShell 文件	PowerShell datoteke
 [hu-HU]
 \n解压缩大小 	 Tömörítetlen méret 
  个项目	 elem
-1 分钟前	1 perccel ezelőtt
-1 天前	1 nappal ezelőtt
-1 小时前	1 órával ezelőtt
-1 秒前	1 másodperccel ezelőtt
 Git 错误	Git hiba
 GitHub 仓库	GitHub repó
 PowerShell 文件	PowerShell fájlok
@@ -9044,11 +8862,7 @@ PowerShell 文件	PowerShell fájlok
 {0, plural, other {有 # 个文件名冲突}}	{0, plural, one {#} other {#}} névütközés
 {0, plural, other {有 # 个文件名冲突}}和 {1, plural, other {# 个无冲突的项目}}	{0, plural, one {Van egy ütköző fájlneve} other {Van # ütköző fájlneve}}, és {1, plural, one {egy kimenő elem} other {# kimenő elem}}
 {0} 个项目	{0} elem
-{0} 分钟前	{0} perccel ezelőtt
-{0} 天前	{0} nappal ezelőtt
-{0} 小时前	{0} órával ezelőtt
 {0} 年	Év {0}
-{0} 秒前	{0} másodperccel ezelőtt
 {0}正在使用您尝试访问的文件	The file you are attempting to access is currently being used by {0}
 “创建日期”列	Létrehozás dátuma
 “大小”列	Méret
@@ -9372,7 +9186,6 @@ PowerShell 文件	PowerShell fájlok
 版本 	Verzió 
 状态中心	Állapotközpont
 玫瑰色	Világos rózsaszín
-现在	Most
 生成新名称	Új név létrehozása
 用选中的项目创建文件夹	Mappa létrehozása a kijelölt elemekkel
 目前没有可共享的内容。	Nincs mit megosztani...
@@ -9468,10 +9281,6 @@ PowerShell 文件	PowerShell fájlok
 [hy-AM]
 \n解压缩大小 	 Uncompressed size 
  个项目	 տարր
-1 分钟前	1 րոպե առաջ
-1 天前	1 օր առաջ
-1 小时前	1 ժամ առաջ
-1 秒前	1 վարկյան առաջ
 Git 错误	Git-ի սխալ
 GitHub 仓库	GitHub պահեստ
 PowerShell 文件	PowerShell files
@@ -9480,11 +9289,7 @@ PowerShell 文件	PowerShell files
 {0, plural, other {有 # 个文件名冲突}}	{0, plural, one {There is one conflicting file name} other {There are # conflicting file names}}
 {0, plural, other {有 # 个文件名冲突}}和 {1, plural, other {# 个无冲突的项目}}	{0, plural, one {There is one conflicting file name} other {There are # conflicting file names}}, and {1, plural, one {one outgoing item} other {# outgoing items}}
 {0} 个项目	{0} տարր
-{0} 分钟前	{0} րոպե առաջ
-{0} 天前	{0} օր առաջ
-{0} 小时前	{0} ժամ առաջ
 {0} 年	{0} Տարի
-{0} 秒前	{0} վարկյան առաջ
 {0}正在使用您尝试访问的文件	The file you are attempting to access is currently being used by {0}
 “创建日期”列	Ստեղծման ամսաթվի սյունակ
 “大小”列	Չափի սյունակ
@@ -9808,7 +9613,6 @@ PowerShell 文件	PowerShell files
 版本 	Վարկած 
 状态中心	Վիճակի կենտոն
 玫瑰色	Պայծառ Վարդ
-现在	Հիմա
 生成新名称	Արտադրել նոր անուն
 用选中的项目创建文件夹	Ստեղծել պանակ ընտրվածով
 目前没有可共享的内容。	There's nothing to share right now...
@@ -9904,10 +9708,6 @@ PowerShell 文件	PowerShell files
 [id-ID]
 \n解压缩大小 	 Ukuran tidak terkompresi 
  个项目	 item
-1 分钟前	1 menit yang lalu
-1 天前	1 hari yang lalu
-1 小时前	1 jam yang lalu
-1 秒前	1 detik yang lalu
 Git 错误	Kesalahan pada Git
 GitHub 仓库	Repositori GitHub
 PowerShell 文件	File PowerShell
@@ -9916,11 +9716,7 @@ PowerShell 文件	File PowerShell
 {0, plural, other {有 # 个文件名冲突}}	{0, plural, one {Ada satu nama berkas yang konflik} other {Ada # nama berkas yang konflik}}
 {0, plural, other {有 # 个文件名冲突}}和 {1, plural, other {# 个无冲突的项目}}	{0, plural, one {Ada satu nama berkas yang konflik} other {Ada # nama berkas yang konflik}}, dan {1, plural, one {satu item keluar} other {# item keluar}}
 {0} 个项目	{0} item
-{0} 分钟前	{0} menit yang lalu
-{0} 天前	{0} hari yang lalu
-{0} 小时前	{0} jam yang lalu
 {0} 年	Tahun {0}
-{0} 秒前	{0} detik yang lalu
 {0}正在使用您尝试访问的文件	The file you are attempting to access is currently being used by {0}
 “创建日期”列	Kolom tanggal dibuat
 “大小”列	Kolom Ukuran
@@ -10244,7 +10040,6 @@ PowerShell 文件	File PowerShell
 版本 	Versi 
 状态中心	Pusat status
 玫瑰色	Mawar Cerah
-现在	Sekarang
 生成新名称	Buat nama baru
 用选中的项目创建文件夹	Buat folder dari yang dipilih
 目前没有可共享的内容。	Tidak ada yang bisa dibagikan saat ini...
@@ -10340,10 +10135,6 @@ PowerShell 文件	File PowerShell
 [it-IT]
 \n解压缩大小 	 Dimensione non compressa 
  个项目	 elementi
-1 分钟前	1 minuto fa
-1 天前	1 giorno fa
-1 小时前	1 ora fa
-1 秒前	1 secondo fa
 Git 错误	Errore di Git
 GitHub 仓库	Repository di GitHub
 PowerShell 文件	File PowerShell
@@ -10352,11 +10143,7 @@ PowerShell 文件	File PowerShell
 {0, plural, other {有 # 个文件名冲突}}	{0, plural, one {C'è un nome di file in conflitto} other {Ci sono # nomi di file in conflitto}}
 {0, plural, other {有 # 个文件名冲突}}和 {1, plural, other {# 个无冲突的项目}}	{0, plural, one {C'è un nome di file in conflitto} other {Ci sono # nomi di file in conflitto}}, e {1, plural, one {un elemento in uscita} other {# elementi in uscita}}
 {0} 个项目	{0} elementi
-{0} 分钟前	{0} minuti fa
-{0} 天前	{0} giorni fa
-{0} 小时前	{0} ore fa
 {0} 年	Anno {0}
-{0} 秒前	{0} secondi fa
 {0}正在使用您尝试访问的文件	Il file a cui stai tentando di accedere è attualmente utilizzato da {0}
 “创建日期”列	Data di creazione
 “大小”列	Dimensione
@@ -10680,7 +10467,6 @@ PowerShell 文件	File PowerShell
 版本 	Versione 
 状态中心	Stato delle operazioni
 玫瑰色	Rosa Brillante
-现在	Ora
 生成新名称	Genera nuovo nome
 用选中的项目创建文件夹	Crea cartella dalla selezione
 目前没有可共享的内容。	Nessun contenuto da condividere.
@@ -10776,9 +10562,6 @@ PowerShell 文件	File PowerShell
 [ja-JP]
 \n解压缩大小 	 圧縮前のサイズ 
  个项目	 項目
-1 分钟前	1 分前
-1 天前	1 日前
-1 小时前	1 時間前
 Git 错误	Git エラー
 GitHub 仓库	GitHub リポジトリ
 PowerShell 文件	PowerShell ファイル
@@ -10787,9 +10570,6 @@ PowerShell 文件	PowerShell ファイル
 {0, plural, other {有 # 个文件名冲突}}	{0, plural, other {# 個の競合するファイル名}}があります
 {0, plural, other {有 # 个文件名冲突}}和 {1, plural, other {# 个无冲突的项目}}	{0, plural, other {# 個の競合するファイル名}}と、{1, plural, other {# 個の競合しない項目}}があります
 {0} 个项目	{0} 個の項目
-{0} 分钟前	{0} 分前
-{0} 天前	{0} 日前
-{0} 小时前	{0} 時間前
 {0} 年	{0}年
 {0}正在使用您尝试访问的文件	The file you are attempting to access is currently being used by {0}
 “创建日期”列	作成日時
@@ -11107,7 +10887,6 @@ PowerShell 文件	PowerShell ファイル
 版本 	バージョン 
 状态中心	ステータス センター
 玫瑰色	ローズ ブライト
-现在	今
 生成新名称	名前を変更
 用选中的项目创建文件夹	選択した項目でフォルダーを作成
 目前没有可共享的内容。	現在共有できるものはありません。
@@ -11203,10 +10982,6 @@ PowerShell 文件	PowerShell ファイル
 [ka]
 \n解压缩大小 	 შეუკუმშავი ზომა 
  个项目	 ნივთი
-1 分钟前	1 minute ago
-1 天前	1 day ago
-1 小时前	1 hour ago
-1 秒前	1 second ago
 Git 错误	Git error
 GitHub 仓库	GitHub repository
 PowerShell 文件	PowerShell files
@@ -11215,11 +10990,7 @@ PowerShell 文件	PowerShell files
 {0, plural, other {有 # 个文件名冲突}}	{0, plural, one {There is one conflicting file name} other {There are # conflicting file names}}
 {0, plural, other {有 # 个文件名冲突}}和 {1, plural, other {# 个无冲突的项目}}	{0, plural, one {There is one conflicting file name} other {There are # conflicting file names}}, and {1, plural, one {one outgoing item} other {# outgoing items}}
 {0} 个项目	{0} ელემენტი
-{0} 分钟前	{0} minutes ago
-{0} 天前	{0} days ago
-{0} 小时前	{0} hours ago
 {0} 年	Year {0}
-{0} 秒前	{0} seconds ago
 {0}正在使用您尝试访问的文件	The file you are attempting to access is currently being used by {0}
 “创建日期”列	Date created column
 “大小”列	Size column
@@ -11543,7 +11314,6 @@ PowerShell 文件	PowerShell files
 版本 	ვერსია 
 状态中心	Status center
 玫瑰色	Rose Bright
-现在	Now
 生成新名称	არსებულის ჩანაცვლება
 用选中的项目创建文件夹	Create folder with selection
 目前没有可共享的内容。	ამჟამად აქ გასაზიარებელი არაფერია...
@@ -11639,10 +11409,6 @@ PowerShell 文件	PowerShell files
 [km-KH]
 \n解压缩大小 	 ទំហំមិនទាន់បង្ហាប់ 
  个项目	 ធាតុ
-1 分钟前	1 នាទីមុន
-1 天前	1 ថ្ងៃមុន
-1 小时前	1 ម៉ោងមុន
-1 秒前	1 វិនាទី​មុន
 Git 错误	Git error
 GitHub 仓库	រីប៉ូហ្គីតហាប់
 PowerShell 文件	PowerShell files
@@ -11651,11 +11417,7 @@ PowerShell 文件	PowerShell files
 {0, plural, other {有 # 个文件名冲突}}	{0, plural, one {There is one conflicting file name} other {There are # conflicting file names}}
 {0, plural, other {有 # 个文件名冲突}}和 {1, plural, other {# 个无冲突的项目}}	{0, plural, one {There is one conflicting file name} other {There are # conflicting file names}}, and {1, plural, one {one outgoing item} other {# outgoing items}}
 {0} 个项目	{0} items
-{0} 分钟前	{0} នាទីមុន
-{0} 天前	{0} ថ្ងៃមុន
-{0} 小时前	{0} ម៉ោងមុន
 {0} 年	ឆ្នាំ {0}
-{0} 秒前	{0} វិនាទី​មុន
 {0}正在使用您尝试访问的文件	The file you are attempting to access is currently being used by {0}
 “创建日期”列	ជួរឈរកាលបរិច្ឆេទបង្កើត
 “大小”列	Size column
@@ -11979,7 +11741,6 @@ PowerShell 文件	PowerShell files
 版本 	ជំនាន់: 
 状态中心	មណ្ឌលស្ថានភាព
 玫瑰色	Rose Bright
-现在	ឥឡូវនេះ
 生成新名称	Generate new name
 用选中的项目创建文件夹	Create folder with selection
 目前没有可共享的内容。	មិនមានអ្វីត្រូវចែករំលែកពេលនេះ ...
@@ -12075,10 +11836,6 @@ PowerShell 文件	PowerShell files
 [ko-KR]
 \n解压缩大小 	 압축 해제 후 크기 
  个项目	 항목
-1 分钟前	1분 전
-1 天前	1일 전
-1 小时前	1시간 전
-1 秒前	1초 전
 Git 错误	Git 오류
 GitHub 仓库	GitHub 저장소
 PowerShell 文件	PowerShell files
@@ -12087,11 +11844,7 @@ PowerShell 文件	PowerShell files
 {0, plural, other {有 # 个文件名冲突}}	{0, plural, other {중복되는 파일 이름이 #개 있습니다}}
 {0, plural, other {有 # 个文件名冲突}}和 {1, plural, other {# 个无冲突的项目}}	{0, plural, other {중복되는 파일 이름이 #개}}, {1, plural, other {그렇지 않은 항목이 #개}} 있습니다.
 {0} 个项目	항목 {0}개
-{0} 分钟前	{0} 분 전
-{0} 天前	{0} 일 전
-{0} 小时前	{0} 시간 전
 {0} 年	{0}년
-{0} 秒前	{0} 초 전
 {0}正在使用您尝试访问的文件	액세스하려는 파일은 현재 {0}에서 사용 중입니다
 “创建日期”列	생성된 날짜 열
 “大小”列	크기 열
@@ -12415,7 +12168,6 @@ PowerShell 文件	PowerShell files
 版本 	버전 
 状态中心	작업 현황
 玫瑰色	밝은 장미
-现在	지금
 生成新名称	새 이름 생성
 用选中的项目创建文件夹	선택한 항목으로 폴더 생성
 目前没有可共享的内容。	공유할 항목이 없습니다...
@@ -12511,10 +12263,6 @@ PowerShell 文件	PowerShell files
 [lt-LT]
 \n解压缩大小 	 Nesuspaustas dydis 
  个项目	 daiktų
-1 分钟前	prieš 1 minutę
-1 天前	prieš 1 dieną
-1 小时前	prieš 1 val
-1 秒前	prieš 1 sekundę
 Git 错误	â€žGitâ€œ klaida
 GitHub 仓库	â€žGitHubâ€œ saugykla
 PowerShell 文件	PowerShell files
@@ -12523,11 +12271,7 @@ PowerShell 文件	PowerShell files
 {0, plural, other {有 # 个文件名冲突}}	{0, plural, one {Yra vienas nesuderinamas failo pavadinimas} other {Yra # nesuderinamų failų pavadinimų}}
 {0, plural, other {有 # 个文件名冲突}}和 {1, plural, other {# 个无冲突的项目}}	{0, plural, one {Yra vienas nesuderinamas failo pavadinimas} other {Yra # nesuderinamų failų pavadinimų}} ir {1, plural, one {one outgoing item} other {# outgoing items}}
 {0} 个项目	{0} prekių
-{0} 分钟前	Prieš {0} minučių
-{0} 天前	Prieš {0} dienų
-{0} 小时前	Prieš {0} valandas
 {0} 年	Metai {0}
-{0} 秒前	Prieš {0} sekundžių
 {0}正在使用您尝试访问的文件	The file you are attempting to access is currently being used by {0}
 “创建日期”列	Sukūrimo datos stulpelis
 “大小”列	Dydžio stulpelis
@@ -12851,7 +12595,6 @@ PowerShell 文件	PowerShell files
 版本 	Versija 
 状态中心	Būsenos centras
 玫瑰色	Ryški rožė
-现在	Dabar
 生成新名称	Sukurti naują pavadinimą
 用选中的项目创建文件夹	Sukurkite aplanką su pasirinkimu
 目前没有可共享的内容。	Šiuo metu nėra kuo dalintis...
@@ -12947,10 +12690,6 @@ PowerShell 文件	PowerShell files
 [lv-LV]
 \n解压缩大小 	 Nesaspiestais izmērs 
  个项目	 vienumi
-1 分钟前	1 minute ago
-1 天前	1 day ago
-1 小时前	1 hour ago
-1 秒前	1 second ago
 Git 错误	Git error
 GitHub 仓库	Izveidot GitHub krātuvi
 PowerShell 文件	PowerShell files
@@ -12959,11 +12698,7 @@ PowerShell 文件	PowerShell files
 {0, plural, other {有 # 个文件名冲突}}	{0, plural, one {There is one conflicting file name} other {There are # conflicting file names}}
 {0, plural, other {有 # 个文件名冲突}}和 {1, plural, other {# 个无冲突的项目}}	{0, plural, one {There is one conflicting file name} other {There are # conflicting file names}}, and {1, plural, one {one outgoing item} other {# outgoing items}}
 {0} 个项目	{0} vienumi
-{0} 分钟前	{0} minutes ago
-{0} 天前	{0} days ago
-{0} 小时前	{0} hours ago
 {0} 年	Year {0}
-{0} 秒前	{0} seconds ago
 {0}正在使用您尝试访问的文件	The file you are attempting to access is currently being used by {0}
 “创建日期”列	Izveides datuma kolonna
 “大小”列	Izmēra kolonna
@@ -13287,7 +13022,6 @@ PowerShell 文件	PowerShell files
 版本 	Versija 
 状态中心	Status center
 玫瑰色	Rose Bright
-现在	Tagad
 生成新名称	Ģenerēt jaunu nosaukumu
 用选中的项目创建文件夹	Create folder with selection
 目前没有可共享的内容。	Pašlaik šeit nav nekā koplietojama...
@@ -13383,10 +13117,6 @@ PowerShell 文件	PowerShell files
 [ms-MY]
 \n解压缩大小 	 Uncompressed size 
  个项目	 item
-1 分钟前	1 minit yang lalu
-1 天前	1 hari yang lalu
-1 小时前	1 jam yang lalu
-1 秒前	1 saat yang lalu
 Git 错误	Git error
 GitHub 仓库	Repositori GitHub
 PowerShell 文件	PowerShell files
@@ -13395,11 +13125,7 @@ PowerShell 文件	PowerShell files
 {0, plural, other {有 # 个文件名冲突}}	{0, plural, one {There is one conflicting file name} other {There are # conflicting file names}}
 {0, plural, other {有 # 个文件名冲突}}和 {1, plural, other {# 个无冲突的项目}}	{0, plural, one {There is one conflicting file name} other {There are # conflicting file names}}, and {1, plural, one {one outgoing item} other {# outgoing items}}
 {0} 个项目	{0} items
-{0} 分钟前	{0} minit yang lalu
-{0} 天前	{0} hari yang lalu
-{0} 小时前	{0} jam yang lalu
 {0} 年	Year {0}
-{0} 秒前	{0} saat yang lalu
 {0}正在使用您尝试访问的文件	The file you are attempting to access is currently being used by {0}
 “创建日期”列	Tarikh kolum dibuat
 “大小”列	Saiz Kolum
@@ -13723,7 +13449,6 @@ PowerShell 文件	PowerShell files
 版本 	Versi 
 状态中心	Pusat status
 玫瑰色	Ros Cerah
-现在	Sekarang
 生成新名称	Generate new name
 用选中的项目创建文件夹	Cipta folder dengan pilihan
 目前没有可共享的内容。	Tiada apa-apa untuk dikongsi sekarang...
@@ -13819,10 +13544,6 @@ PowerShell 文件	PowerShell files
 [nb-NO]
 \n解压缩大小 	 Ukomprimert størrelse 
  个项目	 elementer
-1 分钟前	1 minutt siden
-1 天前	1 dag siden
-1 小时前	1 time siden
-1 秒前	1 sekund siden
 Git 错误	Feil i Git
 GitHub 仓库	GitHub repository
 PowerShell 文件	PowerShell files
@@ -13831,11 +13552,7 @@ PowerShell 文件	PowerShell files
 {0, plural, other {有 # 个文件名冲突}}	{0, plural, one {There is one conflicting file name} other {There are # conflicting file names}}
 {0, plural, other {有 # 个文件名冲突}}和 {1, plural, other {# 个无冲突的项目}}	{0, plural, one {There is one conflicting file name} other {There are # conflicting file names}}, and {1, plural, one {one outgoing item} other {# outgoing items}}
 {0} 个项目	{0} elementer
-{0} 分钟前	{0} minutter siden
-{0} 天前	{0} dager siden
-{0} 小时前	{0} timer siden
 {0} 年	År {0}
-{0} 秒前	{0} sekunder siden
 {0}正在使用您尝试访问的文件	The file you are attempting to access is currently being used by {0}
 “创建日期”列	Dato opprettet-kolonne
 “大小”列	Størrelse kolonne
@@ -14159,7 +13876,6 @@ PowerShell 文件	PowerShell files
 版本 	Versjon 
 状态中心	Statussenter
 玫瑰色	Rose Lyst
-现在	Nå
 生成新名称	Generer nytt navn
 用选中的项目创建文件夹	Opprett mappe med merkede elementer
 目前没有可共享的内容。	Det er ingenting å dele for øyeblikket...
@@ -14255,10 +13971,6 @@ PowerShell 文件	PowerShell files
 [nl-NL]
 \n解压缩大小 	 Ongecomprimeerde grootte 
  个项目	 items
-1 分钟前	1 minuut geleden
-1 天前	1 dag geleden
-1 小时前	1 uur geleden
-1 秒前	1 seconde geleden
 Git 错误	Git fout
 GitHub 仓库	GitHub Repository
 PowerShell 文件	PowerShell files
@@ -14267,11 +13979,7 @@ PowerShell 文件	PowerShell files
 {0, plural, other {有 # 个文件名冲突}}	{0, plural, one {Er is één conflicterende bestandsnaam} other {Er zijn # conflicterende bestandsnamen}}
 {0, plural, other {有 # 个文件名冲突}}和 {1, plural, other {# 个无冲突的项目}}	{0, plural, one {Er is één conflicterende bestandsnaam} other {Er zijn # conflicterende bestandsnamen}}, en {1, plural, one {één uitgaand item} other {# uitgaande items}}
 {0} 个项目	{0} items
-{0} 分钟前	{0} minuten geleden
-{0} 天前	{0} dagen geleden
-{0} 小时前	{0} uur geleden
 {0} 年	Jaar {0}
-{0} 秒前	{0} seconden geleden
 {0}正在使用您尝试访问的文件	The file you are attempting to access is currently being used by {0}
 “创建日期”列	Aanmaakdatum kolom
 “大小”列	Grootte kolom
@@ -14595,7 +14303,6 @@ PowerShell 文件	PowerShell files
 版本 	Versie 
 状态中心	Statuscentrum
 玫瑰色	Licht Roze
-现在	Nu
 生成新名称	Nieuwe naam genereren
 用选中的项目创建文件夹	Maak map met selectie
 目前没有可共享的内容。	Er valt op dit moment niets te delen...
@@ -14691,10 +14398,6 @@ PowerShell 文件	PowerShell files
 [pl-PL]
 \n解压缩大小 	 Rozmiar nieskompresowany 
  个项目	 elementy
-1 分钟前	1 minutę temu
-1 天前	1 dzień temu
-1 小时前	1 godzinę temu
-1 秒前	1 sekundę temu
 Git 错误	Błąd Git
 GitHub 仓库	Repozytorium GitHub
 PowerShell 文件	Pliki PowerShell
@@ -14703,11 +14406,7 @@ PowerShell 文件	Pliki PowerShell
 {0, plural, other {有 # 个文件名冲突}}	{0, plural, one {Istnieje # sprzeczna nazwa pliku} few {Istnieją # sprzeczne nazwy plików} many {Istnieje # sprzecznych nazw plików} other {Istnieje # sprzecznych nazw plików}}
 {0, plural, other {有 # 个文件名冲突}}和 {1, plural, other {# 个无冲突的项目}}	{0, plural, one {Istnieje # sprzeczna nazwa pliku} few {Istnieją # sprzeczne nazwy plików} many {Istnieje # sprzecznych nazw plików} other {Istnieje # sprzecznych nazw plików}} i {1, plural, one {# element wychodzący} few {# elementy wychodzące} many {# elementów wychodzących} other {# elementów wychodzących}}
 {0} 个项目	{0} elementy
-{0} 分钟前	{0} minut temu
-{0} 天前	{0} dni temu
-{0} 小时前	{0} godzin temu
 {0} 年	Rok {0}
-{0} 秒前	{0} sekund temu
 {0}正在使用您尝试访问的文件	Plik, do którego próbujesz uzyskać dostęp, jest obecnie używany przez {0}
 “创建日期”列	Kolumna daty utworzenia
 “大小”列	Kolumna rozmiaru
@@ -15031,7 +14730,6 @@ PowerShell 文件	Pliki PowerShell
 版本 	Wersja 
 状态中心	Centrum statusu
 玫瑰色	Jasny różowy
-现在	Teraz
 生成新名称	Wygeneruj nową nazwę
 用选中的项目创建文件夹	Utwórz folder z zaznaczonych
 目前没有可共享的内容。	Obecnie nie ma nic do udostępniania...
@@ -15127,10 +14825,6 @@ PowerShell 文件	Pliki PowerShell
 [pt-BR]
 \n解压缩大小 	 Tamanho descomprimido 
  个项目	 itens
-1 分钟前	1 minuto atrás
-1 天前	1 dia atrás
-1 小时前	1 hora atrás
-1 秒前	1 segundo atrás
 Git 错误	Erro do Git
 GitHub 仓库	Repositório do GitHub
 PowerShell 文件	Arquivos do PowerShell
@@ -15139,11 +14833,7 @@ PowerShell 文件	Arquivos do PowerShell
 {0, plural, other {有 # 个文件名冲突}}	{0, plural, one {Há um nome de arquivo conflitante} other {Existem # nomes de arquivos conflitantes}}
 {0, plural, other {有 # 个文件名冲突}}和 {1, plural, other {# 个无冲突的项目}}	{0, plural, one {Há 1 nome de arquivo conflitante} other {Há # nomes de arquivos conflitantes}}, e {1, plural, one {1 item enviado} other {# itens enviados}}
 {0} 个项目	{0} itens
-{0} 分钟前	{0} minutos atrás
-{0} 天前	{0} dias atrás
-{0} 小时前	{0} horas atrás
 {0} 年	Ano {0}
-{0} 秒前	{0} segundos atrás
 {0}正在使用您尝试访问的文件	O arquivo que você está tentando acessar está sendo usado por {0}
 “创建日期”列	Coluna de data de criação
 “大小”列	Coluna de tamanho
@@ -15467,7 +15157,6 @@ PowerShell 文件	Arquivos do PowerShell
 版本 	Versão 
 状态中心	Central de status
 玫瑰色	Rosa Brilhante
-现在	Agora
 生成新名称	Gerar novo nome
 用选中的项目创建文件夹	Criar pasta com a seleção
 目前没有可共享的内容。	Não há nada para compartilhar agora...
@@ -15563,10 +15252,6 @@ PowerShell 文件	Arquivos do PowerShell
 [pt-PT]
 \n解压缩大小 	 Tamanho descomprimido 
  个项目	 itens
-1 分钟前	Há 1 minuto
-1 天前	Há 1 dia
-1 小时前	Há 1 hora
-1 秒前	Há 1 segundo
 Git 错误	Erro Git
 GitHub 仓库	Repositório GitHub
 PowerShell 文件	Ficheiros do PowerShell
@@ -15575,11 +15260,7 @@ PowerShell 文件	Ficheiros do PowerShell
 {0, plural, other {有 # 个文件名冲突}}	{0, plural, one {Existe 1 nome de ficheiro em conflito} other {Existem # nomes de ficheiro em conflito}}
 {0, plural, other {有 # 个文件名冲突}}和 {1, plural, other {# 个无冲突的项目}}	{0, plural, one {1 nome de ficheiro em conflito} other {# nomes de ficheiros em conflito}}, e {1, plural, one {item em curso} other {# itens em curso}}
 {0} 个项目	{0} itens
-{0} 分钟前	Há {0} minutos
-{0} 天前	Há {0} dias
-{0} 小时前	Há {0} horas
 {0} 年	Ano {0}
-{0} 秒前	Há {0} segundos
 {0}正在使用您尝试访问的文件	O ficheiro a que está a tentar aceder está a ser utilizado por {0}
 “创建日期”列	Data de criação
 “大小”列	Tamanho
@@ -15903,7 +15584,6 @@ PowerShell 文件	Ficheiros do PowerShell
 版本 	Versão 
 状态中心	Centro de estado
 玫瑰色	Rosa brilhante
-现在	Agora
 生成新名称	Gerar novo nome
 用选中的项目创建文件夹	Criar pasta com seleção
 目前没有可共享的内容。	Não há nada para partilhar agora...
@@ -15999,10 +15679,6 @@ PowerShell 文件	Ficheiros do PowerShell
 [ro-RO]
 \n解压缩大小 	 Dimensiune necomprimată 
  个项目	 elemente
-1 分钟前	1 minut în urmă
-1 天前	O zi în urmă
-1 小时前	O oră în urmă
-1 秒前	1 secundă în urmă
 Git 错误	Eroare Git
 GitHub 仓库	Repozitoriu GitHub
 PowerShell 文件	Fișiere PowerShell
@@ -16011,11 +15687,7 @@ PowerShell 文件	Fișiere PowerShell
 {0, plural, other {有 # 个文件名冲突}}	{0, plural, one {Există un nume de fișier conflictual} few {Există # nume de fișiere conflictuale} other {Există # de nume de fișiere conflictuale}}
 {0, plural, other {有 # 个文件名冲突}}和 {1, plural, other {# 个无冲突的项目}}	{0, plural, one {Există un nume de fișier conflictual} few {Există # nume de fișier conflictuale} other {Există # de nume de fișier conflictuale}}, and {1, plural, one {un element în curs} few {# elemente în curs} other {# de elemente în curs}}
 {0} 个项目	{0} elemente
-{0} 分钟前	{0} minute în urmă
-{0} 天前	{0} zile în urmă
-{0} 小时前	{0} ore în urmă
 {0} 年	Anul {0}
-{0} 秒前	{0} secunde în urmă
 {0}正在使用您尝试访问的文件	Fișierul pe care încercați să îl accesați este utilizat în prezent de {0}
 “创建日期”列	Coloană data creării
 “大小”列	Coloană dimensiune
@@ -16339,7 +16011,6 @@ PowerShell 文件	Fișiere PowerShell
 版本 	Versiune 
 状态中心	Centru de stare
 玫瑰色	Rozaliu luminos
-现在	Acum
 生成新名称	Generare nume nou
 用选中的项目创建文件夹	Creare folder cu selecție
 目前没有可共享的内容。	Nu este nimic de partajat acum...
@@ -16435,10 +16106,6 @@ PowerShell 文件	Fișiere PowerShell
 [ru-RU]
 \n解压缩大小 	 Несжатый размер 
  个项目	 элементов
-1 分钟前	1 минуту назад
-1 天前	1 день назад
-1 小时前	1 час назад
-1 秒前	1 секунду назад
 Git 错误	Ошибка с Git
 GitHub 仓库	Репозиторий на GitHub
 PowerShell 文件	PowerShell files
@@ -16447,11 +16114,7 @@ PowerShell 文件	PowerShell files
 {0, plural, other {有 # 个文件名冲突}}	{0, plural, one {Присутствует один конфликт имени файлов} few {Присутствует # конфликта имён файлов} other {Присутствует # конфликтов имён файлов}}
 {0, plural, other {有 # 个文件名冲突}}和 {1, plural, other {# 个无冲突的项目}}	{0, plural, one {Присутствует один конфликт имени файлов} few {Присутствует # конфликта имён файлов} other {Присутствует # конфликтов имён файлов}} и {1, plural, one {один исходящий элемент} few {# исходящих элемента} other {# исходящих элементов}}
 {0} 个项目	{0} элементов
-{0} 分钟前	{0} минут назад
-{0} 天前	{0} дней назад
-{0} 小时前	{0} часов назад
 {0} 年	{0} год
-{0} 秒前	{0} секунд назад
 {0}正在使用您尝试访问的文件	Файл, к которому вы пытаетесь получить доступ, сейчас используется {0}
 “创建日期”列	Столбец даты создания
 “大小”列	Столбец размера
@@ -16775,7 +16438,6 @@ PowerShell 文件	PowerShell files
 版本 	Версия 
 状态中心	Центр операций
 玫瑰色	Яркий розовый
-现在	Сейчас
 生成新名称	Сгенерировать новое имя
 用选中的项目创建文件夹	Создать папку из выделенных элементов
 目前没有可共享的内容。	Сейчас нет ничего, что можно было бы опубликовать...
@@ -16871,10 +16533,6 @@ PowerShell 文件	PowerShell files
 [sk-SK]
 \n解压缩大小 	 Nekomprimovaná veľkosť 
  个项目	 položiek
-1 分钟前	Pred 1 minútou
-1 天前	Pred 1 dňom
-1 小时前	Pred 1 hodinou
-1 秒前	Pred 1 sekundou
 Git 错误	Git chyba
 GitHub 仓库	GitHub repozitár
 PowerShell 文件	PowerShell files
@@ -16883,11 +16541,7 @@ PowerShell 文件	PowerShell files
 {0, plural, other {有 # 个文件名冲突}}	{0, plural, one {There is one conflicting file name} other {There are # conflicting file names}}
 {0, plural, other {有 # 个文件名冲突}}和 {1, plural, other {# 个无冲突的项目}}	{0, plural, one {There is one conflicting file name} other {There are # conflicting file names}}, and {1, plural, one {one outgoing item} other {# outgoing items}}
 {0} 个项目	Počet položiek: {0}
-{0} 分钟前	Pred {0} minútami
-{0} 天前	Pred {0} dňami
-{0} 小时前	Pred {0} hodinami
 {0} 年	Rok {0}
-{0} 秒前	Pred {0} sekundami
 {0}正在使用您尝试访问的文件	The file you are attempting to access is currently being used by {0}
 “创建日期”列	Stĺpec dátumu vytvorenia
 “大小”列	Stĺpec veľkosti
@@ -17211,7 +16865,6 @@ PowerShell 文件	PowerShell files
 版本 	Verzia 
 状态中心	Stavové centrum
 玫瑰色	Rose Bright
-现在	Teraz
 生成新名称	Vygenerujte nový názov
 用选中的项目创建文件夹	Vytvoriť zložku s výberom
 目前没有可共享的内容。	Práve teraz nie je čo zdielať ...
@@ -17307,10 +16960,6 @@ PowerShell 文件	PowerShell files
 [sq-AL]
 \n解压缩大小 	 MadhÃ«sia e pakompresuar 
  个项目	 artikuj
-1 分钟前	1 minutë më parë
-1 天前	1 dite me pare
-1 小时前	1 orë më parë
-1 秒前	1 sekondë më parë
 Git 错误	Gabim Git
 GitHub 仓库	depo GitHub
 PowerShell 文件	PowerShell files
@@ -17319,11 +16968,7 @@ PowerShell 文件	PowerShell files
 {0, plural, other {有 # 个文件名冲突}}	{0, plural, one {There is one conflicting file name} other {There are # conflicting file names}}
 {0, plural, other {有 # 个文件名冲突}}和 {1, plural, other {# 个无冲突的项目}}	{0, plural, one {There is one conflicting file name} other {There are # conflicting file names}}, and {1, plural, one {one outgoing item} other {# outgoing items}}
 {0} 个项目	{0} artikuj
-{0} 分钟前	{0} minuta më parë
-{0} 天前	{0} ditë më parë
-{0} 小时前	{0} orë më parë
 {0} 年	Viti {0}
-{0} 秒前	{0} sekonda më parë
 {0}正在使用您尝试访问的文件	The file you are attempting to access is currently being used by {0}
 “创建日期”列	Kolona e datës së krijimit
 “大小”列	Kolona e madhësisë
@@ -17647,7 +17292,6 @@ PowerShell 文件	PowerShell files
 版本 	Versioni 
 状态中心	Qendra e statusit
 玫瑰色	Rose Bright
-现在	Tani
 生成新名称	Krijo një emër të ri
 用选中的项目创建文件夹	Krijo dosje me përzgjedhje
 目前没有可共享的内容。	Nuk ka asgjë për të ndarë tani ...
@@ -17743,10 +17387,6 @@ PowerShell 文件	PowerShell files
 [sr-Cyrl]
 \n解压缩大小 	 Uncompressed size 
  个项目	 ставке
-1 分钟前	Пре једног минута
-1 天前	Пре једног дана
-1 小时前	Пре сат времена
-1 秒前	Пре једне секунде
 Git 错误	Git error
 GitHub 仓库	Репозиторијум на платформи GitHub
 PowerShell 文件	PowerShell files
@@ -17755,11 +17395,7 @@ PowerShell 文件	PowerShell files
 {0, plural, other {有 # 个文件名冲突}}	{0, plural, one {There is one conflicting file name} other {There are # conflicting file names}}
 {0, plural, other {有 # 个文件名冲突}}和 {1, plural, other {# 个无冲突的项目}}	{0, plural, one {There is one conflicting file name} other {There are # conflicting file names}}, and {1, plural, one {one outgoing item} other {# outgoing items}}
 {0} 个项目	{0} датотеке
-{0} 分钟前	Пре {0} минута
-{0} 天前	Пре {0} дана
-{0} 小时前	Пре {0} сата
 {0} 年	Године {0}.
-{0} 秒前	Пре {0} секунди
 {0}正在使用您尝试访问的文件	The file you are attempting to access is currently being used by {0}
 “创建日期”列	Date created column
 “大小”列	Size column
@@ -18083,7 +17719,6 @@ PowerShell 文件	PowerShell files
 版本 	Верзија 
 状态中心	Status center
 玫瑰色	Rose Bright
-现在	Сада
 生成新名称	Generate new name
 用选中的项目创建文件夹	Create folder with selection
 目前没有可共享的内容。	Нема ништа да се подели тренутно...
@@ -18179,10 +17814,6 @@ PowerShell 文件	PowerShell files
 [sv-SE]
 \n解压缩大小 	 Okomprimerad storlek 
  个项目	 objekt
-1 分钟前	1 minut sen
-1 天前	1 dag sen
-1 小时前	1 timme sen
-1 秒前	1 sekund sen
 Git 错误	Git fel
 GitHub 仓库	GitHub repository
 PowerShell 文件	PowerShell files
@@ -18191,11 +17822,7 @@ PowerShell 文件	PowerShell files
 {0, plural, other {有 # 个文件名冲突}}	{0, plural, one {Det finns ett motstridigt filnamn} other {Det finns # motstridiga filnamn}}
 {0, plural, other {有 # 个文件名冲突}}和 {1, plural, other {# 个无冲突的项目}}	{0, plural, one {Det finns ett motstridigt filnamn} other {Det finns # motstridiga filnamn}}, och {1, plural, one {ett utgående objekt} other {# utgående objekt}}
 {0} 个项目	{0} objekt
-{0} 分钟前	{0} minuter sen
-{0} 天前	{0} Dagar sen
-{0} 小时前	{0} timmar sen
 {0} 年	År {0}
-{0} 秒前	{0} sekunder sen
 {0}正在使用您尝试访问的文件	The file you are attempting to access is currently being used by {0}
 “创建日期”列	Skapelsedatumskolumn
 “大小”列	Storlekskolumn
@@ -18519,7 +18146,6 @@ PowerShell 文件	PowerShell files
 版本 	Version 
 状态中心	Statuscenter
 玫瑰色	Ros ljus
-现在	Nu
 生成新名称	Generera nytt namn
 用选中的项目创建文件夹	Skapa mapp med markering
 目前没有可共享的内容。	Det finns inget att dela just nu...
@@ -18615,10 +18241,6 @@ PowerShell 文件	PowerShell files
 [ta]
 \n解压缩大小 	 Uncompressed size 
  个项目	 பொருள்கள்
-1 分钟前	1 minute ago
-1 天前	1 day ago
-1 小时前	1 மணிநேரம் முன்
-1 秒前	1 second ago
 Git 错误	Git பிழ
 GitHub 仓库	GitHub களஞ்சியம்
 PowerShell 文件	PowerShell files
@@ -18627,11 +18249,7 @@ PowerShell 文件	PowerShell files
 {0, plural, other {有 # 个文件名冲突}}	{0, plural, one {There is one conflicting file name} other {There are # conflicting file names}}
 {0, plural, other {有 # 个文件名冲突}}和 {1, plural, other {# 个无冲突的项目}}	{0, plural, one {There is one conflicting file name} other {There are # conflicting file names}}, and {1, plural, one {one outgoing item} other {# outgoing items}}
 {0} 个项目	{0} items
-{0} 分钟前	{0} minutes ago
-{0} 天前	{0} days ago
-{0} 小时前	{0} மணிநேரம் முன்
 {0} 年	Year {0}
-{0} 秒前	{0} seconds ago
 {0}正在使用您尝试访问的文件	The file you are attempting to access is currently being used by {0}
 “创建日期”列	Date created column
 “大小”列	Size column
@@ -18955,7 +18573,6 @@ PowerShell 文件	PowerShell files
 版本 	Version 
 状态中心	Status center
 玫瑰色	Rose Bright
-现在	இப்போ
 生成新名称	Generate new name
 用选中的项目创建文件夹	Create folder with selection
 目前没有可共享的内容。	There's nothing to share right now...
@@ -19051,10 +18668,6 @@ PowerShell 文件	PowerShell files
 [th-TH]
 \n解压缩大小 	 ขนาดที่ไม่บีบอัด 
  个项目	 รายการ
-1 分钟前	1 minute ago
-1 天前	1 day ago
-1 小时前	1 hour ago
-1 秒前	1 second ago
 Git 错误	Git error
 GitHub 仓库	คลังเก็บ GitHub
 PowerShell 文件	PowerShell files
@@ -19063,11 +18676,7 @@ PowerShell 文件	PowerShell files
 {0, plural, other {有 # 个文件名冲突}}	{0, plural, one {There is one conflicting file name} other {There are # conflicting file names}}
 {0, plural, other {有 # 个文件名冲突}}和 {1, plural, other {# 个无冲突的项目}}	{0, plural, one {There is one conflicting file name} other {There are # conflicting file names}}, and {1, plural, one {one outgoing item} other {# outgoing items}}
 {0} 个项目	{0} รายการ
-{0} 分钟前	{0} minutes ago
-{0} 天前	{0} days ago
-{0} 小时前	{0} hours ago
 {0} 年	ปี {0}
-{0} 秒前	{0} วินาทีที่แล้ว
 {0}正在使用您尝试访问的文件	The file you are attempting to access is currently being used by {0}
 “创建日期”列	แถววันที่สร้าง
 “大小”列	แถวขนาด
@@ -19391,7 +19000,6 @@ PowerShell 文件	PowerShell files
 版本 	เวอร์ชั่น 
 状态中心	ศูนย์รวมสถานะ
 玫瑰色	กุหลาบสดใส
-现在	ขณะนี้
 生成新名称	สุ่มชื่อใหม่ขึ้นมา
 用选中的项目创建文件夹	สร้างโฟลเดอร์จากส่วนที่เลือก
 目前没有可共享的内容。	ยังไม่มีอะไรจะแบ่งปัน ณ ตอนนี้...
@@ -19487,10 +19095,6 @@ PowerShell 文件	PowerShell files
 [tr-TR]
 \n解压缩大小 	 Sıkıştırılmamış boyut 
  个项目	 öğe
-1 分钟前	1 dakika önce
-1 天前	1 gün önce
-1 小时前	1 saat önce
-1 秒前	1 saniye önce
 Git 错误	Git hatası
 GitHub 仓库	GitHub deposu
 PowerShell 文件	PowerShell dosyaları
@@ -19499,11 +19103,7 @@ PowerShell 文件	PowerShell dosyaları
 {0, plural, other {有 # 个文件名冲突}}	{0, plural, one {Çakışan 1 dosya adı var} other {Çakışan # dosya adı var}}
 {0, plural, other {有 # 个文件名冲突}}和 {1, plural, other {# 个无冲突的项目}}	{0, plural, one {Çakışan 1 dosya adı} other {Çakışan # dosya adı}} ve {1, plural, one {1 giden öğe var} other {# giden öğe var}}
 {0} 个项目	{0} öğe
-{0} 分钟前	{0} dakika önce
-{0} 天前	{0} gün önce
-{0} 小时前	{0} saat önce
 {0} 年	Yıl {0}
-{0} 秒前	{0} saniye önce
 {0}正在使用您尝试访问的文件	Erişmeye çalıştığınız dosya şu anda {0} tarafından kullanılıyor
 “创建日期”列	Oluşturulma tarihi sütunu
 “大小”列	Boyut sütunu
@@ -19827,7 +19427,6 @@ PowerShell 文件	PowerShell dosyaları
 版本 	Sürüm 
 状态中心	Durum Merkezi
 玫瑰色	Parlak Gül
-现在	Şimdi
 生成新名称	Yeni ad oluştur
 用选中的项目创建文件夹	Seçimle klasör oluştur
 目前没有可共享的内容。	Şu anda paylaşılacak bir şey yok...
@@ -19923,10 +19522,6 @@ PowerShell 文件	PowerShell dosyaları
 [uk-UA]
 \n解压缩大小 	 Нестиснутий розмір 
  个项目	 елементи
-1 分钟前	1 хвилину тому
-1 天前	1 день тому
-1 小时前	1 годину тому
-1 秒前	1 секунду тому
 Git 错误	Помилка git
 GitHub 仓库	Репозиторій GitHub
 PowerShell 文件	Файли PowerShell
@@ -19935,11 +19530,7 @@ PowerShell 文件	Файли PowerShell
 {0, plural, other {有 # 个文件名冲突}}	{0, plural, one {Є одне конфліктне ім'я файлу} few {Є # конфліктні імена файлів} many {Є # конфліктних імен файлів} other {Є # конфліктні імена файлів}}
 {0, plural, other {有 # 个文件名冲突}}和 {1, plural, other {# 个无冲突的项目}}	{0, plural, one {Є одне конфліктне ім'я файлу} few {Є # конфліктні імена файлів} many {Є # конфліктних імен файлів} other {Є # конфліктні імена файлів}}, і {1, plural, one {один вихідний елемент} few {# вихідні елементи} many {# вихідних елементів} other {# вихідні елементи}}
 {0} 个项目	Елементів: {0}
-{0} 分钟前	{0} хвилин тому
-{0} 天前	{0} днів тому
-{0} 小时前	{0} годин тому
 {0} 年	Рік {0}
-{0} 秒前	{0} секунд тому
 {0}正在使用您尝试访问的文件	Файл, до якого ви намагаєтеся отримати доступ, зараз використовується {0}
 “创建日期”列	Стовпчик дати створення
 “大小”列	Стовпчик розміру
@@ -20263,7 +19854,6 @@ PowerShell 文件	Файли PowerShell
 版本 	Версія 
 状态中心	Центр стану
 玫瑰色	Світло-трояндовий
-现在	Щойно
 生成新名称	Згенерувати нове ім'я
 用选中的项目创建文件夹	Створити папку з виділення
 目前没有可共享的内容。	Наразі нема до чого надавати спільний доступ...
@@ -20359,10 +19949,6 @@ PowerShell 文件	Файли PowerShell
 [vi]
 \n解压缩大小 	 Kích cỡ chưa nén 
  个项目	 mục
-1 分钟前	1 phút trước
-1 天前	1 ngày trước
-1 小时前	1 giờ trước
-1 秒前	1 giây trước
 Git 错误	Lỗi Git
 GitHub 仓库	Kho lưu trữ GitHub
 PowerShell 文件	Tệp PowerShell
@@ -20371,11 +19957,7 @@ PowerShell 文件	Tệp PowerShell
 {0, plural, other {有 # 个文件名冲突}}	{0, plural, other {Có # tên tệp xung đột}}
 {0, plural, other {有 # 个文件名冲突}}和 {1, plural, other {# 个无冲突的项目}}	{0, plural, other {Có # tên tệp xung đột}} và {1, plural, other {# mục đang chờ}}
 {0} 个项目	{0} mục
-{0} 分钟前	{0} phút trước
-{0} 天前	{0} ngày trước
-{0} 小时前	{0} giờ trước
 {0} 年	Năm {0}
-{0} 秒前	{0} giây trước
 {0}正在使用您尝试访问的文件	Tệp bạn cố truy cập hiện đang được sử dụng bởi {0}
 “创建日期”列	Cột ngày tạo
 “大小”列	Cột kích cỡ
@@ -20699,7 +20281,6 @@ PowerShell 文件	Tệp PowerShell
 版本 	Phiên bản 
 状态中心	Trung tâm trạng thái
 玫瑰色	Hồng sáng
-现在	Vừa xong
 生成新名称	Tạo tên mới
 用选中的项目创建文件夹	Tạo thư mục từ lựa chọn
 目前没有可共享的内容。	Hiện không có gì để chia sẻ...
@@ -20795,8 +20376,6 @@ PowerShell 文件	Tệp PowerShell
 [zh-Hant]
 \n解压缩大小 	 壓縮前的大小 
  个项目	 個項目
-1 分钟前	1 分鐘前
-1 小时前	1 小時前
 Git 错误	Git 錯誤
 GitHub 仓库	GitHub 軟體源
 PowerShell 文件	PowerShell 檔案
@@ -20805,8 +20384,6 @@ PowerShell 文件	PowerShell 檔案
 {0, plural, other {有 # 个文件名冲突}}	{0, plural, other {存在 # 個衝突的檔案名稱}}
 {0, plural, other {有 # 个文件名冲突}}和 {1, plural, other {# 个无冲突的项目}}	{0, plural, other {存在 # 個衝突的檔案名稱}}，{1, plural, other {即將傳送 # 個項目}}
 {0} 个项目	{0} 個項目
-{0} 分钟前	{0} 分鐘前
-{0} 小时前	{0} 小時前
 {0}正在使用您尝试访问的文件	您試圖存取的檔案正在被 {0} 使用
 “创建日期”列	建立日期
 “大小”列	檔案大小
@@ -21108,7 +20685,6 @@ PowerShell 文件	PowerShell 檔案
 清除已完成的条目	清除完成
 状态中心	狀態中心
 玫瑰色	亮玫瑰紅色
-现在	剛剛
 生成新名称	自動重新命名
 用选中的项目创建文件夹	為選取的項目建立資料夾
 目前没有可共享的内容。	目前沒有任何可分享的項目…

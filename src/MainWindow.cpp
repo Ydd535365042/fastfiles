@@ -53,6 +53,7 @@ bool MainWindow::Create(PCIDLIST_ABSOLUTE startup, bool restoreSession, PCUITEMI
         SetPropW(m_hwnd, L"FastFiles.Primary", reinterpret_cast<HANDLE>(1));
     RestoreSession(startup);
     SetTimer(m_hwnd, kStatusTimer, 300, nullptr);
+    SetTimer(m_hwnd, kUpdateTimer, 8000, nullptr); // Files: after the startup tabs loaded
     UpdateTray();
     return true;
 }
@@ -323,6 +324,11 @@ LRESULT MainWindow::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
     case WM_TIMER:
         if (wp == kStatusTimer)
             UpdateStatus();
+        else if (wp == kUpdateTimer)
+        {
+            SetTimer(m_hwnd, kUpdateTimer, 5 * 60 * 60 * 1000, nullptr); // Files' PeriodicallyCheckForUpdatesAsync: 5 hours
+            AutoCheckForUpdates();
+        }
         else if (wp == kInfoTimer)
             UpdateInfoPane();
         else if (wp == kMoveTimer)

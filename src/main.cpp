@@ -1,6 +1,7 @@
 #include "MainWindow.h"
 #include "Drives.h"
 #include "Update.h"
+#include "Sandbox.h"
 
 namespace
 {
@@ -13,13 +14,74 @@ std::wstring Absolute(const std::wstring& arg)
     const DWORD n = GetFullPathNameW(arg.c_str(), ARRAYSIZE(full), full, nullptr);
     return n > 0 && n < ARRAYSIZE(full) ? std::wstring(full) : arg;
 }
+
+bool Elevated()
+{
+    HANDLE token = nullptr;
+    TOKEN_ELEVATION elevation{};
+    DWORD size = 0;
+    const bool ok = OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token) &&
+        GetTokenInformation(token, TokenElevation, &elevation, sizeof(elevation), &size) && elevation.TokenIsElevated;
+    if (token)
+        CloseHandle(token);
+    return ok;
+}
+
+// One command-line argument as CommandLineToArgvW reads it back (backslashes before a quote doubled)
+std::wstring Quote(const std::wstring& arg)
+{
+    std::wstring out = L"\"";
+    size_t slashes = 0;
+    for (wchar_t c : arg)
+    {
+        if (c == L'\\')
+        {
+            ++slashes;
+            continue;
+        }
+        out.append(c == L'"' ? slashes * 2 + 1 : slashes, L'\\');
+        slashes = 0;
+        out += c;
+    }
+    out.append(slashes * 2, L'\\');
+    return out + L"\"";
+}
+
+// FastFiles runs as administrator by default: a plain launch without an elevated token starts itself again through
+// "runas" (one UAC prompt where UAC is on) and quits. False when that didn't happen (prompt declined, no admin
+// account entered): the launch goes on without admin rights. Test mode never elevates; FASTFILES_TEST_ELEVATE=1
+// there writes the command it would run to <data>\elevate-log.txt instead.
+bool RelaunchElevated(const std::wstring& params)
+{
+    wchar_t exe[MAX_PATH]{};
+    GetModuleFileNameW(nullptr, exe, MAX_PATH);
+    if (Sandbox::Active())
+    {
+        wchar_t v[4]{};
+        if (!GetEnvironmentVariableW(L"FASTFILES_TEST_ELEVATE", v, 4) || v[0] != L'1')
+            return false;
+        if (FILE* f = nullptr; _wfopen_s(&f, (Sandbox::Dir() + L"elevate-log.txt").c_str(), L"a, ccs=UTF-8") == 0 && f)
+        {
+            fwprintf(f, L"runas \"%s\" %s\n", exe, params.c_str());
+            fclose(f);
+        }
+        return true;
+    }
+    SHELLEXECUTEINFOW sei{ sizeof(sei) };
+    sei.fMask = SEE_MASK_NOASYNC | SEE_MASK_FLAG_NO_UI;
+    sei.lpVerb = L"runas";
+    sei.lpFile = exe;
+    sei.lpParameters = params.c_str();
+    sei.nShow = SW_SHOWNORMAL;
+    return ShellExecuteExW(&sei) != FALSE;
+}
 }
 
 int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int)
 {
     // --window <path>: extra window (Ctrl+N), never forwarded. --background: started with Windows, stay in the tray.
     // --tab <hex> [--pos x,y]: a tab moved out of another window (both panes), placed where it was dropped.
-    bool restoreSession = true, background = false, select = false, hasPos = false;
+    bool restoreSession = true, background = false, select = false, hasPos = false, restarted = false;
     POINT pos{};
     SessionData::TabState startTab;
     bool hasTab = false;
@@ -45,6 +107,7 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int)
             }
             if (wcscmp(argv[i], L"--wait-pid") == 0 && i + 1 < argc)
             {
+                restarted = true;
                 // RestartApp: let the old process finish quitting first
                 if (HANDLE old = OpenProcess(SYNCHRONIZE, FALSE, wcstoul(argv[++i], nullptr, 10)))
                 {
@@ -104,6 +167,34 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int)
     else if (background)
     {
         background = false;
+    }
+
+    // Administrator by default. Only a plain launch asks, once: a later one was handed to the running window above,
+    // and the windows / tabs / restarts an elevated FastFiles starts inherit its token. The primary mark is released
+    // first, so the elevated copy becomes the primary instance.
+    if (restoreSession && !restarted && !Elevated())
+    {
+        std::wstring params;
+        if (background)
+            params = L"--background";
+        if (!target.empty())
+            params += (params.empty() ? L"" : L" ") + std::wstring(select ? L"--select " : L"") + Quote(target);
+        if (primaryMutex)
+            CloseHandle(primaryMutex);
+        primaryMutex = nullptr;
+        if (RelaunchElevated(params))
+            return 0;
+        // Declined: go on without admin rights, as the primary instance again unless one started meanwhile
+        if (primary)
+        {
+            primaryMutex = CreateMutexW(nullptr, FALSE, PrimaryMutexName().c_str());
+            primary = primaryMutex && GetLastError() != ERROR_ALREADY_EXISTS;
+            if (!primary && primaryMutex)
+            {
+                CloseHandle(primaryMutex);
+                primaryMutex = nullptr;
+            }
+        }
     }
 
     Log::Start(); // keep the last 100 lines, record crashes

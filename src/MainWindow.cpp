@@ -50,7 +50,14 @@ bool MainWindow::Create(PCIDLIST_ABSOLUTE startup, bool restoreSession, PCUITEMI
         return false;
 
     if (m_primary)
+    {
         SetPropW(m_hwnd, L"FastFiles.Primary", reinterpret_cast<HANDLE>(1));
+        // Running as administrator (main.cpp): later launches come from normal-rights processes (Explorer opening a
+        // folder, a shortcut), and Explorer announces a restart (the tray icon comes back) the same way. UIPI drops
+        // those messages to an elevated window unless they're allowed; only these two are.
+        ChangeWindowMessageFilterEx(m_hwnd, WM_COPYDATA, MSGFLT_ALLOW, nullptr);
+        ChangeWindowMessageFilterEx(m_hwnd, RegisterWindowMessageW(L"TaskbarCreated"), MSGFLT_ALLOW, nullptr);
+    }
     RestoreSession(startup);
     SetTimer(m_hwnd, kStatusTimer, 300, nullptr);
     SetTimer(m_hwnd, kUpdateTimer, 8000, nullptr); // Files: after the startup tabs loaded

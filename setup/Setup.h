@@ -58,7 +58,7 @@ bool SamePath(const std::wstring& a, const std::wstring& b);
 bool DeleteRetry(const std::wstring& path, int tries = 20);
 bool CloseRunning(const std::wstring& exe, const Progress& progress, std::wstring& error); // Restart Manager
 bool MakeShortcut(const std::wstring& link, const std::wstring& target, const std::wstring& dir);
-bool LaunchAsUser(const std::wstring& exe); // unelevated, through the shell's own process
+bool LaunchAsUser(const std::wstring& exe); // as the signed-in user (elevated when the setup already is that user)
 DWORD RunWait(const std::wstring& exe, const std::wstring& args, DWORD timeout);
 std::wstring LastErrorText(DWORD code);
 bool IsWindows11();

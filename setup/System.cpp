@@ -107,10 +107,60 @@ bool MakeShortcut(const std::wstring& link, const std::wstring& target, const st
         SUCCEEDED(shell->SetIconLocation(target.c_str(), 0)) && SUCCEEDED(shell.As(&file)) && SUCCEEDED(file->Save(link.c_str(), TRUE));
 }
 
-// The setup runs elevated; the app must not (drag and drop from Explorer would break). Ask the desktop's Explorer
-// to start it, so it runs as the signed-in user with a normal token.
+namespace
+{
+// The account a process runs as (its token's user SID)
+std::vector<BYTE> TokenUser(HANDLE process)
+{
+    std::vector<BYTE> sid;
+    HANDLE token = nullptr;
+    if (!process || !OpenProcessToken(process, TOKEN_QUERY, &token))
+        return sid;
+    DWORD size = 0;
+    GetTokenInformation(token, ::TokenUser, nullptr, 0, &size);
+    std::vector<BYTE> buffer(size);
+    if (size && GetTokenInformation(token, ::TokenUser, buffer.data(), size, &size))
+    {
+        PSID user = reinterpret_cast<TOKEN_USER*>(buffer.data())->User.Sid;
+        sid.assign(static_cast<BYTE*>(user), static_cast<BYTE*>(user) + GetLengthSid(user));
+    }
+    CloseHandle(token);
+    return sid;
+}
+
+// The setup (elevated) runs as the signed-in user: the desktop's Explorer has the same account
+bool SameUserAsShell()
+{
+    DWORD pid = 0;
+    if (HWND shell = GetShellWindow())
+        GetWindowThreadProcessId(shell, &pid);
+    HANDLE explorer = pid ? OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid) : nullptr;
+    const std::vector<BYTE> theirs = TokenUser(explorer), ours = TokenUser(GetCurrentProcess());
+    if (explorer)
+        CloseHandle(explorer);
+    return !ours.empty() && theirs == ours;
+}
+}
+
+// FastFiles runs as administrator (it elevates itself at start). The setup is elevated already: when it runs as the
+// signed-in user, start the app straight from here, elevated, without a second UAC prompt. When it runs as another
+// account (a standard user entered an administrator's password), ask the desktop's Explorer to start it, so it runs
+// as the signed-in user with that user's data, and asks for administrator rights itself.
 bool LaunchAsUser(const std::wstring& exe)
 {
+    if (SameUserAsShell())
+    {
+        std::wstring cmd = L"\"" + exe + L"\"";
+        const std::wstring dir = exe.substr(0, exe.find_last_of(L'\\'));
+        STARTUPINFOW si{ sizeof(si) };
+        PROCESS_INFORMATION pi{};
+        if (CreateProcessW(exe.c_str(), cmd.data(), nullptr, nullptr, FALSE, 0, nullptr, dir.c_str(), &si, &pi))
+        {
+            CloseHandle(pi.hThread);
+            CloseHandle(pi.hProcess);
+            return true;
+        }
+    }
     ComPtr<IShellWindows> windows;
     ComPtr<IDispatch> dispatch;
     ComPtr<IServiceProvider> provider;

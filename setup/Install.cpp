@@ -19,11 +19,16 @@ constexpr const wchar_t* kLegacyCompanionFiles[] = { L"7z.dll", L"7z.License.txt
 
 std::wstring RegString(HKEY root, const wchar_t* key, const wchar_t* name)
 {
-    // RRF_SUBKEY_WOW6464KEY (Windows 10+) is left out: this is an x64-only build, so a 64-bit process already sees
-    // the 64-bit registry view with no WOW64 redirection to force past.
+    // The 64-bit view, where the uninstall entry is written (KEY_WOW64_64KEY): the x86 setup on 64-bit Windows would
+    // otherwise read WOW6432Node. Opened first because RRF_SUBKEY_WOW6464KEY is Windows 10+; 32-bit Windows ignores it.
+    HKEY h = nullptr;
+    if (RegOpenKeyExW(root, key, 0, KEY_QUERY_VALUE | KEY_WOW64_64KEY, &h) != ERROR_SUCCESS)
+        return L"";
     wchar_t buf[1024]{};
     DWORD size = sizeof(buf);
-    return RegGetValueW(root, key, name, RRF_RT_REG_SZ, nullptr, buf, &size) == ERROR_SUCCESS ? buf : L"";
+    const bool ok = RegGetValueW(h, nullptr, name, RRF_RT_REG_SZ, nullptr, buf, &size) == ERROR_SUCCESS;
+    RegCloseKey(h);
+    return ok ? buf : L"";
 }
 
 std::wstring StartMenuLink() { return Join(KnownFolder(FOLDERID_CommonPrograms), L"FastFiles.lnk"); }
@@ -227,7 +232,13 @@ void RemoveRegTree(HKEY root, const wchar_t* subkey, REGSAM extra = 0)
         LogDryRun(std::wstring(L"[dry-run] delete key ") + rootName + L"\\" + subkey);
         return;
     }
-    RegDeleteTreeW(root, subkey);
+    // The tree in the view `extra` names (the x86 setup: KEY_WOW64_64KEY reaches past WOW6432Node), then the key itself
+    HKEY key = nullptr;
+    if (RegOpenKeyExW(root, subkey, 0, DELETE | KEY_ENUMERATE_SUB_KEYS | KEY_QUERY_VALUE | KEY_SET_VALUE | extra, &key) == ERROR_SUCCESS)
+    {
+        RegDeleteTreeW(key, nullptr);
+        RegCloseKey(key);
+    }
     RegDeleteKeyExW(root, subkey, extra, 0);
 }
 
@@ -402,7 +413,13 @@ bool RunInstall(const Options& o, const Progress& progress, std::wstring& error)
     // skips its companion-file loop); a leftover 7z.dll / 7z.License.txt from an older install needs its own pass
     for (const wchar_t* name : kLegacyCompanionFiles)
         DeleteRetry(Join(o.dir, name), 3);
-    RegDeleteTreeW(HKEY_LOCAL_MACHINE, kLegacyKey);
+    // Inno's entry (a 64-bit Inno install wrote the 64-bit view; KEY_WOW64_64KEY reaches it from the x86 setup too)
+    if (HKEY legacyKey = nullptr; RegOpenKeyExW(HKEY_LOCAL_MACHINE, kLegacyKey, 0,
+            DELETE | KEY_ENUMERATE_SUB_KEYS | KEY_QUERY_VALUE | KEY_SET_VALUE | KEY_WOW64_64KEY, &legacyKey) == ERROR_SUCCESS)
+    {
+        RegDeleteTreeW(legacyKey, nullptr);
+        RegCloseKey(legacyKey);
+    }
     RegDeleteKeyExW(HKEY_LOCAL_MACHINE, kLegacyKey, KEY_WOW64_64KEY, 0);
     MakeShortcut(StartMenuLink(), app, o.dir);
     if (o.desktopIcon)

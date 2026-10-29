@@ -67,7 +67,8 @@ std::wstring FindGitExe()
     wchar_t path[MAX_PATH]{};
     if (SearchPathW(nullptr, L"git.exe", nullptr, MAX_PATH, path, nullptr))
         return path;
-    for (const wchar_t* guess : { L"%ProgramFiles%\\Git\\cmd\\git.exe", L"%LocalAppData%\\Programs\\Git\\cmd\\git.exe" })
+    // %ProgramW6432%: the 64-bit Program Files also from the x86 build (its %ProgramFiles% is Program Files (x86))
+    for (const wchar_t* guess : { L"%ProgramFiles%\\Git\\cmd\\git.exe", L"%ProgramW6432%\\Git\\cmd\\git.exe", L"%LocalAppData%\\Programs\\Git\\cmd\\git.exe" })
         if (ExpandEnvironmentStringsW(guess, path, MAX_PATH) && GetFileAttributesW(path) != INVALID_FILE_ATTRIBUTES)
             return path;
     return {};

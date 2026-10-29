@@ -1,5 +1,5 @@
 ﻿# Builds res/lang.txt: translations of FastFiles' UI strings (the Chinese literals in src/) for Files' 49 languages.
-# A literal that is exactly one of Files' zh-Hans strings takes Files' own translations (MIT, Desktop\11\Files);
+# A literal that is exactly one of Files' zh-Hans strings takes Files' own translations (MIT, D:\yuanma\11\Files);
 # the rest come from tools/lang-en.txt (zh=>en), which also fills en-US. Other languages fall back to English at
 # run time (Lang.cpp), as Files does. Run after adding UI strings:  powershell -File tools\gen-lang.ps1 [-Missing]
 param([switch]$Missing)

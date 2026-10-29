@@ -1,3 +1,5 @@
 # The C++ side links the static CRT (/MT); the Rust staticlib must match or the link fails with LNK2038
 [target.x86_64-pc-windows-msvc]
 rustflags = ["-C", "target-feature=+crt-static"]
+[target.i686-pc-windows-msvc]
+rustflags = ["-C", "target-feature=+crt-static"]

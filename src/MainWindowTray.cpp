@@ -103,6 +103,19 @@ bool ParseLaunchTarget(const std::wstring& raw, UniquePidl& folder, UniquePidl& 
     return true;
 }
 
+void ThisPcToHome(UniquePidl& folder, const UniquePidl& select)
+{
+    // As the default file manager, Explorer hands over "::{20D04FE0-...}" for 此电脑 (the desktop icon, Win+E's
+    // This PC start, a shortcut to it): FastFiles shows its Home page there, not the shell's drive view
+    PCIDLIST_ABSOLUTE home = HomePidl();
+    PIDLIST_ABSOLUTE computer = nullptr;
+    if (select || !folder || !home || FAILED(SHGetKnownFolderIDList(FOLDERID_ComputerFolder, 0, nullptr, &computer)))
+        return;
+    if (ILIsEqual(folder.get(), computer))
+        folder = ClonePidl(home);
+    CoTaskMemFree(computer);
+}
+
 bool AutoStartEnabled()
 {
     wchar_t value[MAX_PATH * 2]{};
@@ -164,12 +177,19 @@ bool WriteCommand(const wchar_t* subkey, const std::wstring& command)
     return s == ERROR_SUCCESS;
 }
 
+// A command that starts FastFiles: FastFiles.exe, or this exe under its own name (the portable x86 FastFiles_x86.exe)
+bool NamesFastFiles(const wchar_t* command)
+{
+    const std::wstring exe = ExePath();
+    return StrStrIW(command, L"FastFiles.exe") != nullptr || StrStrIW(command, PathFindFileNameW(exe.c_str())) != nullptr;
+}
+
 bool IsOurs(const wchar_t* subkey)
 {
     wchar_t value[MAX_PATH * 2]{};
     DWORD size = sizeof(value);
     return RegGetValueW(HKEY_CURRENT_USER, subkey, nullptr, RRF_RT_REG_SZ | RRF_RT_REG_EXPAND_SZ | RRF_NOEXPAND, nullptr, value, &size) == ERROR_SUCCESS &&
-        StrStrIW(value, L"FastFiles.exe") != nullptr;
+        NamesFastFiles(value);
 }
 
 // Deletes subkey and then each parent up to (not including) stop, while they're empty
@@ -213,7 +233,7 @@ bool DefaultFileManagerEnabled()
     DWORD size = sizeof(value);
     return RegGetValueW(HKEY_CLASSES_ROOT, L"Folder\\shell\\open\\command", nullptr, RRF_RT_REG_SZ | RRF_RT_REG_EXPAND_SZ | RRF_NOEXPAND,
                nullptr, value, &size) == ERROR_SUCCESS &&
-        StrStrIW(value, L"FastFiles.exe") != nullptr;
+        NamesFastFiles(value);
 }
 
 bool SetDefaultFileManager(bool on)
@@ -417,6 +437,7 @@ bool MainWindow::HandleTrayMessage(UINT msg, WPARAM wp, LPARAM lp, LRESULT& resu
         UniquePidl folder, select;
         if (!target->empty() && ParseLaunchTarget(*target, folder, select))
         {
+            ThisPcToHome(folder, select);
             // Not activated yet: activation browses there, and the selection has to be waiting when that completes
             const int index = NewTab(folder.get(), false);
             if (index >= 0 && index < static_cast<int>(m_tabList.size()))

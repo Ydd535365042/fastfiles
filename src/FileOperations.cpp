@@ -331,9 +331,14 @@ HRESULT RunGroup(Job& j, HWND owner, int kind /*0 copy 1 move 2 delete*/, const 
     BOOL aborted = FALSE;
     if (SUCCEEDED(hr) && SUCCEEDED(op->GetAnyOperationsAborted(&aborted)) && aborted)
     {
-        // With FOF_NOERRORUI an aborted run is a failure the sink already recorded; make sure one is recorded
+        // With FOF_NOERRORUI an aborted run is a failure the sink already recorded. Nothing recorded: the user
+        // stopped it in the system's progress window (copy / move show it), which is a cancel, not an error.
         if (std::all_of(indices.begin(), indices.end(), [&](size_t i) { return SUCCEEDED(sink.results[i]); }) && !indices.empty())
+        {
+            if (!(flags & FOF_SILENT))
+                return HRESULT_FROM_WIN32(ERROR_CANCELLED);
             sink.results[indices.front()] = E_FAIL;
+        }
     }
     return hr;
 }
@@ -384,6 +389,9 @@ void RunWithRetries(Job& j, HWND owner, int kind, DWORD baseFlags, DWORD replace
             if (elevated)
                 flags |= FOFX_SHOWELEVATIONPROMPT | FOFX_REQUIREELEVATION;
             const HRESULT hr = RunGroup(j, owner, kind, groups[g], flags, j.target, sink);
+            // Cancelled in the system's progress window (×): the card says cancelled, the rest doesn't run
+            if (FAILED(hr) && IsCancelCode(hr))
+                return Finish(j, Operations::State::Cancelled);
             for (size_t i : groups[g])
                 results[i] = sink.results[i];
             if (FAILED(hr) && !IsCancelCode(hr) && std::all_of(groups[g].begin(), groups[g].end(), [&](size_t i) { return SUCCEEDED(results[i]); }))
@@ -445,8 +453,10 @@ namespace FileOperations
 {
 void Transfer(Job& j, HWND owner, bool move)
 {
-    // Files' CopyItemAsync / MoveItemAsync flags; FOF_ALLOWUNDO keeps the shell's undo (Ctrl+Z in the view) working
-    const DWORD common = FOF_NOCONFIRMMKDIR | FOF_SILENT | FOF_NOERRORUI | FOF_ALLOWUNDO;
+    // Files' CopyItemAsync / MoveItemAsync flags, except FOF_SILENT: the user wants the system's own progress window
+    // (speed graph, pause, cancel) as in Explorer, besides the status center card. FOF_ALLOWUNDO keeps the shell's undo
+    // (Ctrl+Z in the view) working; name conflicts were already settled in Files' dialog, errors still come back here.
+    const DWORD common = FOF_NOCONFIRMMKDIR | FOF_NOERRORUI | FOF_ALLOWUNDO;
     RunWithRetries(j, owner, move ? 1 : 0, common | FOFX_PRESERVEFILEEXTENSIONS | FOF_RENAMEONCOLLISION, common | FOF_NOCONFIRMATION);
 }
 

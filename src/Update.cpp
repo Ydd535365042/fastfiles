@@ -303,8 +303,9 @@ void CheckAsync(HWND notify)
                 if (u.empty())
                     break;
                 const std::wstring name = u.substr(u.find_last_of(L'/') + 1);
-                const bool setup = name.size() > 14 && _wcsicmp(name.c_str() + name.size() - 14, L"_x64_Setup.exe") == 0;
-                if (installed ? setup : _wcsicmp(name.c_str(), L"FastFiles.exe") == 0)
+                const size_t suffix = wcslen(kSetupSuffix);
+                const bool setup = name.size() > suffix && _wcsicmp(name.c_str() + name.size() - suffix, kSetupSuffix) == 0;
+                if (installed ? setup : _wcsicmp(name.c_str(), kPortableName) == 0)
                     url = u;
             }
             if (url.empty())

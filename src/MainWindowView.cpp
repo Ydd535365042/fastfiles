@@ -442,7 +442,9 @@ std::wstring PeekExe()
         for (const wchar_t* root : { L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall", L"SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall" })
         {
             HKEY key = nullptr;
-            if (RegOpenKeyExW(hive, root, 0, KEY_READ, &key) != ERROR_SUCCESS)
+            // The 64-bit view for the plain Uninstall key (the x86 build would otherwise be sent to WOW6432Node twice)
+            const REGSAM view = StrStrIW(root, L"WOW6432Node") ? 0 : KEY_WOW64_64KEY;
+            if (RegOpenKeyExW(hive, root, 0, KEY_READ | view, &key) != ERROR_SUCCESS)
                 continue;
             wchar_t sub[256];
             for (DWORD i = 0;; ++i)

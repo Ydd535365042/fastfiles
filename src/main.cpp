@@ -211,8 +211,8 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int)
     InitCommonControlsEx(&icc);
 
     UniquePidl startup, selectItem;
-    if (!target.empty())
-        ParseLaunchTarget(target, startup, selectItem, select);
+    if (!target.empty() && ParseLaunchTarget(target, startup, selectItem, select) && restoreSession)
+        ThisPcToHome(startup, selectItem);
 
     int exitCode = 1;
     {

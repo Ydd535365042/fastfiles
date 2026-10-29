@@ -46,7 +46,7 @@ public:
     }
     IFACEMETHODIMP Skip(ULONG count) override
     {
-        m_at = std::min(m_ids.size(), m_at + count);
+        m_at = std::min<size_t>(m_ids.size(), m_at + count);
         return m_at < m_ids.size() ? S_OK : S_FALSE;
     }
     IFACEMETHODIMP Reset() override

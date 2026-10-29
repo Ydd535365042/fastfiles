@@ -1,7 +1,27 @@
 cmake_minimum_required(VERSION 3.20)
-project(FastFiles VERSION 1.0.0.6 LANGUAGES CXX)
+project(FastFiles VERSION 1.0.0.7 LANGUAGES CXX)
 
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
+# x64 or x86, from the toolchain the build runs in (build.ps1 -Arch picks the VS developer shell): the Rust target, the
+# manifests' processorArchitecture and the setup's name follow it
+if(CMAKE_SIZEOF_VOID_P EQUAL 4)
+    set(FF_ARCH x86)
+    set(FF_MANIFEST_ARCH x86)
+    set(FF_RUST_TARGET i686-pc-windows-msvc)
+else()
+    set(FF_ARCH x64)
+    set(FF_MANIFEST_ARCH amd64)
+    set(FF_RUST_TARGET x86_64-pc-windows-msvc)
+endif()
+# The checked-in manifests say amd64; the x86 build gets copies that say x86 (a wrong architecture fails to start)
+foreach(m src/app.manifest setup/setup.manifest)
+    file(READ ${CMAKE_SOURCE_DIR}/${m} FF_MANIFEST_TEXT)
+    string(REPLACE "processorArchitecture=\"amd64\"" "processorArchitecture=\"${FF_MANIFEST_ARCH}\"" FF_MANIFEST_TEXT "${FF_MANIFEST_TEXT}")
+    get_filename_component(FF_MANIFEST_NAME ${m} NAME)
+    file(CONFIGURE OUTPUT ${CMAKE_BINARY_DIR}/generated/${FF_MANIFEST_NAME} CONTENT "${FF_MANIFEST_TEXT}" @ONLY)
+endforeach()
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS src/app.manifest setup/setup.manifest)
 
 add_executable(FastFiles WIN32
     src/main.cpp
@@ -59,7 +79,7 @@ src/ContentDialog.cpp src/NewItem.cpp src/MainWindowNewItem.cpp src/SevenZip.cpp
     src/Session.cpp
     src/Update.cpp
     src/Share.cpp
-    src/app.manifest
+    ${CMAKE_BINARY_DIR}/generated/app.manifest
     src/FastFiles.rc
 )
 set_source_files_properties(src/FastFiles.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_SOURCE_DIR}/res/lang.txt)
@@ -74,11 +94,11 @@ target_link_libraries(FastFiles PRIVATE comctl32 shell32 shlwapi ole32 oleaut32 
 # Rust core: built by cargo as a static lib (release profile, static CRT to match /MT) and linked in
 set(CORE_DIR ${CMAKE_SOURCE_DIR}/core)
 set(CARGO_TARGET_DIR ${CMAKE_BINARY_DIR}/cargo)
-set(CORE_LIB ${CARGO_TARGET_DIR}/release/fastfiles_core.lib)
+set(CORE_LIB ${CARGO_TARGET_DIR}/${FF_RUST_TARGET}/release/fastfiles_core.lib)
 file(GLOB_RECURSE CORE_SOURCES CONFIGURE_DEPENDS ${CORE_DIR}/src/*.rs)
 add_custom_command(
     OUTPUT ${CORE_LIB}
-    COMMAND cargo build --release --lib --manifest-path ${CORE_DIR}/Cargo.toml --target-dir ${CARGO_TARGET_DIR}
+    COMMAND cargo build --release --lib --target ${FF_RUST_TARGET} --manifest-path ${CORE_DIR}/Cargo.toml --target-dir ${CARGO_TARGET_DIR}
     DEPENDS ${CORE_SOURCES} ${CORE_DIR}/Cargo.toml
     WORKING_DIRECTORY ${CORE_DIR}
     COMMENT "Building Rust core"
@@ -118,7 +138,7 @@ file(WRITE ${CMAKE_BINARY_DIR}/generated/payload_path.h "#define FF_PAYLOAD_PATH
 
 add_executable(FastFilesSetup WIN32
     setup/Main.cpp setup/Install.cpp setup/System.cpp setup/Draw.cpp setup/Ui.cpp setup/UiPaint.cpp src/RoundFrame.cpp
-    src/DWriteText.cpp setup/Setup.rc setup/setup.manifest)
+    src/DWriteText.cpp setup/Setup.rc ${CMAKE_BINARY_DIR}/generated/setup.manifest)
 add_dependencies(FastFilesSetup ff_payload)
 set_source_files_properties(setup/Setup.rc PROPERTIES OBJECT_DEPENDS ${FF_PAYLOAD})
 target_include_directories(FastFilesSetup PRIVATE ${CMAKE_BINARY_DIR}/generated ${CMAKE_SOURCE_DIR}/src)
@@ -127,4 +147,4 @@ target_compile_definitions(FastFilesSetup PRIVATE UNICODE _UNICODE NOMINMAX _WIN
 target_compile_options(FastFilesSetup PRIVATE /W4 /permissive- /utf-8 /EHsc)
 target_link_options(FastFilesSetup PRIVATE "/MANIFESTUAC:level='requireAdministrator' uiAccess='false'")
 target_link_libraries(FastFilesSetup PRIVATE cabinet rstrtmgr dwmapi gdiplus msimg32 shell32 shlwapi ole32 oleaut32 uuid version dwrite)
-set_target_properties(FastFilesSetup PROPERTIES OUTPUT_NAME "FastFiles_${PROJECT_VERSION}_x64_Setup")
+set_target_properties(FastFilesSetup PROPERTIES OUTPUT_NAME "FastFiles_${PROJECT_VERSION}_${FF_ARCH}_Setup")

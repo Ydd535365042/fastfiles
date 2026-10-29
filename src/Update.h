@@ -4,8 +4,9 @@
 // Online update from the GitHub repository's releases (Files' IUpdateService: CheckForUpdatesAsync, then
 // DownloadUpdatesAsync with progress, then the app restarts). Files reads an .appinstaller; FastFiles reads the
 // latest release of kRepo through the GitHub API and takes the asset that matches how it runs:
-//  - installed (Uninstall.exe next to the exe): FastFiles_<ver>_x64_Setup.exe, run silently over the same folder
-//  - portable (no Uninstall.exe): FastFiles.exe, swapped in place of the running exe
+//  - installed (Uninstall.exe next to the exe): FastFiles_<ver>_x64_Setup.exe (x86: _x86_Setup.exe), run silently over
+//    the same folder
+//  - portable (no Uninstall.exe): FastFiles.exe (x86: FastFiles_x86.exe), swapped in place of the running exe
 // Test mode (Sandbox::Active): the check and the download are real (read-only GitHub requests), applying never
 // starts the setup or opens a browser (both are logged to <data>\update-log.txt), and a portable swap only ever
 // happens to an exe under %TEMP%. FASTFILES_TEST_VERSION pretends to be another version there, so a test can see
@@ -14,6 +15,14 @@ namespace Update
 {
 inline constexpr wchar_t kRepo[] = L"Ydd535365042/fastfiles";
 inline constexpr wchar_t kRepoUrl[] = L"https://github.com/Ydd535365042/fastfiles";
+// The release assets for this build's architecture (x64 keeps the names earlier versions look for)
+#ifdef _WIN64
+inline constexpr wchar_t kSetupSuffix[] = L"_x64_Setup.exe";
+inline constexpr wchar_t kPortableName[] = L"FastFiles.exe";
+#else
+inline constexpr wchar_t kSetupSuffix[] = L"_x86_Setup.exe";
+inline constexpr wchar_t kPortableName[] = L"FastFiles_x86.exe";
+#endif
 
 struct Release
 {

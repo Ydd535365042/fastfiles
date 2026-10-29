@@ -31,6 +31,8 @@ std::wstring PrimaryMutexName();
 HWND FindPrimaryWindow();
 bool ForwardToPrimary(HWND primary, const std::wstring& target); // target may be empty (just bring the window up)
 bool ParseLaunchTarget(const std::wstring& arg, UniquePidl& folder, UniquePidl& select, bool forceSelect = false);
+// A launch from outside (not a --window of our own) for 此电脑 opens Home instead
+void ThisPcToHome(UniquePidl& folder, const UniquePidl& select);
 bool AutoStartEnabled();
 bool SetAutoStart(bool on);
 bool DefaultFileManagerEnabled(); // folders open with this FastFiles (HKCU Folder\shell\open)

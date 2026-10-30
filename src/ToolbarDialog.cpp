@@ -5,6 +5,7 @@
 #include "Lang.h"
 #include "DarkMode.h"
 #include "SmoothScroll.h"
+#include "ScrollOverlay.h"
 
 namespace
 {
@@ -14,7 +15,7 @@ constexpr wchar_t kClass[] = L"FastFiles.ToolbarDialog";
 // 96-DPI layout: Files sizes the window 760 x 560, the available list 240 wide
 constexpr int kW = 760, kH = 560, kPad = 16, kLeftW = 240, kTop = 52, kRowL = 32, kRowR = 36, kHead = 30, kPreview = 52, kFoot = 56;
 enum : int { IdSearch = 10, IdPreview = 11, IdReset = 20, IdContextBase = 100 };
-constexpr UINT_PTR kSearchTimer = 1;
+constexpr UINT_PTR kSearchTimer = 1, kBarTimerL = 2, kBarTimerR = 3;
 constexpr wchar_t kGripper[] = L"\xE76F", kAccept[] = L"\xE73E";
 
 struct LeftRow
@@ -38,9 +39,14 @@ struct Dialog final : ButtonBarEvents
     std::vector<std::wstring> collapsed;
     int leftScroll = 0, rightScroll = 0;
     SmoothScroll leftSmooth, rightSmooth; // each panel's wheel animation
+    ScrollOverlay leftBar, rightBar;      // each panel's scroll bar (SyncBars)
     int leftHot = -1, leftSel = -1, rightHot = -1, rightSel = -1, rightHotPart = 0; // part: 1 icon, 2 label, 3 remove
     int pressed = 0, hotButton = 0;   // IdReset / IDOK / IDCANCEL / IdContextBase (the context picker)
     bool focusRight = false;
+    // A drawn control with the keyboard while the window has the focus (Files' page: every control is a Tab stop):
+    // IdContextBase (the mode ComboBox), IdReset, IDOK, IDCANCEL; 0 = the lists (focusRight picks which)
+    int focusButton = 0;
+    bool ring = false; // the focus visual: after Tab, not after a click
     // Dragging: from the available list (dragLeft) or within the added list
     bool dragArmed = false, dragging = false, dragLeft = false;
     int dragIndex = -1, dropIndex = -1;
@@ -270,6 +276,15 @@ struct Dialog final : ButtonBarEvents
             FrameRound(hdc, r, S(4), t.controlStroke);
         const COLORREF ink = primary ? t.textOnAccent : enabled ? t.ink : t.muted;
         DrawLabel(hdc, t.ui, text, r, ink, DT_CENTER);
+        FocusRing(hdc, id, r);
+    }
+    void FocusRing(HDC hdc, int id, const RECT& r) const
+    {
+        if (ring && focusButton == id && GetFocus() == hwnd)
+        {
+            const RECT c = Client();
+            DrawFocusVisual(hdc, *theme, r, S(4), theme->layer, &c);
+        }
     }
     void Paint(HDC hdc, const RECT& rc)
     {
@@ -282,6 +297,7 @@ struct Dialog final : ButtonBarEvents
         FrameRound(hdc, box, S(4), t.controlStroke);
         DrawLabel(hdc, t.ui, ContextName(context), { box.left + S(12), box.top, box.right - S(32), box.bottom }, t.ink);
         DrawGlyph(hdc, t.iconsSmall, Glyph::ChevronDown, { box.right - S(30), box.top, box.right - S(10), box.bottom }, t.muted);
+        FocusRing(hdc, IdContextBase, box);
 
         PaintLeft(hdc);
         PaintRight(hdc);
@@ -327,14 +343,15 @@ struct Dialog final : ButtonBarEvents
         FrameRound(hdc, p, S(8), t.cardStroke);
         DrawLabel(hdc, bold, title, { p.left + S(12), p.top, p.right - S(12), p.top + S(kHead) + S(4) }, t.ink);
     }
-    void Thumb(HDC hdc, const RECT& list, int content, int scroll) const
+    // Each panel's ListView ScrollViewer bar (the file list's WinUI ScrollBar), along the list's right edge. The scroll
+    // positions change in many places (keys, drops, search, wheel); the bars take them before every paint.
+    void SyncBars()
     {
-        const int h = list.bottom - list.top;
-        if (content <= h || h <= 0)
-            return;
-        const int th = std::max(S(24), MulDiv(h, h, content));
-        const int top = list.top + MulDiv(h - th, scroll, content - h);
-        FillRound(hdc, { list.right - S(5), top, list.right - S(2), top + th }, S(2), Mix(theme->muted, theme->card, 40));
+        const RECT l = LeftList(), r = RightList();
+        const int lc = static_cast<int>(left.size()) * S(kRowL), rc = static_cast<int>(Items().size()) * S(kRowR);
+        const int lv = l.bottom - l.top, rv = r.bottom - r.top;
+        leftBar.Set(lc > lv ? lc : 0, lv, leftScroll, { l.right - S(12), l.top, l.right, l.bottom }, S(kRowL));
+        rightBar.Set(rc > rv ? rc : 0, rv, rightScroll, { r.right - S(12), r.top, r.right, r.bottom }, S(kRowR));
     }
     void PaintLeft(HDC hdc)
     {
@@ -353,7 +370,7 @@ struct Dialog final : ButtonBarEvents
             if (r.bottom < list.top || r.top > list.bottom)
                 continue;
             const LeftRow& row = left[i];
-            const bool sel = i == leftSel && !focusRight;
+            const bool sel = i == leftSel && !focusRight && !focusButton;
             if (sel || i == leftHot)
                 FillRound(hdc, { r.left, r.top + S(2), r.right, r.bottom - S(2) }, S(4), sel ? (GetFocus() == hwnd ? t.selected : t.hover) : t.hover);
             if (!row.command)
@@ -371,7 +388,6 @@ struct Dialog final : ButtonBarEvents
             DrawLabel(hdc, t.ui, IsSeparator(row.command->key) ? std::wstring(Tr(L"分隔符")) : DisplayName(*row.command), { x, r.top, r.right - S(4), r.bottom }, t.ink);
         }
         RestoreDC(hdc, dc);
-        Thumb(hdc, list, static_cast<int>(left.size()) * S(kRowL), leftScroll);
     }
     void PaintRight(HDC hdc)
     {
@@ -395,7 +411,7 @@ struct Dialog final : ButtonBarEvents
                 continue;
             const Entry& e = items[i];
             const Command* c = Find(e.key);
-            const bool sel = i == rightSel && focusRight;
+            const bool sel = i == rightSel && focusRight && !focusButton;
             if (sel || (i == rightHot && rightHotPart == 0))
                 FillRound(hdc, { r.left, r.top + S(2), r.right, r.bottom - S(2) }, S(4), sel ? (GetFocus() == hwnd ? t.selected : t.hover) : t.hover);
             DrawGlyph(hdc, t.iconsSmall, kGripper, { r.left + S(6), r.top, r.left + S(22), r.bottom }, t.muted);
@@ -425,7 +441,6 @@ struct Dialog final : ButtonBarEvents
             FillRound(hdc, { list.left + S(8), y - S(1), list.right - S(10), y + S(2) }, S(1), t.accent);
         }
         RestoreDC(hdc, dc);
-        Thumb(hdc, list, static_cast<int>(items.size()) * S(kRowR), rightScroll);
     }
     // --- Hit testing ---
     int LeftAt(POINT pt) const
@@ -575,6 +590,8 @@ struct Dialog final : ButtonBarEvents
     void MouseDown(POINT pt)
     {
         SetFocus(hwnd);
+        ring = false; // pointer focus: no focus visual
+        focusButton = 0;
         if (const int b = ButtonAt(pt))
         {
             pressed = b;
@@ -672,24 +689,79 @@ struct Dialog final : ButtonBarEvents
         else if (l >= 0)
             MouseDown(pt); // category: toggles again like a second click
     }
-    // --- Keyboard: search box -> available list -> added list -> buttons (Tab), Files' list keys ---
+    // --- Keyboard: mode ComboBox -> search box -> available list -> added list -> 恢复默认 -> 保存 -> 取消 (Tab, round
+    // and back), Files' list keys; Enter / Space press a focused button, F4 / Enter / Space open the ComboBox ---
+    enum : int { StopMode, StopSearch, StopLeft, StopRight, StopReset, StopSave, StopCancel, StopCount };
+    int CurrentStop() const
+    {
+        if (GetFocus() == search)
+            return StopSearch;
+        switch (focusButton)
+        {
+        case IdContextBase: return StopMode;
+        case IdReset: return StopReset;
+        case IDOK: return StopSave;
+        case IDCANCEL: return StopCancel;
+        }
+        return focusRight ? StopRight : StopLeft;
+    }
+    void TabFrom(int stop, bool back)
+    {
+        int next = stop;
+        do
+            next = (next + (back ? StopCount - 1 : 1)) % StopCount;
+        while (next == StopSave && !Changed()); // 保存 is disabled until something changed
+        ring = true;
+        focusButton = 0;
+        switch (next)
+        {
+        case StopSearch:
+            SetFocus(search);
+            SendMessageW(search, EM_SETSEL, 0, -1);
+            break;
+        case StopLeft:
+        case StopRight:
+            focusRight = next == StopRight;
+            if (!focusRight && leftSel < 0 && !left.empty())
+                leftSel = 0;
+            if (focusRight && rightSel < 0 && !Items().empty())
+                rightSel = 0;
+            SetFocus(hwnd);
+            break;
+        default:
+            focusButton = next == StopMode ? IdContextBase : next == StopReset ? IdReset : next == StopSave ? IDOK : IDCANCEL;
+            SetFocus(hwnd);
+            break;
+        }
+        InvalidateRect(hwnd, nullptr, FALSE);
+    }
     void Key(WPARAM vk)
     {
         const bool ctrl = GetKeyState(VK_CONTROL) < 0;
         if (vk == VK_TAB)
         {
-            if (GetKeyState(VK_SHIFT) < 0 ? !focusRight : focusRight)
-                SetFocus(search);
-            else
-            {
-                focusRight = !focusRight;
-                InvalidateRect(hwnd, nullptr, FALSE);
-            }
+            TabFrom(CurrentStop(), GetKeyState(VK_SHIFT) < 0);
             return;
         }
         if (vk == VK_ESCAPE)
         {
             OnButton(IDCANCEL);
+            return;
+        }
+        if (focusButton)
+        {
+            if (focusButton == IdContextBase && (vk == VK_F4 || vk == VK_RETURN || vk == VK_SPACE))
+            {
+                ShowContextMenu();
+                InvalidateRect(hwnd, nullptr, FALSE);
+            }
+            else if (vk == VK_RETURN || vk == VK_SPACE)
+            {
+                const int id = focusButton;
+                OnButton(id);
+                if (id == IdReset && IsWindow(hwnd))
+                    InvalidateRect(hwnd, nullptr, FALSE);
+            }
             return;
         }
         if (focusRight)
@@ -767,9 +839,12 @@ struct Dialog final : ButtonBarEvents
                         break;
                     }
                 return 0;
-            case VK_DOWN:
             case VK_TAB:
-                self->focusRight = GetKeyState(VK_SHIFT) < 0 && wp == VK_TAB;
+                self->TabFrom(StopSearch, GetKeyState(VK_SHIFT) < 0);
+                return 0;
+            case VK_DOWN:
+                self->focusRight = false;
+                self->focusButton = 0;
                 if (self->leftSel < 0 && !self->left.empty())
                     self->leftSel = 0;
                 SetFocus(self->hwnd);
@@ -792,8 +867,11 @@ struct Dialog final : ButtonBarEvents
         {
         case WM_PAINT:
         {
+            SyncBars();
             BufferedPaint paint(hwnd);
             Paint(paint.dc(), paint.rect());
+            leftBar.Paint(paint.dc(), paint.rect());
+            rightBar.Paint(paint.dc(), paint.rect());
             return 0;
         }
         case WM_ERASEBKGND:
@@ -805,10 +883,29 @@ struct Dialog final : ButtonBarEvents
         {
             TRACKMOUSEEVENT tme{ sizeof(tme), TME_LEAVE, hwnd };
             TrackMouseEvent(&tme);
+            // The scroll bars first (dragging one, or the pointer on its strip) unless a row / button is held
+            if (!dragArmed && !pressed)
+            {
+                const bool held = leftBar.Captured() || rightBar.Captured();
+                const bool onL = leftBar.OnMouseMove(pt, (wp & MK_LBUTTON) != 0);
+                const bool onR = !leftBar.Captured() && rightBar.OnMouseMove(pt, (wp & MK_LBUTTON) != 0);
+                if (held || onL || onR)
+                {
+                    if (leftHot >= 0 || rightHot >= 0 || hotButton)
+                    {
+                        leftHot = rightHot = -1;
+                        rightHotPart = hotButton = 0;
+                        InvalidateRect(hwnd, nullptr, FALSE);
+                    }
+                    return 0;
+                }
+            }
             MouseMove(pt);
             return 0;
         }
         case WM_MOUSELEAVE:
+            leftBar.OnMouseLeave();
+            rightBar.OnMouseLeave();
             if (!dragging && (leftHot >= 0 || rightHot >= 0 || hotButton))
             {
                 leftHot = rightHot = -1;
@@ -817,15 +914,23 @@ struct Dialog final : ButtonBarEvents
             }
             return 0;
         case WM_LBUTTONDOWN:
-            MouseDown(pt);
-            return 0;
         case WM_LBUTTONDBLCLK:
-            DoubleClick(pt);
+            if (leftBar.Over(pt) || rightBar.Over(pt))
+            {
+                if (!leftBar.OnButtonDown(pt))
+                    rightBar.OnButtonDown(pt);
+                return 0;
+            }
+            msg == WM_LBUTTONDOWN ? MouseDown(pt) : DoubleClick(pt);
             return 0;
         case WM_LBUTTONUP:
+            if (leftBar.OnButtonUp() || rightBar.OnButtonUp())
+                return 0;
             MouseUp(pt);
             return 0;
         case WM_CAPTURECHANGED:
+            leftBar.OnCaptureLost();
+            rightBar.OnCaptureLost();
             if (reinterpret_cast<HWND>(lp) != hwnd && (dragArmed || pressed))
             {
                 dragArmed = dragging = false;
@@ -861,7 +966,9 @@ struct Dialog final : ButtonBarEvents
                 OnButton(LOWORD(wp));
             return 0; // preview buttons do nothing
         case WM_TIMER:
-            if (wp == kSearchTimer)
+            if (wp == kBarTimerL || wp == kBarTimerR)
+                (wp == kBarTimerL ? leftBar : rightBar).OnTimer(wp);
+            else if (wp == kSearchTimer)
             {
                 KillTimer(hwnd, kSearchTimer);
                 BuildLeft();
@@ -952,6 +1059,8 @@ bool ShowToolbarDialog(HWND owner, const Theme* theme, ToolbarModel::Lists& list
         return false;
     }
     g_open = hwnd;
+    d.leftBar.Attach(hwnd, true, kBarTimerL, theme, [&d](int y) { d.leftSmooth.Reset(y); d.leftScroll = y; InvalidateRect(d.hwnd, nullptr, FALSE); });
+    d.rightBar.Attach(hwnd, true, kBarTimerR, theme, [&d](int y) { d.rightSmooth.Reset(y); d.rightScroll = y; InvalidateRect(d.hwnd, nullptr, FALSE); });
     DarkMode::ApplyWindow(hwnd, theme->dark);
     d.search = CreateWindowExW(0, WC_EDITW, L"", WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL, 0, 0, 0, 0, hwnd, MenuId(IdSearch),
         GetModuleHandleW(nullptr), nullptr);

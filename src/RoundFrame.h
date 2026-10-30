@@ -41,26 +41,39 @@ public:
     int Radius() const { return MulDiv(8, static_cast<int>(m_dpi), 96); }
 
 private:
+    // A layered window and what its bitmap was last made for (size, active state, look)
+    struct Piece
+    {
+        HWND hwnd = nullptr;
+        SIZE painted{ -1, -1 };
+        bool active = false;
+        unsigned version = ~0u;
+    };
+    enum { kTop, kBottom, kLeft, kRight, kStrips };
     static LRESULT CALLBACK FrameProc(HWND, UINT, WPARAM, LPARAM);
-    void Paint(POINT at, SIZE size);
-    void PaintCap(const RECT& rc);  // the above-window anti-alias patch over the region's stepped corners
+    // One strip of the frame: `strip` within the whole frame (its size `frame`), placed with the frame at `at`
+    void PaintStrip(Piece& piece, const RECT& strip, POINT at, SIZE frame);
+    // One corner's anti-alias patch: the corner box at (x0, y0) of the window `rc`, `box` square
+    void PaintCap(Piece& piece, const RECT& rc, int x0, int y0, int box, bool bottom);
+    bool Fresh(const Piece& piece, SIZE key) const;
+    void Painted(Piece& piece, SIZE key);
+    void HidePieces();
     int Band() const { return MulDiv(8, static_cast<int>(m_dpi), 96); } // the resize band outside the edge
-    // The frame window around the edge: the band (resizable: every pixel of it takes the mouse), else a wider shadow
-    // that lets the mouse through
+    // The frame around the edge: the band (resizable: every pixel of it takes the mouse), else a wider shadow that
+    // lets the mouse through
     int Margin() const { return m_resizable ? Band() : 2 * Band(); }
-    // m_anchor: a hidden window owning the frame window (an owned window: not taken for the process's main window).
-    // m_cap: owned by `window` itself so it always stays directly above it (click-through corner anti-aliasing)
-    HWND m_window = nullptr, m_frame = nullptr, m_anchor = nullptr, m_cap = nullptr;
+    // The frame and the corner patch only carry pixels along the edge, so they're split into windows that cover just
+    // that: four strips around the edge (top / bottom: the full width with the corners; left / right: between them)
+    // and four corner boxes. A resize then repaints a few thin strips, never a window-sized bitmap.
+    // m_anchor: a hidden window owning the strips (an owned window: not taken for the process's main window).
+    // The corner boxes: owned by `window` itself so they always stay directly above it (click-through)
+    HWND m_window = nullptr, m_anchor = nullptr;
+    Piece m_frame[kStrips], m_cap[4];
     bool m_resizable = false, m_active = true, m_suppressed = false, m_regionRounded = false, m_updating = false;
-    bool m_frameTopmost = false; // m_frame/m_anchor's own band, kept matched to m_window's (see Update())
+    bool m_frameTopmost = false; // the strips' and m_anchor's own band, kept matched to m_window's (see Update())
     UINT m_dpi = 96;
     Look m_look;
-    SIZE m_painted{ -1, -1 };    // the frame bitmap's size, active state and look when last made
-    bool m_paintedActive = false;
-    unsigned m_lookVersion = 0, m_paintedVersion = ~0u;
+    unsigned m_lookVersion = 0;
     SIZE m_regionSize{ -1, -1 };
     HRGN m_capRegion = nullptr;  // a copy of the window's region, kept to test pixels against (PtInRegion)
-    SIZE m_capPainted{ -1, -1 }; // the cap bitmap's size, active state and look when last made
-    bool m_capPaintedActive = false;
-    unsigned m_capPaintedVersion = ~0u;
 };

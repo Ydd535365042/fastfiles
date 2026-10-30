@@ -497,6 +497,24 @@ void TabStrip::Paint(HDC hdc, const RECT& rc)
     button(m_left, Part::ScrollLeft, Glyph::ChevronLeft, t.iconsSmall, m_scroll > 0);
     button(m_right, Part::ScrollRight, Glyph::ChevronRight, t.iconsSmall, m_scroll < content - (m_view.right - m_view.left));
     button(m_new, Part::NewTab, Glyph::Add, t.iconsMid, true);
+    // Keyboard focus visual: on the selected tab, the "+" or the tab actions button
+    if (m_ring && GetFocus() == m_hwnd)
+    {
+        if (m_focusPart == kFocusTabs && m_active >= 0 && m_active < Count())
+        {
+            RECT r = m_items[m_active].rc;
+            r.left += t.S(4);
+            r.right -= t.S(4);
+            r.top += t.S(4);
+            r.bottom -= t.S(2);
+            IntersectRect(&r, &r, &m_view);
+            DrawFocusVisual(hdc, t, r, t.S(5), t.layer, &rc);
+        }
+        else if (m_focusPart == kFocusNew && !IsRectEmpty(&m_new))
+            DrawFocusVisual(hdc, t, m_new, t.S(5), t.chrome, &rc);
+        else if (m_focusPart == kFocusActions && !IsRectEmpty(&m_actions))
+            DrawFocusVisual(hdc, t, m_actions, t.S(5), t.chrome, &rc);
+    }
     PaintCaption(hdc, m_min, Part::Minimize, Glyph::Minimize);
     PaintCaption(hdc, m_max, Part::Maximize, m_maximized ? Glyph::Restore : Glyph::Maximize);
     PaintCaption(hdc, m_close, Part::Close, Glyph::Close);
@@ -524,6 +542,35 @@ void TabStrip::Activate(const Hit& hit)
     case Part::Close: PostMessageW(root, WM_SYSCOMMAND, SC_CLOSE, 0); break;
     default: break;
     }
+}
+
+std::vector<int> TabStrip::FocusStops() const
+{
+    std::vector<int> stops;
+    if (!m_hwnd || !IsWindowVisible(m_hwnd))
+        return stops;
+    if (m_showActions && !IsRectEmpty(&m_actions))
+        stops.push_back(kFocusActions);
+    if (Count() > 0)
+        stops.push_back(kFocusTabs);
+    if (!IsRectEmpty(&m_new))
+        stops.push_back(kFocusNew);
+    return stops;
+}
+
+void TabStrip::FocusPart(int part)
+{
+    m_focusPart = part;
+    m_ring = true;
+    if (part == kFocusTabs)
+        EnsureVisible(m_active);
+    SetFocus(m_hwnd);
+    Invalidate();
+}
+
+int TabStrip::FocusedPart() const
+{
+    return GetFocus() == m_hwnd ? m_focusPart : -1;
 }
 
 void TabStrip::MoveItem(int from, int to)
@@ -836,6 +883,10 @@ LRESULT TabStrip::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
         return Count();
     case TCM_GETCURSEL:
         return m_active;
+    case TCM_GETCURFOCUS:
+        // As a stock tab control: the focused tab (the selected one while the tab list has the keyboard focus);
+        // tests: -2 the "+" button, -3 the tab actions button, -1 the strip doesn't have the focus
+        return GetFocus() != m_hwnd ? -1 : m_focusPart == kFocusTabs ? m_active : m_focusPart == kFocusNew ? -2 : -3;
     case TCM_GETITEMW:
         // Header text, as a stock tab control answers it (test scripts read it with memory in this process)
         if (auto* item = reinterpret_cast<TCITEMW*>(lp); item && static_cast<int>(wp) >= 0 && static_cast<int>(wp) < Count())
@@ -909,6 +960,7 @@ LRESULT TabStrip::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
         return 0;
     case WM_LBUTTONDOWN:
     {
+        m_ring = false; // a pointer press hides the keyboard focus visual
         m_pressed = HitTest(pt);
         if (m_pressed.part == Part::None)
             return 0;
@@ -991,6 +1043,50 @@ LRESULT TabStrip::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
         }
         break;
     case WM_LBUTTONDBLCLK:
+        return 0;
+    case WM_GETDLGCODE:
+        return DLGC_WANTARROWS | DLGC_WANTCHARS;
+    case WM_KEYDOWN:
+    {
+        // WinUI's TabView with the keyboard: the arrows select the next / previous tab (selection follows focus),
+        // Home / End the first / last, Delete closes it; Enter / Space press the "+" or tab actions button
+        const int count = Count();
+        if (m_focusPart == kFocusTabs && count > 0)
+        {
+            int next = m_active;
+            if (wp == VK_LEFT) next = std::max(0, m_active - 1);
+            else if (wp == VK_RIGHT) next = std::min(count - 1, m_active + 1);
+            else if (wp == VK_HOME) next = 0;
+            else if (wp == VK_END) next = count - 1;
+            else if (wp == VK_DELETE && m_active >= 0)
+            {
+                m_events->OnTabClose(m_active);
+                if (IsWindow(m_hwnd))
+                    SetFocus(m_hwnd);
+                return 0;
+            }
+            else
+                break;
+            m_ring = true;
+            if (next != m_active)
+            {
+                m_events->OnTabSelect(next); // shows the tab (and focuses its view)...
+                SetFocus(m_hwnd);           // ...the keyboard stays on the strip
+            }
+            EnsureVisible(m_active);
+            Invalidate();
+            return 0;
+        }
+        if ((wp == VK_RETURN || wp == VK_SPACE) && (m_focusPart == kFocusNew || m_focusPart == kFocusActions))
+        {
+            Activate({ m_focusPart == kFocusNew ? Part::NewTab : Part::Actions });
+            return 0;
+        }
+        break;
+    }
+    case WM_SETFOCUS:
+    case WM_KILLFOCUS:
+        Invalidate();
         return 0;
     case WM_DESTROY:
         RevokeDragDrop(m_hwnd);

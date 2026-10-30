@@ -356,8 +356,24 @@ void Collect(PCIDLIST_ABSOLUTE pidl, InfoPane::Page page, int thumbSize, const R
         }
         if (!IsOneOf(ext, { L".fon", L".otf", L".ttc", L".ttf", L".exe", L".bat", L".cmd", L".ahk" }) && FindHandler(ext, r.handler))
         {
-            r.kind = InfoPane::Kind::Handler;
-            return;
+            // Windows' TXT previewer ignores IPreviewHandlerVisuals (black on white in the dark theme): its files get
+            // the theme's own text preview instead, like a .txt (Files' TextPreview)
+            static constexpr CLSID kTxtPreviewer = { 0x1531d583, 0x8375, 0x4d3f, { 0xb5, 0xfb, 0xd2, 0x3b, 0xbd, 0x16, 0x9f, 0x22 } };
+            if (!IsEqualCLSID(r.handler, kTxtPreviewer))
+            {
+                r.kind = InfoPane::Kind::Handler;
+                return;
+            }
+            r.handler = CLSID{};
+            std::wstring text;
+            if (ReadText(path, 10 * 1024 * 1024, text))
+            {
+                if (text.size() > kTextLimit)
+                    text.resize(kTextLimit);
+                r.text = Crlf(text);
+                r.kind = InfoPane::Kind::Text;
+                return;
+            }
         }
         // Files' TryLoadAsTextAsync: not .iso, not empty, at most 500 000 bytes, no run of four NULs
         WIN32_FILE_ATTRIBUTE_DATA fa{};

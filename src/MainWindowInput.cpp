@@ -3,6 +3,7 @@
 #include "Lang.h"
 #include "Sandbox.h"
 #include "Session.h"
+#include <optional>
 
 namespace
 {
@@ -34,6 +35,9 @@ bool MainWindow::PreTranslate(MSG* msg)
     }
     if (msg->message < WM_KEYFIRST || msg->message > WM_KEYLAST)
         return false;
+    // Tab / Shift+Tab: the window's Tab order (Files' TabIndex: tabs, address bar, sidebar, toolbar, files, details)
+    if (msg->message == WM_KEYDOWN && msg->wParam == VK_TAB && !Down(VK_CONTROL) && !Down(VK_MENU) && CycleFocus(Down(VK_SHIFT)))
+        return true;
     // The settings page in a tab: it records shortcuts and moves between its cards itself
     if (Tab* tab = Active(); tab && tab->Settings() && msg->hwnd == tab->Settings()->Hwnd())
     {
@@ -180,6 +184,166 @@ bool MainWindow::HandleKey(MSG* msg)
         if (tab && key == VK_BROWSER_FORWARD) { tab->Forward(); return true; }
     }
     return false;
+}
+
+// --- Keyboard focus order (Files: MainPage TabIndex 0 tab bar, 1 address bar, then the sidebar, the toolbar
+// (TabIndex 2 inside the sidebar's content), the files (ShellPanesPage: each pane once) and the details pane). Every
+// button is its own stop like a WinUI Button; lists and the tab row are one stop each and use the arrow keys. ---
+
+namespace
+{
+enum StopKind { StopStrip, StopNav, StopAddress, StopSearch, StopCenter, StopUpdate, StopSidebar, StopSideFoot, StopCmd, StopFilter, StopPane,
+    StopStatus, StopInfoPart, StopInfo };
+struct FocusStop
+{
+    StopKind kind;
+    int id = 0; // a button's id, the strip's part, or the pane
+    bool operator==(const FocusStop&) const = default;
+};
+
+bool Shown(HWND hwnd) { return hwnd && IsWindowVisible(hwnd) && IsWindowEnabled(hwnd); }
+
+// The details pane's first control that takes the focus (its text box / property list / preview)
+HWND FirstTabStop(HWND parent)
+{
+    struct Find { HWND found = nullptr; } find;
+    EnumChildWindows(parent, [](HWND h, LPARAM lp) -> BOOL
+    {
+        auto* f = reinterpret_cast<Find*>(lp);
+        if ((GetWindowLongW(h, GWL_STYLE) & WS_TABSTOP) && IsWindowVisible(h) && IsWindowEnabled(h))
+        {
+            f->found = h;
+            return FALSE;
+        }
+        return TRUE;
+    }, reinterpret_cast<LPARAM>(&find));
+    return find.found;
+}
+}
+
+bool MainWindow::CycleFocus(bool back)
+{
+    const HWND focus = GetFocus();
+    if (focus && focus != m_hwnd && !IsChild(m_hwnd, focus))
+        return false;
+    // Edit boxes of a view (rename in place, the column view's...) keep Tab to themselves
+    if (IsEditControl(focus) && focus != m_address && focus != m_search && focus != m_filter)
+        return false;
+    TabSlot* slot = ActiveSlot();
+    // The settings page moves between its own cards first; at its first / last one Tab leaves it
+    for (int p = 0; slot && p < 2; ++p)
+        if (Tab* pane = slot->panes[p].Get(); pane && pane->HasFocus())
+            if (SettingsView* settings = pane->Settings())
+            {
+                if (settings->Capturing() || settings->WantsKey(VK_TAB))
+                    return false;
+                if (settings->TabWithin(back))
+                    return true;
+            }
+
+    std::vector<FocusStop> stops;
+    for (int part : m_strip.FocusStops())
+        stops.push_back({ StopStrip, part });
+    for (int id : m_nav.FocusableIds())
+        stops.push_back({ StopNav, id });
+    if (Shown(m_crumb.Hwnd()) || Shown(m_address))
+        stops.push_back({ StopAddress });
+    if (Shown(m_search))
+        stops.push_back({ StopSearch });
+    if (Shown(m_center.Button()))
+        stops.push_back({ StopCenter });
+    for (int id : m_updateBar.FocusableIds())
+        stops.push_back({ StopUpdate, id });
+    if (m_sidebar && Shown(m_sidebar->Hwnd()))
+        stops.push_back({ StopSidebar });
+    for (int id : m_sideFoot.FocusableIds())
+        stops.push_back({ StopSideFoot, id });
+    for (int id : m_cmd.FocusableIds())
+        stops.push_back({ StopCmd, id });
+    if (m_filterVisible && Shown(m_filter))
+        stops.push_back({ StopFilter });
+    for (int p = 0; slot && p < 2; ++p)
+        if (slot->panes[p])
+            stops.push_back({ StopPane, p });
+    // The status bar's Git buttons (Files: inside the shell page, after its layout), then the details pane: its page
+    // buttons, close, the tags row, then its preview's control
+    for (int id : m_status.FocusableIds())
+        stops.push_back({ StopStatus, id });
+    if (m_info && Shown(m_info->Hwnd()))
+        for (int part : m_info->FocusParts())
+            stops.push_back({ StopInfoPart, part });
+    if (m_info && Shown(m_info->Hwnd()) && FirstTabStop(m_info->Hwnd()))
+        stops.push_back({ StopInfo });
+    if (stops.empty())
+        return false;
+
+    // Where the focus is now
+    std::optional<FocusStop> now;
+    if (focus && focus == m_strip.Hwnd())
+        now = FocusStop{ StopStrip, m_strip.FocusedPart() };
+    else if (focus && focus == m_nav.Hwnd())
+        now = FocusStop{ StopNav, m_nav.FocusedId() };
+    else if (focus && (focus == m_address || focus == m_crumb.Hwnd()))
+        now = FocusStop{ StopAddress };
+    else if (focus && focus == m_search)
+        now = FocusStop{ StopSearch };
+    else if (focus && focus == m_center.Button())
+        now = FocusStop{ StopCenter };
+    else if (focus && focus == m_updateBar.Hwnd())
+        now = FocusStop{ StopUpdate, m_updateBar.FocusedId() };
+    else if (focus && m_sidebar && focus == m_sidebar->Hwnd())
+        now = FocusStop{ StopSidebar };
+    else if (focus && focus == m_sideFoot.Hwnd())
+        now = FocusStop{ StopSideFoot, m_sideFoot.FocusedId() };
+    else if (focus && focus == m_cmd.Hwnd())
+        now = FocusStop{ StopCmd, m_cmd.FocusedId() };
+    else if (focus && focus == m_filter)
+        now = FocusStop{ StopFilter };
+    else if (focus && focus == m_status.Hwnd())
+        now = FocusStop{ StopStatus, m_status.FocusedId() };
+    else if (focus && m_info && focus == m_info->Hwnd())
+        now = FocusStop{ StopInfoPart, m_info->FocusedPart() };
+    else if (focus && m_info && IsChild(m_info->Hwnd(), focus))
+        now = FocusStop{ StopInfo };
+    else
+        for (int p = 0; slot && p < 2; ++p)
+            if (slot->panes[p] && slot->panes[p]->HasFocus())
+                now = FocusStop{ StopPane, p };
+    int at = -1;
+    if (now)
+    {
+        const auto it = std::find(stops.begin(), stops.end(), *now);
+        // (the button that had it may have gone, e.g. 后退 at the start of the history: its group's place)
+        const auto group = std::find_if(stops.begin(), stops.end(), [&](const FocusStop& s) { return s.kind == now->kind; });
+        at = static_cast<int>((it != stops.end() ? it : group != stops.end() ? group : stops.end()) - stops.begin());
+        if (at >= static_cast<int>(stops.size()))
+            at = -1;
+    }
+    const int n = static_cast<int>(stops.size());
+    const int next = at < 0 ? (back ? n - 1 : 0) : (at + (back ? -1 : 1) + n) % n;
+    const FocusStop& to = stops[next];
+    switch (to.kind)
+    {
+    case StopStrip: m_strip.FocusPart(to.id); break;
+    case StopNav: m_nav.FocusItem(to.id); break;
+    case StopAddress: FocusAddress(); break;
+    case StopSearch: FocusSearch(); break;
+    case StopCenter: m_center.FocusByKeyboard(); break;
+    case StopUpdate: m_updateBar.FocusItem(to.id); break;
+    case StopSidebar: m_sidebar->FocusByKeyboard(); break;
+    case StopSideFoot: m_sideFoot.FocusItem(to.id); break;
+    case StopCmd: m_cmd.FocusItem(to.id); break;
+    case StopFilter: SetFocus(m_filter); SendMessageW(m_filter, EM_SETSEL, 0, -1); break;
+    case StopPane:
+        if (slot->Split())
+            SetPaneFocus(to.id, false);
+        slot->panes[to.id]->FocusByKeyboard(back);
+        break;
+    case StopStatus: m_status.FocusItem(to.id); break;
+    case StopInfoPart: m_info->FocusPart(to.id); break;
+    case StopInfo: SetFocus(FirstTabStop(m_info->Hwnd())); break;
+    }
+    return true;
 }
 
 void MainWindow::FocusAddress()

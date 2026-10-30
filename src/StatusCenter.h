@@ -2,6 +2,7 @@
 #include "Operations.h"
 #include "Theme.h"
 #include "SmoothScroll.h"
+#include "ScrollOverlay.h"
 #include <map>
 
 // Files' status center: the address bar button (StatusCenter icon, or a progress ring with a count badge while
@@ -27,6 +28,8 @@ public:
     void Refresh();       // operations changed (also the timer): cards, speed, ring, taskbar
     void Toggle();        // the button: open / close the flyout
     bool Open() const { return m_flyout && IsWindowVisible(m_flyout); }
+    // The window's Tab order arrived at the button: the keyboard focus visual on, Enter / Space open the flyout
+    void FocusByKeyboard() { m_focusRing = true; SetFocus(m_button); InvalidateRect(m_button, nullptr, FALSE); }
     // Files' flyout is part of the window, which stays active under it: the window keeps its active look (tab row,
     // border) while this one has the activation, instead of turning inactive and back on every open and close
     bool KeepsWindowActive() const { return m_showing || Open(); }
@@ -71,6 +74,16 @@ private:
     int Average() const;   // Files' AverageOperationProgressValue
     enum Hit { HitNone, HitClear, HitDismiss, HitExpand, HitMore };
     Hit HitTest(POINT pt, unsigned& id) const;
+    // The flyout by keyboard (Files' flyout: 清除已完成的条目 and each card's buttons are Tab stops): the stop with
+    // the keyboard, Tab / Shift+Tab move it, Enter / Space press it
+    struct FlyStop { Hit hit; unsigned id; };
+    std::vector<FlyStop> FlyStops() const;
+    RECT StopRect(const FlyStop& s) const; // flyout client coordinates (empty if not on screen)
+    void FocusFlyStop(bool back);
+    void Activate(Hit hit, unsigned id, POINT anchor); // a click or the keyboard on a part
+    Hit m_focusHit = HitNone;
+    unsigned m_focusId = 0;
+    bool m_flyRing = false; // the flyout's focus visual (after Tab, not after a click)
     RECT ClearRect() const;
     RECT ListRect() const;
 
@@ -84,10 +97,13 @@ private:
     bool m_always = true, m_tipPending = false, m_wanted = false;
     bool m_ring = false;        // Files' ShowProgressRing: on while something runs, off once the flyout was opened
     bool m_hot = false, m_down = false, m_tracking = false, m_flyTracking = false;
+    bool m_focusRing = false; // the button has the keyboard focus from Tab (drawn until a mouse press)
     int m_hotHit = HitNone;
     unsigned m_hotId = 0, m_tipId = 0;
     int m_scroll = 0;
     SmoothScroll m_smooth; // the flyout's wheel animation
+    ScrollOverlay m_bar;   // the flyout ScrollViewer's bar (the file list's WinUI ScrollBar)
+    void ScrollTo(int offset);
     ULONGLONG m_hiddenAt = 0;   // the flyout closed (a click on the button that closed it doesn't reopen it)
     SIZE m_region{};            // the flyout's size its rounded region was made for
     bool m_showing = false;     // Toggle is showing the flyout (the window must keep its active look meanwhile)

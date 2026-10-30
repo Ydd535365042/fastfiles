@@ -73,8 +73,34 @@ struct Flyout
     int dragChannel = -1;       // 0=R 1=G 2=B 3=A while a slider thumb is being dragged
     int hotChannel = -1;
     int hotButton = 0, pressed = 0; // IDOK / IDCANCEL
+    // The keyboard while the flyout itself has the focus (WinUI ColorPicker: every slider is a Tab stop, the arrows
+    // move it): kStopChannel + channel, IDOK, IDCANCEL; 0 = the hex box
+    static constexpr int kStopChannel = 1000;
+    int focusStop = 0;
+    bool ring = false; // the focus visual: after Tab, not after a click
 
     int S(int v) const { return theme->S(v); }
+    // Tab order: hex box, R, G, B, A, 确定, 取消 (round, Shift+Tab back)
+    void FocusNext(bool back)
+    {
+        const int stops[] = { 0, kStopChannel, kStopChannel + 1, kStopChannel + 2, kStopChannel + 3, IDOK, IDCANCEL };
+        constexpr int n = static_cast<int>(std::size(stops));
+        int at = 0;
+        for (int i = 0; i < n; ++i)
+            if (stops[i] == (GetFocus() == hexEdit ? 0 : focusStop))
+                at = i;
+        focusStop = stops[(at + (back ? n - 1 : 1)) % n];
+        ring = true;
+        if (focusStop == 0)
+        {
+            SetFocus(hexEdit);
+            SendMessageW(hexEdit, EM_SETSEL, 0, -1);
+        }
+        else
+            SetFocus(hwnd);
+        InvalidateRect(hwnd, nullptr, FALSE);
+    }
+    bool Keyboard(int stop) const { return ring && focusStop == stop && GetFocus() == hwnd; }
     RECT Client() const { RECT rc{}; GetClientRect(hwnd, &rc); return rc; }
     RECT PreviewRect() const { const RECT c = Client(); return { S(kPad), S(kPad), c.right - S(kPad), S(kPad + kPreview) }; }
     RECT HexRect() const { const RECT c = Client(); const int top = S(kPad + kPreview + kGap); return { S(kPad), top, c.right - S(kPad), top + S(kHexH) }; }
@@ -204,6 +230,8 @@ struct Flyout
             FillRound(hdc, thumb, S(7), t.sliderThumb);
             FrameRound(hdc, thumb, S(7), t.controlStroke);
             FillRound(hdc, { x - S(3), cy - S(3), x + S(3), cy + S(3) }, S(3), fillColor);
+            if (Keyboard(kStopChannel + i))
+                DrawFocusVisual(hdc, t, { track.left - S(4), cy - S(5), track.right + S(4), cy + S(5) }, S(5), t.flyoutCard, &c);
         }
         // OK / Cancel (Files' Flyout has no explicit buttons, but WinUI ColorPicker's More section has no commit
         // button either; FastFiles adds Primary/Close like its other flyouts/dialogs so the alpha choice is explicit)
@@ -222,6 +250,11 @@ struct Flyout
         if (!primary)
             FrameRound(hdc, r, S(4), t.controlStroke);
         DrawLabel(hdc, label, text, r, primary ? t.textOnAccent : t.ink, DT_CENTER);
+        if (Keyboard(id))
+        {
+            const RECT c = Client();
+            DrawFocusVisual(hdc, t, r, S(4), t.flyoutCard, &c);
+        }
     }
 
     bool closing = false; // DestroyWindow below re-enters WM_ACTIVATE(WA_INACTIVE) before WM_DESTROY; ignore it
@@ -263,7 +296,13 @@ struct Flyout
             return 1;
         case WM_LBUTTONDOWN:
         {
+            ring = false; // pointer focus: no focus visual
             const int ch = ChannelAtY(pt.y);
+            if (ch >= 0)
+            {
+                focusStop = kStopChannel + ch;
+                SetFocus(hwnd);
+            }
             if (ch >= 0)
             {
                 dragChannel = ch;
@@ -315,10 +354,41 @@ struct Flyout
             }
             return 0;
         case WM_KEYDOWN:
+        {
+            const bool shift = GetKeyState(VK_SHIFT) < 0;
+            const int ch = focusStop - kStopChannel;
             if (wp == VK_ESCAPE)
                 Close(false);
+            else if (wp == VK_TAB)
+                FocusNext(shift);
+            else if ((wp == VK_RETURN || wp == VK_SPACE) && (focusStop == IDOK || focusStop == IDCANCEL))
+                Close(focusStop == IDOK);
             else if (wp == VK_RETURN)
                 Close(true);
+            else if (ch >= 0 && ch < 4)
+            {
+                // WinUI Slider keys: arrows by 1, Page Up / Down by 10 (Files' sliders: SmallChange 1), Home / End the ends
+                int v = Channel(ch);
+                switch (wp)
+                {
+                case VK_LEFT: case VK_DOWN: v -= 1; break;
+                case VK_RIGHT: case VK_UP: v += 1; break;
+                case VK_PRIOR: v += 10; break;
+                case VK_NEXT: v -= 10; break;
+                case VK_HOME: v = 0; break;
+                case VK_END: v = 255; break;
+                default: return 0;
+                }
+                ring = true;
+                SetChannel(ch, v);
+            }
+            return 0;
+        }
+        case WM_GETDLGCODE:
+            return DLGC_WANTALLKEYS;
+        case WM_SETFOCUS:
+        case WM_KILLFOCUS:
+            InvalidateRect(hwnd, nullptr, FALSE);
             return 0;
         case WM_ACTIVATE:
             // Light dismiss: losing activation to anything but our own hex box closes without accepting
@@ -435,6 +505,11 @@ bool Show(HWND owner, const Theme* theme, POINT anchor, uint32_t initial, uint32
             if (msg.message == WM_KEYDOWN && (msg.wParam == VK_RETURN || msg.wParam == VK_ESCAPE))
             {
                 f.Close(msg.wParam == VK_RETURN);
+                continue;
+            }
+            if (msg.message == WM_KEYDOWN && msg.wParam == VK_TAB)
+            {
+                f.FocusNext(GetKeyState(VK_SHIFT) < 0); // before IsDialogMessage swallows it
                 continue;
             }
             if (!IsDialogMessageW(hwnd, &msg))

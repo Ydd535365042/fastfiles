@@ -228,6 +228,9 @@ LRESULT MainWindow::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
     case WM_SIZE:
         m_strip.SetMaximized(wp == SIZE_MAXIMIZED || m_fullScreen);
         Layout();
+        // Dragging the frame: each size is painted whole before the next one (see WM_MOUSEMOVE's splitter drags)
+        if (m_moving)
+            RedrawWindow(m_hwnd, nullptr, nullptr, RDW_UPDATENOW | RDW_ALLCHILDREN);
         return 0;
     case WM_DPICHANGED:
     {
@@ -499,6 +502,16 @@ LRESULT MainWindow::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
         }
         return 0;
     case WM_MOUSEMOVE:
+    {
+        // A splitter drag: every step is one whole frame. The children and the gaps between them are painted here and
+        // now (RDW_UPDATENOW), not one by one as their WM_PAINT comes round between the next mouse moves (WM_PAINT is
+        // the queue's lowest priority: during a fast drag the list, the details pane and the cards then showed
+        // different steps, the "blocks" of a torn frame). A step that changes nothing doesn't lay anything out.
+        bool moved = false;
+        // Only moves with the button held drive a drag (Windows adds a move of its own whenever windows move under the
+        // capture; it carries the real button state)
+        if ((m_paneDragging || m_dragging || m_infoDragging) && !(wp & MK_LBUTTON))
+            return 0;
         if (m_paneDragging)
         {
             if (TabSlot* slot = ActiveSlot())
@@ -506,29 +519,41 @@ LRESULT MainWindow::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
                 const int gap = Scale(kPaneGap, m_dpi);
                 const int span = slot->horizontal ? m_viewRect.bottom - m_viewRect.top - gap : m_viewRect.right - m_viewRect.left - gap;
                 const int pos = slot->horizontal ? GET_Y_LPARAM(lp) - m_viewRect.top : GET_X_LPARAM(lp) - m_viewRect.left;
-                if (span > 0)
+                if (const int ratio = span > 0 ? std::clamp(MulDiv(pos - gap / 2, 1000, span), 150, 850) : slot->ratio; ratio != slot->ratio)
                 {
-                    slot->ratio = std::clamp(MulDiv(pos - gap / 2, 1000, span), 150, 850);
+                    slot->ratio = ratio;
                     PlacePanes();
+                    moved = true;
                 }
             }
         }
         else if (m_dragging)
         {
-            m_sidebarWidth = std::clamp(MulDiv(GET_X_LPARAM(lp), 96, static_cast<int>(m_dpi)), 160, 600);
-            Layout();
+            if (const int w = std::clamp(MulDiv(GET_X_LPARAM(lp), 96, static_cast<int>(m_dpi)), 160, 600); w != m_sidebarWidth)
+            {
+                m_sidebarWidth = w;
+                Layout();
+                moved = true;
+            }
         }
         else if (m_infoDragging)
         {
             RECT rc;
             GetClientRect(m_hwnd, &rc);
-            if (m_infoBottom)
-                m_infoHeight = std::clamp(MulDiv(rc.bottom - Scale(kCardMargin, m_dpi) - GET_Y_LPARAM(lp), 96, static_cast<int>(m_dpi)), 140, 900);
-            else
-                m_infoWidth = std::clamp(MulDiv(rc.right - Scale(kCardMargin, m_dpi) - GET_X_LPARAM(lp), 96, static_cast<int>(m_dpi)), 200, 900);
-            Layout();
+            int& size = m_infoBottom ? m_infoHeight : m_infoWidth;
+            const int next = m_infoBottom ? std::clamp(MulDiv(rc.bottom - Scale(kCardMargin, m_dpi) - GET_Y_LPARAM(lp), 96, static_cast<int>(m_dpi)), 140, 900)
+                                          : std::clamp(MulDiv(rc.right - Scale(kCardMargin, m_dpi) - GET_X_LPARAM(lp), 96, static_cast<int>(m_dpi)), 200, 900);
+            if (next != size)
+            {
+                size = next;
+                Layout();
+                moved = true;
+            }
         }
+        if (moved)
+            RedrawWindow(m_hwnd, nullptr, nullptr, RDW_UPDATENOW | RDW_ALLCHILDREN);
         return 0;
+    }
     case WM_LBUTTONUP:
         if (m_dragging || m_infoDragging || m_paneDragging)
             ReleaseCapture();

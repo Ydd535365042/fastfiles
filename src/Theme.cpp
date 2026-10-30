@@ -312,6 +312,8 @@ void Theme::SetPalette(bool darkPalette)
     dialogFooter = Mix(layer, black, dark ? 18 : 4);                    // ContentDialog's CommandSpace
     sliderThumb = dark ? RGB(0x45, 0x45, 0x45) : white;                 // ControlSolidFillColorDefault
     scrubTrack = Mix(content, overlay, dark ? 6 : 4);
+    smoke = black;           // SmokeFillColorDefault #4D000000 (the alpha is the smoke window's layering)
+    videoBackground = black; // MediaPlayerElement draws the picture on black in both themes
     checkerLight = RGB(0xD3, 0xD3, 0xD3);                               // ColorPicker's checkerboard
     checkerDark = RGB(0x80, 0x80, 0x80);
     // ColorPicker's channel sliders: the filled part in the channel's own color (the same in both themes)
@@ -356,6 +358,13 @@ void Theme::SetPalette(bool darkPalette)
     groupDivider = Mix(content, overlay, 20);
     marqueeStroke = Mix(accent, white, 20);
     focusStroke = ink; // WinUI's focus visual (FocusStrokeColorOuter: the text color)
+    // WinUI ScrollBar_themeresources.xaml: ScrollBarThumbBackground = ControlStrongFillColorDefault (#8BFFFFFF / #72000000),
+    // ScrollBarButtonArrowForegroundPointerOver = TextFillColorSecondary (#C5FFFFFF / #9E000000), ScrollBarTrackFill =
+    // AcrylicInAppFillColorDefault (its solid fallback)
+    scrollInk = overlay;
+    scrollThumbAlpha = dark ? 0x8B : 0x72;
+    scrollArrowHotAlpha = dark ? 0xC5 : 0x9E;
+    scrollTrack = flyout;
     // Cards and grid cells: light #B3FFFFFF / #FFFFFFFF / #0F000000 / #06000000 / #9E000000; dark #0DFFFFFF / #12FFFFFF /
     // #19000000 / #08FFFFFF / #C5FFFFFF
     cardFillBase = cardHoverBase = white;
@@ -528,6 +537,20 @@ void FrameRound(HDC hdc, const RECT& rc, int radius, COLORREF color)
     AddRound(path, Gdiplus::RectF(rc.left + 0.5f, rc.top + 0.5f, rc.right - rc.left - 1.0f, rc.bottom - rc.top - 1.0f), static_cast<float>(radius), true);
     Gdiplus::Pen pen(ToColor(color), 1.0f);
     g.DrawPath(&pen, &path);
+}
+
+void DrawFocusVisual(HDC hdc, const Theme& t, const RECT& rc, int radius, COLORREF under, const RECT* bounds)
+{
+    // WinUI's system focus visual: FocusVisualMargin -3 (the ring sits 3px outside the control), the 2px outer stroke in
+    // FocusStrokeColorOuter and the 1px inner stroke in what is under it. Kept inside `bounds` (the window) when given.
+    const int out = t.S(3), outer = t.S(2), inner = std::max(1, t.S(1));
+    RECT f{ rc.left - out, rc.top - out, rc.right + out, rc.bottom + out };
+    if (bounds)
+        IntersectRect(&f, &f, bounds);
+    for (int k = 0; k < outer; ++k)
+        FrameRound(hdc, { f.left + k, f.top + k, f.right - k, f.bottom - k }, std::max(0, radius + out - k), t.focusStroke);
+    for (int k = 0; k < inner; ++k)
+        FrameRound(hdc, { f.left + outer + k, f.top + outer + k, f.right - outer - k, f.bottom - outer - k }, std::max(0, radius + out - outer - k), under);
 }
 
 void FillSolid(HDC hdc, const RECT& rc, COLORREF color)
@@ -801,7 +824,7 @@ BufferedPaint::~BufferedPaint()
     if (m_buffer->bits && Backdrop::Active())
     {
         GdiFlush();
-        Backdrop::Compose(m_hwnd, m_buffer->bits, m_buffer->width, p);
+        Backdrop::Compose(m_hwnd, m_buffer->bits, m_buffer->width, p, nullptr, m_target);
     }
     BitBlt(m_target, p.left, p.top, p.right - p.left, p.bottom - p.top, m_buffer->dc, p.left, p.top, SRCCOPY);
     m_buffer.reset();

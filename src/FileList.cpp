@@ -81,10 +81,13 @@ bool FileList::Create(HWND parent)
     // The column header (details) above the items; both children of the container
     m_header = CreateWindowExW(0, WC_HEADERW, L"", WS_CHILD | HDS_HORZ | HDS_BUTTONS | HDS_FULLDRAG, 0, 0, rc.right, 0, m_hwnd, nullptr,
         GetModuleHandleW(nullptr), nullptr);
-    m_list = CreateWindowExW(0, kItemsClass, L"", WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL | WS_HSCROLL | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, 0, 0,
+    // No WS_VSCROLL / WS_HSCROLL: the scroll bars are WinUI's, drawn over the items (ScrollOverlay)
+    m_list = CreateWindowExW(0, kItemsClass, L"", WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, 0, 0,
         rc.right, rc.bottom, m_hwnd, nullptr, GetModuleHandleW(nullptr), this);
     if (!m_list || !m_header)
         return false;
+    m_barV.Attach(m_list, true, kBarTimerV, m_theme, [this](int y) { m_smoothY.Reset(y); ScrollTo(m_scroll.x, y); });
+    m_barH.Attach(m_list, false, kBarTimerH, m_theme, [this](int x) { m_smoothX.Reset(x); ScrollTo(x, m_scroll.y); });
     SetWindowSubclass(m_header, HeaderProc, kHeaderSubclass, reinterpret_cast<DWORD_PTR>(this));
     SHFILEINFOW sfi{};
     m_icons = reinterpret_cast<HIMAGELIST>(SHGetFileInfoW(L"x", FILE_ATTRIBUTE_NORMAL, &sfi, sizeof(sfi),
@@ -240,6 +243,8 @@ LRESULT CALLBACK FileList::ItemsProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
         RECT client{};
         GetClientRect(hwnd, &client);
         self->DrawItems(reinterpret_cast<HDC>(wp), client);
+        self->m_barV.Paint(reinterpret_cast<HDC>(wp), client);
+        self->m_barH.Paint(reinterpret_cast<HDC>(wp), client);
         return 0;
     }
     case WM_ERASEBKGND:
@@ -259,20 +264,22 @@ LRESULT CALLBACK FileList::ItemsProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
         return 0;
     case WM_VSCROLL: case WM_HSCROLL:
     {
+        // (no system scroll bar any more: the list's own position and page; kept for anything that sends these)
         const bool vertical = msg == WM_VSCROLL;
-        SCROLLINFO si{ sizeof(si), SIF_ALL };
-        GetScrollInfo(hwnd, vertical ? SB_VERT : SB_HORZ, &si);
+        RECT client{};
+        GetClientRect(hwnd, &client);
         const int line = self->m_theme->S(vertical ? 36 : 24);
-        int pos = si.nPos;
+        const int page = vertical ? client.bottom : client.right;
+        int pos = vertical ? self->m_scroll.y : self->m_scroll.x;
         switch (LOWORD(wp))
         {
         case SB_LINEUP: pos -= line; break;
         case SB_LINEDOWN: pos += line; break;
-        case SB_PAGEUP: pos -= static_cast<int>(si.nPage); break;
-        case SB_PAGEDOWN: pos += static_cast<int>(si.nPage); break;
-        case SB_THUMBTRACK: case SB_THUMBPOSITION: pos = si.nTrackPos; break;
+        case SB_PAGEUP: pos -= page; break;
+        case SB_PAGEDOWN: pos += page; break;
+        case SB_THUMBTRACK: case SB_THUMBPOSITION: pos = static_cast<short>(HIWORD(wp)); break;
         case SB_TOP: pos = 0; break;
-        case SB_BOTTOM: pos = si.nMax; break;
+        case SB_BOTTOM: pos = vertical ? self->m_layout.ContentHeight() : self->m_layout.ContentWidth(); break;
         default: break;
         }
         (vertical ? self->m_smoothY : self->m_smoothX).Reset(pos); // the scrollbar itself: no wheel animation to fight
@@ -356,6 +363,21 @@ LRESULT CALLBACK FileList::ItemsProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
     case WM_MOUSEMOVE:
     {
         const POINT pt{ GET_X_LPARAM(lp), GET_Y_LPARAM(lp) };
+        // The scroll bars first (dragging one, or the pointer on its strip) unless a row / band / box is being held
+        const bool listBusy = self->m_pressedCheck >= 0 || self->m_marquee || self->m_downRow >= 0;
+        if (!listBusy)
+        {
+            const bool held = self->m_barV.Captured() || self->m_barH.Captured();
+            const bool overV = self->m_barV.OnMouseMove(pt, (wp & MK_LBUTTON) != 0);
+            const bool overH = !self->m_barV.Captured() && self->m_barH.OnMouseMove(pt, (wp & MK_LBUTTON) != 0);
+            TRACKMOUSEEVENT tme{ sizeof(tme), TME_LEAVE, hwnd, 0 };
+            TrackMouseEvent(&tme);
+            if (held || overV || overH)
+            {
+                self->SetHot(-1);
+                return 0;
+            }
+        }
         if (self->m_pressedCheck >= 0)
         {
             // A row's box held down: it alone follows the mouse (no marquee, no drag)
@@ -372,8 +394,12 @@ LRESULT CALLBACK FileList::ItemsProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
         self->SetHot(-1);
         if (self->m_pressedCheck < 0)
             self->SetHotCheck(-1);
+        self->m_barV.OnMouseLeave();
+        self->m_barH.OnMouseLeave();
         return 0;
     case WM_LBUTTONUP:
+        if (self->m_barV.OnButtonUp() || self->m_barH.OnButtonUp())
+            return 0;
         if (self->m_pressedCheck >= 0)
         {
             const int row = self->m_pressedCheck;
@@ -387,6 +413,8 @@ LRESULT CALLBACK FileList::ItemsProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
         self->OnButtonUp({ GET_X_LPARAM(lp), GET_Y_LPARAM(lp) });
         return 0;
     case WM_CAPTURECHANGED:
+        self->m_barV.OnCaptureLost();
+        self->m_barH.OnCaptureLost();
         if (self->m_pressedCheck >= 0)
         {
             self->InvalidateRow(self->m_pressedCheck);
@@ -402,6 +430,11 @@ LRESULT CALLBACK FileList::ItemsProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
         }
         return 0;
     case WM_TIMER:
+        if (wp == kBarTimerV || wp == kBarTimerH)
+        {
+            (wp == kBarTimerV ? self->m_barV : self->m_barH).OnTimer(wp);
+            return 0;
+        }
         if (wp == kScrollTimer && self->m_marquee)
         {
             // The band at an edge scrolls the items under it
@@ -435,6 +468,13 @@ LRESULT CALLBACK FileList::ItemsProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
     }
     case WM_LBUTTONDOWN: case WM_RBUTTONDOWN: case WM_LBUTTONDBLCLK:
     {
+        // On a scroll bar's strip: the bar takes it (a left press drags / steps; a right one does nothing, no menu)
+        if (const POINT bp{ GET_X_LPARAM(lp), GET_Y_LPARAM(lp) }; self->m_barV.Over(bp) || self->m_barH.Over(bp))
+        {
+            if (msg != WM_RBUTTONDOWN && !self->m_barV.OnButtonDown(bp))
+                self->m_barH.OnButtonDown(bp);
+            return 0;
+        }
         if (self->m_edit)
             self->CommitRename(true);
         // Files' SelectionCheckbox takes the press (its double tap is handled too: no open)
@@ -709,6 +749,12 @@ LRESULT FileList::ListMessage(UINT msg, WPARAM wp, LPARAM lp, bool& handled)
     case LVM_ENSUREVISIBLE:
         EnsureVisible(row);
         return TRUE;
+    case LVM_GETTOPINDEX:
+    {
+        // As a stock list view: the first row at the top of the view (tests read how far it scrolled)
+        const auto rows = m_layout.RowsIn({ m_scroll.x, m_scroll.y, m_scroll.x + 1, m_scroll.y + 1 });
+        return rows.empty() ? 0 : *std::min_element(rows.begin(), rows.end());
+    }
     case LVM_GETGROUPCOUNT:
         return static_cast<LRESULT>(m_groups.size());
     case LVM_GETGROUPINFOBYINDEX:
@@ -740,24 +786,14 @@ void FileList::Relayout(bool keepFocusVisible)
     int columns = 0;
     for (int i = 0; i < kColumnCount; ++i)
         columns = std::max(columns, m_colRight[i]);
-    // Two passes: a scroll bar coming or going changes the client size
-    for (int pass = 0; pass < 2; ++pass)
     {
+        // The scroll bars sit over the items (WinUI's), so the client size doesn't depend on them: one pass
         RECT client{};
         GetClientRect(m_list, &client);
         ItemsMetrics m = Metrics(client.right);
         if (!m.wrap)
             m.rowWidth = m_mode == Mode::Column ? client.right : std::max<int>(columns, client.right); // (a column: no columns)
         m_layout.Build(Count(), m_groups, m, client.right, client.bottom);
-        // Details: both ways (the columns can be wider); cards / grid: down only; list: sideways only
-        const bool sideways = m.wrap && m.vertical;
-        SCROLLINFO si{ sizeof(si), SIF_RANGE | SIF_PAGE };
-        si.nMax = sideways ? 0 : std::max(0, m_layout.ContentHeight() - 1);
-        si.nPage = static_cast<UINT>(std::max<LONG>(0, client.bottom));
-        SetScrollInfo(m_list, SB_VERT, &si, TRUE);
-        si.nMax = std::max(0, (sideways ? m_layout.ContentWidth() : m.wrap || m_mode == Mode::Column ? 0 : columns) - 1);
-        si.nPage = static_cast<UINT>(std::max<LONG>(0, client.right));
-        SetScrollInfo(m_list, SB_HORZ, &si, TRUE);
     }
     m_inLayout = false;
     {
@@ -769,6 +805,7 @@ void FileList::Relayout(bool keepFocusVisible)
         m_smoothY.ClampTarget(std::max(0, m_layout.ContentHeight() - static_cast<int>(client.bottom)));
     }
     ScrollTo(m_scroll.x, m_scroll.y);
+    UpdateBars(); // (also when the position stayed: the ranges changed)
     PlaceHeader();
     if (keepFocusVisible && FocusedIndex() >= 0)
         EnsureVisible(FocusedIndex());
@@ -836,20 +873,54 @@ void FileList::ScrollTo(int x, int y)
     const bool moved = x != m_scroll.x;
     const int dx = x - m_scroll.x, dy = y - m_scroll.y;
     m_scroll = { x, y };
-    SetScrollPos(m_list, SB_VERT, y, TRUE);
-    SetScrollPos(m_list, SB_HORZ, x, TRUE);
     // A per-frame wheel scroll (vertical-only, smaller than a screenful): slide the already-painted rows with
     // ScrollWindowEx and repaint only the strip it exposes, instead of the whole window every tick. Correct only
     // when nothing composed (the backdrop material is fixed to the window, not the content: Paint() still repaints
     // everything then, same as before) and the move is small enough that most of the picture carries over.
     if (!Backdrop::Active() && dx == 0 && dy != 0 && std::abs(dy) < client.bottom && !m_marquee)
-        ScrollWindowEx(m_list, 0, -dy, nullptr, nullptr, nullptr, nullptr, SW_INVALIDATE | SW_ERASE);
+    {
+        // The scroll bars lie over the rows: their strips stay out of the blit (it would carry the bar's own pixels
+        // along with the rows, leaving copies of the thumb and arrows behind) and are painted again whole
+        const int bar = m_theme->S(12);
+        RECT area = client;
+        area.right -= bar;
+        if (m_barH.Needed())
+            area.bottom -= bar;
+        ScrollWindowEx(m_list, 0, -dy, &area, &area, nullptr, nullptr, SW_INVALIDATE | SW_ERASE);
+        const RECT right{ client.right - bar, 0, client.right, client.bottom };
+        InvalidateRect(m_list, &right, FALSE);
+        if (m_barH.Needed())
+        {
+            const RECT bottom{ 0, client.bottom - bar, client.right, client.bottom };
+            InvalidateRect(m_list, &bottom, FALSE);
+        }
+    }
     else
         InvalidateRect(m_list, nullptr, FALSE); // painted whole (the material doesn't scroll with the rows)
     if (m_edit)
         CommitRename(true);
     if (moved)
         PlaceHeader();
+    UpdateBars();
+}
+
+void FileList::UpdateBars()
+{
+    if (!m_list || !m_theme)
+        return;
+    RECT client{};
+    GetClientRect(m_list, &client);
+    const ItemsMetrics& m = m_layout.Metrics();
+    const bool sideways = m.wrap && m.vertical;
+    // Details: both ways (the columns can be wider); cards / grid: down only; list: sideways only (as ScrollTo clamps)
+    const int contentH = sideways ? 0 : m_layout.ContentHeight();
+    const int contentW = m.wrap && !sideways ? 0 : m_layout.ContentWidth();
+    const bool v = contentH > client.bottom, h = contentW > client.right;
+    const int bar = m_theme->S(12); // ScrollBarSize; the other bar leaves its corner free
+    const RECT stripV{ client.right - bar, 0, client.right, client.bottom - (h ? bar : 0) };
+    const RECT stripH{ 0, client.bottom - bar, client.right - (v ? bar : 0), client.bottom };
+    m_barV.Set(v ? contentH : 0, client.bottom, m_scroll.y, stripV, m_theme->S(36));
+    m_barH.Set(h ? contentW : 0, client.right, m_scroll.x, stripH, m_theme->S(24));
 }
 
 void FileList::EnsureVisible(int row)

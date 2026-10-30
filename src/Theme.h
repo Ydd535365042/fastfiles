@@ -43,6 +43,8 @@ struct Theme
     COLORREF dialogFooter = 0;                // ContentDialog's button row
     COLORREF sliderThumb = 0;                 // SliderThumbBackground over the media bar
     COLORREF scrubTrack = 0;                  // media bar track
+    COLORREF smoke = 0;                       // SmokeFillColorDefault's color (the dimmed window under a dialog)
+    COLORREF videoBackground = 0;             // MediaPlayerElement's letterbox before / around the picture
     COLORREF checkerLight = 0, checkerDark = 0; // transparency checkerboard under color swatches
     COLORREF channelRed = 0, channelGreen = 0, channelBlue = 0; // the color picker's R / G / B slider fills
     COLORREF glyphMask = 0;                   // white glyph drawn into a mask bitmap (recolored afterwards)
@@ -61,6 +63,10 @@ struct Theme
     int checkFillPct[3]{}, checkStrokePct[2]{}, checkAccentPct[3]{};
     int checkGlyphPressedPct = 0;             // the check mark pressed: TextOnAccentFillColorSecondary's alpha
     COLORREF groupDivider = 0, marqueeStroke = 0, focusStroke = 0; // the list's group header line, rubber band, focus frame
+    // WinUI ScrollBar (ScrollOverlay): thumb and arrows in ControlStrongFillColorDefault (scrollInk at scrollThumbAlpha), a
+    // hovered arrow in TextFillColorSecondary (scrollArrowHotAlpha), the expanded track in AcrylicInAppFillColorDefault
+    COLORREF scrollInk = 0, scrollTrack = 0;
+    int scrollThumbAlpha = 0, scrollArrowHotAlpha = 0;
     // The own list's cards / grid (GridLayoutPage): CardBackgroundFillColorDefault, App.Theme.CardBackgroundFillColorTertiary
     // (hover), CardStrokeColorDefault, SystemFillColorNeutralBackground (the cards' picture box), TextFillColorSecondary;
     // each a base and an alpha over what's under it
@@ -135,6 +141,8 @@ COLORREF FadeFill(COLORREF base, COLORREF hover, COLORREF pressed, int level);
 // Anti-aliased shapes through GDI+; text stays on GDI so ClearType and font linking keep working
 void FillRound(HDC hdc, const RECT& rc, int radius, COLORREF color);
 void FrameRound(HDC hdc, const RECT& rc, int radius, COLORREF color);
+// WinUI's keyboard focus visual around a control's rect (2px focus stroke 3px outside, 1px inner stroke in `under`)
+void DrawFocusVisual(HDC hdc, const Theme& t, const RECT& rc, int radius, COLORREF under, const RECT* bounds = nullptr);
 void FillTopRound(HDC hdc, const RECT& rc, int radius, COLORREF color);
 void FillSolid(HDC hdc, const RECT& rc, COLORREF color);
 // A GDI pattern (plain fills only; `paint` draws at (0,0)-relative coordinates) clipped to a rounded rect, its

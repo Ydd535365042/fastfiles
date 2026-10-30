@@ -1,6 +1,7 @@
 #pragma once
 #include "Theme.h"
 #include "SmoothScroll.h"
+#include "ScrollOverlay.h"
 #include <memory>
 
 class MediaPreview;
@@ -30,6 +31,13 @@ public:
     Page CurrentPage() const { return m_page; }
     void SetPage(Page page);
 
+    // Keyboard: the pane's own Tab stops before its preview's controls. Files' 详情 / 预览 RadioButtons are one stop
+    // (the checked one; Left / Right switch), then the close button, then the tags row's edit button (Details page).
+    enum Part { PartPages = 0, PartClose = 1, PartTags = 2 };
+    std::vector<int> FocusParts() const;
+    void FocusPart(int part);
+    int FocusedPart() const; // -1 when the pane window itself hasn't the focus
+
     // One item (selected item, or the folder itself when nothing is selected)
     void ShowItem(PCIDLIST_ABSOLUTE pidl);
     // Several selected items: count and total size only
@@ -53,8 +61,8 @@ public:
     };
 
 private:
-    static constexpr UINT kMsgResult = WM_APP + 30;
-    static constexpr UINT_PTR kHandlerTimer = 1, kResizeTimer = 2;
+    static constexpr UINT kMsgResult = WM_APP + 30, kMsgReveal = WM_APP + 31;
+    static constexpr UINT_PTR kHandlerTimer = 1, kResizeTimer = 2, kBarTimer = 3;
 
     static LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
     LRESULT HandleMessage(UINT msg, WPARAM wp, LPARAM lp);
@@ -79,6 +87,10 @@ private:
     HWND m_list = nullptr;    // list view: archive contents
     HWND m_host = nullptr;    // preview handler parent
     HWND m_rich = nullptr;    // read-only RichEdit: Markdown, code, .rtf
+    // m_text / m_list / m_rich live in m_clip, one system scroll bar's width wider / taller than it: their own bars are
+    // cut off, NativeBars draws the WinUI ones (TextPreview's / CodePreview's / the archive list's ScrollViewer)
+    HWND m_clip = nullptr;
+    NativeBars m_textBars, m_richBars, m_listBars;
     MediaPreview* m_media = nullptr; // owned; deleted in Destroy (incomplete type here)
     std::wstring m_mediaPath; // what m_media has loaded
     std::string m_rtf;        // what m_rich shows (RTF bytes)
@@ -98,9 +110,18 @@ private:
     UniquePidl m_pidl;
     unsigned m_generation = 0;
     int m_hotTab = -1; // 0 details, 1 preview, 2 close
+    int m_focusPart = -1;
+    bool m_ring = false;      // the focus visual: after keyboard focus only
+    bool m_revealTags = false; // the tags row was focused: scrolled into view once it's laid out (Paint)
+    RECT m_tagsButton{};      // the 添加标签 / 编辑 chip (client coordinates)
+    void Press(int part);
+    void NameFocus();
     bool m_tracking = false;
     int m_scroll = 0;
     SmoothScroll m_smooth; // the Details page body's wheel animation
+    ScrollOverlay m_bar;   // RootPropertiesScrollViewer's vertical bar (the same WinUI ScrollBar as the file list's)
+    void ScrollTo(int offset);
+    void UpdateBar();
 
     // Current content (from the worker)
     Kind m_kind = Kind::None;

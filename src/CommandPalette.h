@@ -1,6 +1,7 @@
 #pragma once
 #include "Theme.h"
 #include "SmoothScroll.h"
+#include "ScrollOverlay.h"
 
 // Files' command palette lives in the omnibar: type ">" (or press Ctrl+Shift+P) and the address box filters
 // commands. This is the list under it; the address edit keeps the focus, the list never activates.
@@ -46,5 +47,7 @@ private:
     int m_hot = -1;
     int m_scroll = 0;         // first visible row (SmoothScroll::Value: fractional rows while animating)
     SmoothScroll m_smooth;    // the wheel's animation (Move / Filter jump straight there: m_smooth.Reset)
+    ScrollOverlay m_bar;      // the suggestion list's ScrollViewer bar (in rows; the file list's WinUI ScrollBar)
+    void UpdateBar();
     RECT m_below{};
 };

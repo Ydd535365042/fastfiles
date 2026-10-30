@@ -1,6 +1,7 @@
 #pragma once
 #include "Theme.h"
 #include "SmoothScroll.h"
+#include "ScrollOverlay.h"
 #include <functional>
 
 // One line on a settings page. Values are read through the callbacks every paint, so the page always shows
@@ -60,6 +61,10 @@ public:
 
     bool Create(HWND parent, const Theme* theme, int page); // child window, hidden until the tab shows it
     HWND Hwnd() const { return m_hwnd; }
+    // Tab arrived: forward the navigation pane (Files' SidebarView: one stop, the arrows move, Enter opens), Shift+Tab
+    // the last card. TabWithin: navigation -> the cards -> out; false when Tab has run past the page's first / last stop.
+    void FocusByKeyboard(bool back);
+    bool TabWithin(bool back); // Tab / Shift+Tab inside the page: false at its end
     int Page() const { return m_page; }
     bool Capturing() const { return m_capture >= 0; } // recording a shortcut: every key is the page's
     // Keys the page takes before the app's shortcuts: all of them while a dropdown is open, F4 on a ComboBox
@@ -109,7 +114,6 @@ private:
     void MoveFocus(int delta);
     void EnsureVisible(int cell);
     void ScrollTo(int offset);
-    bool ThumbRect(RECT& thumb) const;
     void Activate(int cell, Part part, int tile = -1);
     void OpenDropdown(int cell);
     void CloseDropdown();
@@ -146,6 +150,9 @@ private:
     int m_scroll = 0;
     SmoothScroll m_smooth; // the page body's wheel animation (the dropdown popup's own scroll stays immediate)
     int m_navHot = -1;
+    bool m_navFocus = false; // the keyboard is on the navigation pane (m_navKey), not on a card
+    int m_navKey = 0;        // the navigation item with the keyboard (the arrows move it, Enter opens its page)
+    void MoveNav(int to);
     int m_hot = -1;
     Part m_hotPart = Part::None;
     int m_pressed = -1;
@@ -153,8 +160,7 @@ private:
     int m_focus = -1;
     bool m_keyboard = false;
     bool m_tracking = false;
-    bool m_thumbDrag = false;
-    int m_thumbGrab = 0;
+    ScrollOverlay m_bar;           // the content ScrollViewer's vertical bar (the same WinUI ScrollBar as the file list's)
     int m_capture = -1;            // cell waiting for a key press
     int m_bubble = -1;             // cell whose explanation bubble is open
     std::wstring m_messageCommand; // shortcut row showing m_message (survives Rebuild)

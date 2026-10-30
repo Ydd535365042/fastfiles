@@ -13,7 +13,7 @@ constexpr int kNavWidth = 240, kNavTop = 12 + 28 + 4 + 8, kNavItem = 32, kNavGap
 constexpr wchar_t kClearGlyph[] = L"\xE711"; // Cancel
 // WinUI ToggleSwitch knob ~ ControlFasterAnimationDuration, page EntranceThemeTransition, NavigationView indicator
 constexpr int kToggleMs = 167, kPageMs = 250, kNavMs = 200, kPageRise = 24;
-constexpr UINT_PTR kAnimTimer = 1;
+constexpr UINT_PTR kAnimTimer = 1, kBarTimer = 2;
 
 HFONT Derive(HFONT base, int px, int weight)
 {
@@ -140,7 +140,10 @@ bool SettingsView::Create(HWND parent, const Theme* theme, int page)
     if (!CreateWindowExW(0, kClass, Tr(L"设置"), WS_CHILD | WS_CLIPCHILDREN | WS_TABSTOP, 0, 0, 0, 0, parent, nullptr,
             GetModuleHandleW(nullptr), this))
         return false;
+    m_bar.Attach(m_hwnd, true, kBarTimer, m_theme, [this](int y) { m_smooth.Reset(y); ScrollTo(y); });
+    m_navKey = m_page;
     Relayout();
+    PublishDropdown();
     return true;
 }
 
@@ -172,10 +175,12 @@ void SettingsView::ShowPage(int page)
     }
     m_toggleRow = -1;
     m_page = page;
+    m_navKey = page;
     m_scroll = 0;
     m_focus = -1;
     m_message.clear();
     Layout();
+    PublishDropdown();
     InvalidateRect(m_hwnd, nullptr, FALSE);
 }
 
@@ -402,6 +407,11 @@ void SettingsView::ScrollTo(int offset)
         m_scroll = offset;
         InvalidateRect(m_hwnd, nullptr, FALSE);
     }
+    if (m_hwnd && m_theme)
+    {
+        const RECT strip{ client.right - m_theme->S(12), client.top, client.right, client.bottom };
+        m_bar.Set(max > 0 ? m_content : 0, client.bottom - client.top, m_scroll, strip, m_theme->S(32));
+    }
 }
 
 void SettingsView::EnsureVisible(int cell)
@@ -422,17 +432,51 @@ void SettingsView::EnsureVisible(int cell)
     ScrollTo(y);
 }
 
-bool SettingsView::ThumbRect(RECT& thumb) const
+void SettingsView::FocusByKeyboard(bool back)
 {
-    const RECT client = ContentClient();
-    const int view = client.bottom - client.top;
-    if (m_content <= view || view <= 0)
+    m_focus = -1;
+    m_keyboard = true;
+    SetFocus(m_hwnd);
+    if (back)
+    {
+        m_navFocus = false;
+        if (!TabWithin(true))
+            MoveNav(m_page); // a page without cards: the navigation pane
+    }
+    else
+        MoveNav(m_page);
+}
+
+bool SettingsView::TabWithin(bool back)
+{
+    // The navigation pane, then the cards (Files: SidebarView's pane, then its InnerContent). Is there a focusable
+    // stop beyond the current one in that direction? Otherwise Tab leaves the page.
+    if (!back && !m_navFocus && m_focus < 0)
+    {
+        MoveNav(m_page); // nothing in the page has the keyboard yet (just opened): its first stop
+        return true;
+    }
+    const bool fromNav = m_navFocus;
+    if (fromNav && back)
         return false;
-    const int track = view - m_theme->S(4);
-    const int h = std::max(m_theme->S(32), MulDiv(track, view, m_content));
-    const int top = client.top + m_theme->S(2) + MulDiv(track - h, m_scroll, m_content - view);
-    thumb = { client.right - m_theme->S(6), top, client.right - m_theme->S(2), top + h };
-    return true;
+    const int n = static_cast<int>(m_cells.size());
+    const int delta = back ? -1 : 1;
+    for (int i = (fromNav || m_focus < 0 ? (back ? n : -1) : m_focus) + delta; i >= 0 && i < n; i += delta)
+        if (Focusable(i))
+        {
+            if (fromNav)
+                m_focus = -1;
+            m_navFocus = false;
+            MoveFocus(delta);
+            PublishDropdown();
+            return true;
+        }
+    if (back)
+    {
+        MoveNav(m_page); // Shift+Tab from the first card: the navigation pane, on the page shown
+        return true;
+    }
+    return false; // (from the navigation pane of a page without cards: Tab leaves from there)
 }
 
 void SettingsView::MoveFocus(int delta)
@@ -475,6 +519,9 @@ void SettingsView::Paint(HDC hdc, const RECT& rc)
         }
         else if (hot)
             FillRound(hdc, box, t.S(4), t.subtleHover);
+        // The keyboard's item: the main sidebar's focus visual (SidebarItem ElementGrid UseSystemFocusVisuals)
+        if (m_navFocus && m_keyboard && i == m_navKey && GetFocus() == m_hwnd)
+            FrameRound(hdc, box, t.S(4), t.ink);
         // [3 indicator][icon margin 8][16 icon][text margin 12]
         const int iconX = box.left + t.S(1 + 3 + 8);
         if (m_pages[i].glyph)
@@ -533,9 +580,7 @@ void SettingsView::Paint(HDC hdc, const RECT& rc)
         paintPage(hdc);
     if (mem)
         DeleteDC(mem);
-    RECT thumb;
-    if ((m_tracking || m_thumbDrag) && ThumbRect(thumb))
-        FillRound(hdc, thumb, t.S(2), Mix(t.muted, t.content, 30));
+    m_bar.Paint(hdc, rc);
     PaintDropdown(hdc);
 }
 
@@ -574,7 +619,7 @@ void SettingsView::PaintRow(HDC hdc, const Cell& cell, int offsetY)
     else
         FillRound(hdc, r, t.S(4), face);
     FrameRound(hdc, r, t.S(4), t.cardStroke);
-    if (index == m_focus && m_keyboard && GetFocus() == m_hwnd)
+    if (index == m_focus && !m_navFocus && m_keyboard && GetFocus() == m_hwnd)
         FrameRound(hdc, { r.left - t.S(2), r.top - t.S(2), r.right + t.S(2), r.bottom + t.S(2) }, t.S(6), t.ink);
 
     // Label and detail (or this row's message); swatch rows (tags) start with their color, cards with an icon
@@ -1003,7 +1048,20 @@ void SettingsView::PublishDropdown()
         text += L"\tdropdown " + std::to_wstring(n) + L" " + std::to_wstring(m_drop.current) + L" " + std::to_wstring(m_drop.hot) + L" " +
             std::to_wstring(m_drop.scroll / std::max(1, m_drop.itemH)) + L" " + std::to_wstring(m_drop.visible);
     }
+    // The page shown and, while the keyboard is on the navigation pane, its item
+    text += L"\tpage " + std::to_wstring(m_page);
+    if (m_navFocus)
+        text += L"\tnav " + std::to_wstring(m_navKey);
     SetWindowTextW(m_hwnd, text.c_str());
+}
+
+void SettingsView::MoveNav(int to)
+{
+    m_navFocus = m_keyboard = true;
+    m_navKey = std::clamp(to, 0, std::max(0, static_cast<int>(m_pages.size()) - 1));
+    m_focus = -1;
+    PublishDropdown();
+    InvalidateRect(m_hwnd, nullptr, FALSE);
 }
 
 void SettingsView::PaintDropdown(HDC hdc)
@@ -1191,6 +1249,11 @@ LRESULT SettingsView::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
             }
             return 0;
         }
+        if (wp == kBarTimer)
+        {
+            m_bar.OnTimer(wp);
+            return 0;
+        }
         break;
     case WM_PAINT:
     {
@@ -1204,19 +1267,16 @@ LRESULT SettingsView::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
         {
             TRACKMOUSEEVENT tme{ sizeof(tme), TME_LEAVE, m_hwnd, 0 };
             m_tracking = TrackMouseEvent(&tme) != FALSE;
-            InvalidateRect(m_hwnd, nullptr, FALSE);
         }
-        if (m_thumbDrag)
+        // The scroll bar first (dragging it, or the pointer on its strip) unless a card or the dropdown has the mouse
+        if (const bool held = m_bar.Captured(); m_drop.cell < 0 && m_pressed < 0 &&
+            (m_bar.OnMouseMove(pt, (wp & MK_LBUTTON) != 0) || held))
         {
-            const RECT client = ContentClient();
-            RECT thumb;
-            if (ThumbRect(thumb))
+            if (m_hot >= 0 || m_navHot >= 0)
             {
-                const int view = client.bottom - client.top;
-                const int track = view - m_theme->S(4) - (thumb.bottom - thumb.top);
-                const int offset = track > 0 ? MulDiv(pt.y - client.top - m_theme->S(2) - m_thumbGrab, m_content - view, track) : 0;
-                m_smooth.Reset(offset); // dragging the thumb itself: no wheel animation to fight it
-                ScrollTo(offset);
+                m_hot = m_navHot = m_hotTile = -1;
+                m_hotPart = Part::None;
+                InvalidateRect(m_hwnd, nullptr, FALSE);
             }
             return 0;
         }
@@ -1247,6 +1307,7 @@ LRESULT SettingsView::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
     }
     case WM_MOUSELEAVE:
         m_tracking = false;
+        m_bar.OnMouseLeave();
         m_hot = m_navHot = -1;
         m_hotPart = Part::None;
         InvalidateRect(m_hwnd, nullptr, FALSE);
@@ -1271,18 +1332,23 @@ LRESULT SettingsView::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
     {
         SetFocus(m_hwnd);
         m_keyboard = false;
-        RECT thumb;
-        if (ThumbRect(thumb) && pt.x >= thumb.left - m_theme->S(6))
+        if (m_bar.Over(pt))
         {
-            m_thumbDrag = true;
-            m_thumbGrab = PtInRect(&thumb, pt) ? pt.y - thumb.top : (thumb.bottom - thumb.top) / 2;
-            SetCapture(m_hwnd);
+            SetBubble(-1);
+            m_bar.OnButtonDown(pt);
             return 0;
         }
         if (const int nav = NavAt(pt); nav >= 0)
         {
+            // A click opens the page; the keyboard goes on with its cards (only Tab brings it to the navigation pane)
+            m_navFocus = false;
             ShowPage(nav);
             return 0;
+        }
+        if (m_navFocus)
+        {
+            m_navFocus = false;
+            PublishDropdown();
         }
         EndCapture();
         m_pressed = CellAt(pt, &m_pressedPart, &m_pressedTile);
@@ -1316,11 +1382,12 @@ LRESULT SettingsView::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
             }
             return 0;
         }
+        if (m_bar.OnButtonUp())
+            return 0;
         const int pressed = m_pressed, pressedTile = m_pressedTile;
         const Part part = m_pressedPart;
         m_pressed = m_pressedTile = -1;
         m_pressedPart = Part::None;
-        m_thumbDrag = false;
         if (GetCapture() == m_hwnd)
             ReleaseCapture();
         InvalidateRect(m_hwnd, nullptr, FALSE);
@@ -1333,8 +1400,8 @@ LRESULT SettingsView::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
     case WM_CAPTURECHANGED:
         if (reinterpret_cast<HWND>(lp) != m_hwnd)
         {
+            m_bar.OnCaptureLost();
             m_pressed = -1;
-            m_thumbDrag = false;
             CloseDropdown();
         }
         return 0;
@@ -1411,11 +1478,28 @@ LRESULT SettingsView::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
                 return 0;
             }
         }
+        // The navigation pane (Files' SidebarItem: the arrows move between the items, Enter opens the page)
+        if (m_navFocus && vk != VK_TAB)
+        {
+            const int last = static_cast<int>(m_pages.size()) - 1;
+            switch (vk)
+            {
+            case VK_UP: MoveNav(m_navKey - 1); return 0;
+            case VK_DOWN: MoveNav(m_navKey + 1); return 0;
+            case VK_HOME: MoveNav(0); return 0;
+            case VK_END: MoveNav(last); return 0;
+            case VK_RETURN: case VK_SPACE:
+                ShowPage(m_navKey);
+                MoveNav(m_navKey);
+                return 0;
+            }
+            break;
+        }
         switch (vk)
         {
-        case VK_UP: MoveFocus(-1); return 0;
-        case VK_DOWN: MoveFocus(1); return 0;
-        case VK_TAB: MoveFocus(shift ? -1 : 1); return 0;
+        case VK_UP: MoveFocus(-1); PublishDropdown(); return 0;
+        case VK_DOWN: MoveFocus(1); PublishDropdown(); return 0;
+        case VK_TAB: TabWithin(shift); return 0;
         case VK_HOME: m_focus = -1; MoveFocus(1); ScrollTo(0); return 0;
         case VK_END: m_focus = -1; MoveFocus(-1); return 0;
         case VK_PRIOR: case VK_NEXT:

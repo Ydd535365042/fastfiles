@@ -45,6 +45,7 @@ bool Sidebar::Create(HWND parent, int id, const Theme* theme)
     if (!registered || !CreateWindowExW(0, kClass, Tr(L"侧边栏"), WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_TABSTOP, 0, 0, 0, 0,
             parent, MenuId(id), GetModuleHandleW(nullptr), this))
         return false;
+    m_bar.Attach(m_hwnd, true, kBarTimer, m_theme, [this](int y) { m_smooth.Reset(y); ScrollTo(y); });
 
     SHFILEINFOW sfi{};
     m_images = reinterpret_cast<HIMAGELIST>(SHGetFileInfoW(L".txt", FILE_ATTRIBUTE_NORMAL, &sfi, sizeof(sfi),
@@ -190,6 +191,11 @@ void Sidebar::ScrollTo(int offset)
         m_scroll = offset;
         InvalidateRect(m_hwnd, nullptr, FALSE);
     }
+    if (m_hwnd && m_theme)
+    {
+        const RECT strip{ client.right - m_theme->S(12), 0, client.right, client.bottom };
+        m_bar.Set(maxScroll > 0 ? ContentHeight() : 0, client.bottom, m_scroll, strip, m_theme->S(32));
+    }
 }
 
 void Sidebar::EnsureVisible(int row)
@@ -208,21 +214,6 @@ void Sidebar::EnsureVisible(int row)
         return;
     m_smooth.Reset(y); // a key / selection jump, not the wheel: goes straight there
     ScrollTo(y);
-}
-
-bool Sidebar::ThumbRect(RECT& thumb) const
-{
-    RECT client;
-    GetClientRect(m_hwnd, &client);
-    const int content = ContentHeight();
-    if (content <= client.bottom || client.bottom <= 0)
-        return false;
-    const int track = client.bottom - m_theme->S(4);
-    const int h = std::max(m_theme->S(24), MulDiv(track, client.bottom, content));
-    const int top = m_theme->S(2) + MulDiv(track - h, m_scroll, content - client.bottom);
-    const int w = (m_overBar || m_thumbDrag) ? m_theme->S(6) : m_theme->S(3);
-    thumb = { client.right - m_theme->S(2) - w, top, client.right - m_theme->S(2), top + h };
-    return true;
 }
 
 void Sidebar::SetHot(int row)
@@ -386,9 +377,7 @@ void Sidebar::Paint(HDC hdc, const RECT& rc)
         const int y = m_insertY - m_scroll;
         FillRound(hdc, { t.S(10), y - t.S(1), client.right - t.S(10), y + t.S(2) }, t.S(1), t.accent);
     }
-    RECT thumb;
-    if ((m_tracking || m_thumbDrag || m_dragData) && ThumbRect(thumb))
-        FillRound(hdc, thumb, t.S(3), Mix(t.muted, t.layer, m_overBar || m_thumbDrag ? 20 : 45));
+    m_bar.Paint(hdc, rc);
 }
 
 LRESULT CALLBACK Sidebar::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
@@ -437,30 +426,16 @@ LRESULT Sidebar::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
         {
             TRACKMOUSEEVENT tme{ sizeof(tme), TME_LEAVE, m_hwnd, 0 };
             m_tracking = TrackMouseEvent(&tme) != FALSE;
-            InvalidateRect(m_hwnd, nullptr, FALSE); // overlay scrollbar appears
         }
-        if (m_thumbDrag)
+        // The scroll bar first (dragging it, or the pointer on its strip) unless a row is being held
+        const bool held = m_bar.Captured();
+        if (m_pressed < 0 && m_chevronPressed < 0 && m_ejectPressed < 0 &&
+            (m_bar.OnMouseMove(pt, (wp & MK_LBUTTON) != 0) || held))
         {
-            RECT client, thumb;
-            GetClientRect(m_hwnd, &client);
-            if (ThumbRect(thumb))
-            {
-                const int track = client.bottom - m_theme->S(4) - (thumb.bottom - thumb.top);
-                const int range = ContentHeight() - client.bottom;
-                const int offset = track > 0 ? MulDiv(pt.y - m_theme->S(2) - m_thumbGrab, range, track) : 0;
-                m_smooth.Reset(offset); // dragging the thumb itself: no wheel animation to fight it
-                ScrollTo(offset);
-            }
+            SetHot(-1);
             return 0;
         }
-        RECT thumb;
-        const bool overBar = ThumbRect(thumb) && pt.x >= thumb.right - m_theme->S(10);
-        if (overBar != m_overBar)
-        {
-            m_overBar = overBar;
-            InvalidateRect(m_hwnd, nullptr, FALSE);
-        }
-        SetHot(overBar ? -1 : RowAt(pt.y));
+        SetHot(RowAt(pt.y));
         if (const bool ejectHot = m_hot >= 0 && HasEject(m_hot) && [&] { const RECT er = EjectRect(m_hot); return PtInRect(&er, pt) != FALSE; }();
             ejectHot != m_ejectHot)
         {
@@ -481,7 +456,7 @@ LRESULT Sidebar::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
     }
     case WM_MOUSELEAVE:
         m_tracking = false;
-        m_overBar = false;
+        m_bar.OnMouseLeave();
         SetHot(-1);
         InvalidateRect(m_hwnd, nullptr, FALSE);
         return 0;
@@ -490,13 +465,9 @@ LRESULT Sidebar::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
     {
         SetFocus(m_hwnd);
         m_keyboardFocus = false;
-        RECT thumb;
-        if (ThumbRect(thumb) && pt.x >= thumb.right - m_theme->S(10))
+        if (m_bar.Over(pt))
         {
-            m_thumbDrag = true;
-            m_thumbGrab = PtInRect(&thumb, pt) ? pt.y - thumb.top : (thumb.bottom - thumb.top) / 2;
-            SetCapture(m_hwnd);
-            SendMessageW(m_hwnd, WM_MOUSEMOVE, wp, lp);
+            m_bar.OnButtonDown(pt);
             return 0;
         }
         const int row = RowAt(pt.y);
@@ -539,6 +510,8 @@ LRESULT Sidebar::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
     }
     case WM_LBUTTONUP:
     {
+        if (m_bar.OnButtonUp())
+            return 0;
         const int pressed = m_pressed, chevron = m_chevronPressed, eject = m_ejectPressed;
         m_pressed = m_chevronPressed = m_ejectPressed = -1;
         if (GetCapture() == m_hwnd)
@@ -564,6 +537,8 @@ LRESULT Sidebar::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
         return 0;
     case WM_RBUTTONUP:
     {
+        if (m_bar.Over(pt))
+            return 0; // the scroll bar's strip has no menu (as in the file list)
         POINT screen = pt;
         ClientToScreen(m_hwnd, &screen);
         const int row = RowAt(pt.y);
@@ -587,11 +562,7 @@ LRESULT Sidebar::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
         return 0;
     }
     case WM_CAPTURECHANGED:
-        if (m_thumbDrag)
-        {
-            m_thumbDrag = false;
-            InvalidateRect(m_hwnd, nullptr, FALSE);
-        }
+        m_bar.OnCaptureLost();
         m_pressed = m_chevronPressed = m_ejectPressed = -1;
         return 0;
     case WM_MOUSEWHEEL:
@@ -683,7 +654,9 @@ LRESULT Sidebar::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
         InvalidateRect(m_hwnd, nullptr, FALSE);
         return 0;
     case WM_TIMER:
-        if (wp == kRefreshTimer)
+        if (wp == kBarTimer)
+            m_bar.OnTimer(wp);
+        else if (wp == kRefreshTimer)
         {
             KillTimer(m_hwnd, kRefreshTimer);
             if (m_pendingPins)

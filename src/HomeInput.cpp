@@ -185,26 +185,24 @@ LRESULT HomeView::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
         {
             TRACKMOUSEEVENT tme{ sizeof(tme), TME_LEAVE, m_hwnd, 0 };
             m_tracking = TrackMouseEvent(&tme) != FALSE;
-            InvalidateRect(m_hwnd, nullptr, FALSE); // overlay scrollbar appears
         }
-        if (m_thumbDrag)
+        // The scroll bar first (dragging it, or the pointer on its strip) unless a card is being held
+        const bool held = m_bar.Captured();
+        if (m_pressed < 0 && (m_bar.OnMouseMove(pt, (wp & MK_LBUTTON) != 0) || held))
         {
-            RECT client, thumb;
-            GetClientRect(m_hwnd, &client);
-            if (ThumbRect(thumb))
-            {
-                const int track = client.bottom - m_theme->S(4) - (thumb.bottom - thumb.top);
-                const int offset = track > 0 ? MulDiv(pt.y - m_theme->S(2) - m_thumbGrab, m_content - client.bottom, track) : 0;
-                m_smooth.Reset(offset); // dragging the thumb itself: no wheel animation to fight it
-                ScrollTo(offset);
-            }
+            SetHot(-1);
             return 0;
         }
         SetHot(CellAt(pt));
         return 0;
     }
+    case WM_TIMER:
+        if (wp == kBarTimer)
+            m_bar.OnTimer(wp);
+        return 0;
     case WM_MOUSELEAVE:
         m_tracking = false;
+        m_bar.OnMouseLeave();
         SetHot(-1);
         InvalidateRect(m_hwnd, nullptr, FALSE);
         return 0;
@@ -213,13 +211,10 @@ LRESULT HomeView::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
     {
         SetFocus(m_hwnd);
         m_keyboardFocus = false;
-        RECT thumb;
-        if (msg == WM_LBUTTONDOWN && ThumbRect(thumb) && pt.x >= thumb.right - m_theme->S(10))
+        if (m_bar.Over(pt))
         {
-            m_thumbDrag = true;
-            m_thumbGrab = PtInRect(&thumb, pt) ? pt.y - thumb.top : (thumb.bottom - thumb.top) / 2;
-            SetCapture(m_hwnd);
-            SendMessageW(m_hwnd, WM_MOUSEMOVE, wp, lp);
+            if (msg == WM_LBUTTONDOWN)
+                m_bar.OnButtonDown(pt);
             return 0;
         }
         m_pressed = CellAt(pt);
@@ -234,22 +229,22 @@ LRESULT HomeView::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
     case WM_LBUTTONUP:
     case WM_MBUTTONUP:
     {
+        if (msg == WM_LBUTTONUP && m_bar.OnButtonUp())
+            return 0;
         const int pressed = m_pressed;
-        const bool dragging = m_thumbDrag;
         if (GetCapture() == m_hwnd)
             ReleaseCapture();
         m_pressed = -1;
-        m_thumbDrag = false;
         InvalidateRect(m_hwnd, nullptr, FALSE);
-        if (!dragging && pressed >= 0 && CellAt(pt) == pressed)
+        if (pressed >= 0 && CellAt(pt) == pressed)
             Activate(pressed, msg == WM_MBUTTONUP || (wp & MK_CONTROL) ? OpenMode::NewTab : OpenMode::Here);
         return 0;
     }
     case WM_CAPTURECHANGED:
         if (reinterpret_cast<HWND>(lp) != m_hwnd)
         {
+            m_bar.OnCaptureLost();
             m_pressed = -1;
-            m_thumbDrag = false;
             InvalidateRect(m_hwnd, nullptr, FALSE);
         }
         return 0;
@@ -269,6 +264,8 @@ LRESULT HomeView::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
         {
             POINT client = screen;
             ScreenToClient(m_hwnd, &client);
+            if (m_bar.Over(client))
+                return 0; // the scroll bar's strip has no menu (as in the file list)
             cell = CellAt(client);
         }
         ShowMenu(cell, screen);
@@ -347,6 +344,16 @@ LRESULT HomeView::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
     }
     return DefWindowProcW(m_hwnd, msg, wp, lp);
 }
+void HomeView::FocusByKeyboard()
+{
+    m_keyboardFocus = true;
+    SetFocus(m_hwnd);
+    // Files: Tab into Home lands on the first widget's header; afterwards it comes back to where it was
+    if (m_focus < 0 || m_focus >= static_cast<int>(m_cells.size()) || !Interactive(m_cells[m_focus].item))
+        MoveFocus(VK_HOME);
+    InvalidateRect(m_hwnd, nullptr, FALSE);
+}
+
 void HomeView::MoveFocus(int key)
 {
     const int n = static_cast<int>(m_cells.size());

@@ -59,20 +59,46 @@ void RoundFrame::Attach(HWND window, bool resizable)
 
 void RoundFrame::Detach()
 {
-    if (m_frame)
-    {
-        SetWindowLongPtrW(m_frame, GWLP_USERDATA, 0);
-        DestroyWindow(m_frame);
-    }
-    if (m_cap)
-        DestroyWindow(m_cap);
+    for (Piece& p : m_frame)
+        if (p.hwnd)
+        {
+            SetWindowLongPtrW(p.hwnd, GWLP_USERDATA, 0);
+            DestroyWindow(p.hwnd);
+        }
+    for (Piece& p : m_cap)
+        if (p.hwnd)
+            DestroyWindow(p.hwnd);
     if (m_anchor)
         DestroyWindow(m_anchor);
     if (m_capRegion)
         DeleteObject(m_capRegion);
-    m_frame = m_anchor = m_cap = nullptr;
+    for (Piece& p : m_frame)
+        p = {};
+    for (Piece& p : m_cap)
+        p = {};
+    m_anchor = nullptr;
     m_capRegion = nullptr;
     m_window = nullptr;
+}
+
+bool RoundFrame::Fresh(const Piece& piece, SIZE key) const
+{
+    return piece.painted.cx == key.cx && piece.painted.cy == key.cy && piece.active == m_active && piece.version == m_lookVersion;
+}
+
+void RoundFrame::Painted(Piece& piece, SIZE key)
+{
+    piece.painted = key;
+    piece.active = m_active;
+    piece.version = m_lookVersion;
+}
+
+void RoundFrame::HidePieces()
+{
+    for (Piece* list : { m_frame, m_cap })
+        for (int i = 0; i < 4; ++i)
+            if (list[i].hwnd && IsWindowVisible(list[i].hwnd))
+                ShowWindow(list[i].hwnd, SW_HIDE);
 }
 
 void RoundFrame::SetLook(const Look& look)
@@ -126,10 +152,22 @@ void RoundFrame::Update()
         const bool round = !m_suppressed && !IsZoomed(m_window);
         if (round != m_regionRounded || (round && (w != m_regionSize.cx || h != m_regionSize.cy)))
         {
+            const SIZE before = m_regionSize;
+            const bool wasRounded = m_regionRounded;
             m_regionRounded = round;
             m_regionSize = { w, h };
             const int d = 2 * Radius();
-            SetWindowRgn(m_window, round ? CreateRoundRectRgn(0, 0, w + 1, h + 1, d, d) : nullptr, TRUE);
+            // No redraw of the whole window for it (that repainted everything on every size step of a resize): only the
+            // corner boxes the old and the new region cut differently can show something stale
+            SetWindowRgn(m_window, round ? CreateRoundRectRgn(0, 0, w + 1, h + 1, d, d) : nullptr, FALSE);
+            const int box = Radius() + 2;
+            for (const SIZE s : { before, SIZE{ w, h } })
+                if (s.cx > 0 && s.cy > 0 && (wasRounded || round))
+                    for (const POINT c : { POINT{ 0, 0 }, POINT{ s.cx - box, 0 }, POINT{ 0, s.cy - box }, POINT{ s.cx - box, s.cy - box } })
+                    {
+                        const RECT corner{ c.x, c.y, c.x + box, c.y + box };
+                        RedrawWindow(m_window, &corner, nullptr, RDW_INVALIDATE | RDW_ALLCHILDREN);
+                    }
             // SetWindowRgn takes ownership of that one; keep our own copy to test pixels against (PtInRegion),
             // so the cap knows exactly which ones the hard region actually kept
             if (m_capRegion)
@@ -143,14 +181,11 @@ void RoundFrame::Update()
     }
     if (!Rounded() || !IsWindowVisible(m_window) || w <= 0 || h <= 0)
     {
-        if (m_frame && IsWindowVisible(m_frame))
-            ShowWindow(m_frame, SW_HIDE);
-        if (m_cap && IsWindowVisible(m_cap))
-            ShowWindow(m_cap, SW_HIDE);
+        HidePieces();
         m_updating = false;
         return;
     }
-    if (!m_frame)
+    if (!m_frame[0].hwnd)
     {
         static const bool registered = []
         {
@@ -166,7 +201,8 @@ void RoundFrame::Update()
         {
             m_anchor = CreateWindowExW(WS_EX_TOOLWINDOW, kFrameClass, L"", WS_POPUP, 0, 0, 0, 0, nullptr, nullptr, GetModuleHandleW(nullptr), nullptr);
             const DWORD ex = WS_EX_LAYERED | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE | (m_resizable ? 0 : WS_EX_TRANSPARENT);
-            m_frame = CreateWindowExW(ex, kFrameClass, L"", WS_POPUP, 0, 0, 0, 0, m_anchor, nullptr, GetModuleHandleW(nullptr), nullptr);
+            for (Piece& p : m_frame)
+                p.hwnd = CreateWindowExW(ex, kFrameClass, L"", WS_POPUP, 0, 0, 0, 0, m_anchor, nullptr, GetModuleHandleW(nullptr), nullptr);
             // Owned directly by the window: Windows always keeps an owned window immediately above its owner, so
             // this stays over the jagged region edge without any manual z-order juggling. Click-through always
             // (it never takes the mouse; m_frame behind still does the resize hit-testing).
@@ -182,51 +218,82 @@ void RoundFrame::Update()
             }();
             const DWORD capEx = WS_EX_LAYERED | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE | WS_EX_TRANSPARENT;
             if (capRegistered)
-                m_cap = CreateWindowExW(capEx, kCapClass, L"", WS_POPUP, 0, 0, 0, 0, m_window, nullptr, GetModuleHandleW(nullptr), nullptr);
+                for (Piece& p : m_cap)
+                    p.hwnd = CreateWindowExW(capEx, kCapClass, L"", WS_POPUP, 0, 0, 0, 0, m_window, nullptr, GetModuleHandleW(nullptr), nullptr);
         }
-        if (!m_frame)
+        if (!m_frame[0].hwnd)
         {
             m_updating = false;
             return;
         }
-        SetWindowLongPtrW(m_frame, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
+        for (Piece& p : m_frame)
+            if (p.hwnd)
+                SetWindowLongPtrW(p.hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
     }
-    if (m_cap)
+    // The corner boxes over the window's corners (repainted with the region: on a size change)
+    const int box = std::min({ Radius() + 2, w / 2, h / 2 });
+    for (int i = 0; i < 4; ++i)
     {
-        if (w != m_capPainted.cx || h != m_capPainted.cy || m_active != m_capPaintedActive || m_lookVersion != m_capPaintedVersion)
-            PaintCap(rc);
-        SetWindowPos(m_cap, nullptr, rc.left, rc.top, w, h, SWP_NOACTIVATE | SWP_NOZORDER | SWP_SHOWWINDOW);
+        Piece& cap = m_cap[i];
+        if (!cap.hwnd)
+            continue;
+        const int x0 = (i & 1) ? w - box : 0, y0 = (i & 2) ? h - box : 0;
+        if (!Fresh(cap, { w, h }))
+            PaintCap(cap, rc, x0, y0, box, (i & 2) != 0);
+        SetWindowPos(cap.hwnd, nullptr, rc.left + x0, rc.top + y0, box, box, SWP_NOACTIVATE | SWP_NOZORDER | SWP_SHOWWINDOW);
     }
-    const int m = Margin();
+    // The frame's strips: top / bottom the full width (with the rounded corners), left / right the straight sides
+    // between them (each repainted when its own size changes; a move only places them)
+    const int m = Margin(), r = Radius();
     const POINT at{ rc.left - m, rc.top - m };
-    const SIZE size{ w + 2 * m, h + 2 * m };
-    if (size.cx != m_painted.cx || size.cy != m_painted.cy || m_active != m_paintedActive || m_lookVersion != m_paintedVersion)
-        Paint(at, size);
-    // m_frame isn't owned by m_window (it has to sit behind it, and an owned window is always kept above its
-    // owner), so inserting it right after m_window in z-order only stays put within the same topmost/normal band.
+    const SIZE frame{ w + 2 * m, h + 2 * m };
+    const int cornerH = std::min<int>(m + r + 1, frame.cy / 2);
+    const RECT strips[kStrips] = { { 0, 0, frame.cx, cornerH }, { 0, frame.cy - cornerH, frame.cx, frame.cy },
+        { 0, cornerH, m + 1, frame.cy - cornerH }, { frame.cx - m - 1, cornerH, frame.cx, frame.cy - cornerH } };
+    // The strips aren't owned by m_window (they have to sit behind it, and an owned window is always kept above its
+    // owner), so inserting them right after m_window in z-order only stays put within the same topmost/normal band.
     // Across bands SetWindowPos instead knocks hWndInsertAfter (m_window) out of the topmost band to make room.
-    // Keep m_frame (and the hidden m_anchor that owns it) in whichever band m_window is actually in before placing
-    // it there, so the compact overlay's HWND_TOPMOST isn't undone the next time this runs.
+    // Keep them (and the hidden m_anchor that owns them) in whichever band m_window is actually in before placing
+    // them there, so the compact overlay's HWND_TOPMOST isn't undone the next time this runs.
     const bool topmost = (GetWindowLongPtrW(m_window, GWL_EXSTYLE) & WS_EX_TOPMOST) != 0;
     if (topmost != m_frameTopmost)
     {
         m_frameTopmost = topmost;
         const HWND band = topmost ? HWND_TOPMOST : HWND_NOTOPMOST;
         SetWindowPos(m_anchor, band, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
-        SetWindowPos(m_frame, band, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
+        for (Piece& p : m_frame)
+            if (p.hwnd)
+                SetWindowPos(p.hwnd, band, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
     }
-    // Just behind the window (the cap stays above it automatically: it's owned by the window, not by m_anchor)
-    SetWindowPos(m_frame, m_window, at.x, at.y, size.cx, size.cy, SWP_NOACTIVATE | SWP_SHOWWINDOW | SWP_NOOWNERZORDER);
+    for (int i = 0; i < kStrips; ++i)
+    {
+        Piece& strip = m_frame[i];
+        const RECT& s = strips[i];
+        const SIZE size{ s.right - s.left, s.bottom - s.top };
+        if (!strip.hwnd)
+            continue;
+        if (size.cx <= 0 || size.cy <= 0)
+        {
+            if (IsWindowVisible(strip.hwnd))
+                ShowWindow(strip.hwnd, SW_HIDE);
+            continue;
+        }
+        if (!Fresh(strip, size))
+            PaintStrip(strip, s, at, frame);
+        // Just behind the window (the corner boxes stay above it by themselves: they're owned by the window)
+        SetWindowPos(strip.hwnd, m_window, at.x + s.left, at.y + s.top, size.cx, size.cy, SWP_NOACTIVATE | SWP_SHOWWINDOW | SWP_NOOWNERZORDER);
+    }
     m_updating = false;
 }
 
 // The ring just outside the rounded edge (anti-aliased: it also hides the region's stepped corners) over a shadow
 // fading out across the margin; premultiplied BGRA for UpdateLayeredWindow
-void RoundFrame::Paint(POINT at, SIZE size)
+void RoundFrame::PaintStrip(Piece& piece, const RECT& strip, POINT at, SIZE frame)
 {
-    const int fw = size.cx, fh = size.cy;
+    const int sw = strip.right - strip.left, sh = strip.bottom - strip.top;
+    const int fw = frame.cx, fh = frame.cy;
     BITMAPINFO bi{};
-    bi.bmiHeader = { sizeof(BITMAPINFOHEADER), fw, -fh, 1, 32, BI_RGB };
+    bi.bmiHeader = { sizeof(BITMAPINFOHEADER), sw, -sh, 1, 32, BI_RGB };
     HDC screen = GetDC(nullptr);
     HDC mem = CreateCompatibleDC(screen);
     void* bits = nullptr;
@@ -240,17 +307,20 @@ void RoundFrame::Paint(POINT at, SIZE size)
         const COLORREF ring = m_active ? m_look.border : m_look.borderInactive;
         const double ringA = (m_active ? m_look.borderAlpha : m_look.borderInactiveAlpha) / 255.0;
         const double shadowA = (m_active ? m_look.shadowAlpha : m_look.shadowInactiveAlpha) / 255.0;
-        for (int y = 0; y < fh; ++y)
-            for (int x = 0; x < fw; ++x)
+        // In the frame's coordinates (x, y); what the window covers is cleared once and skipped
+        ZeroMemory(bits, static_cast<size_t>(sw) * sh * 4);
+        for (int y = strip.top; y < strip.bottom; ++y)
+        {
+            // Rows along the straight sides: just the band at each end (the window covers what's between)
+            const bool side = y >= m + r && y < fh - m - r;
+            const int spanL = side ? m + 1 : fw, spanR = side ? fw - m - 1 : fw;
+            for (int x = strip.left; x < strip.right; x = (x + 1 == spanL && spanR > x + 1) ? std::max<int>(spanR, x + 1) : x + 1)
             {
-                DWORD& p = px[static_cast<size_t>(y) * fw + x];
+                DWORD& p = px[static_cast<size_t>(y - strip.top) * sw + (x - strip.left)];
                 // Well inside the edge: the window covers it
                 const bool insideX = x >= m + 1 && x < fw - m - 1, insideY = y >= m + 1 && y < fh - m - 1;
                 if ((insideX && y >= m + r && y < fh - m - r) || (insideY && x >= m + r && x < fw - m - r))
-                {
-                    p = 0;
                     continue;
-                }
                 const double d = Distance(x + 0.5, y + 0.5, l, t, rgt, btm, r);
                 if (d <= -0.5)
                 {
@@ -266,13 +336,14 @@ void RoundFrame::Paint(POINT at, SIZE size)
                 const auto c = [&](int v) { return static_cast<DWORD>(std::min(alpha, static_cast<int>(v * cover + 0.5))); };
                 p = static_cast<DWORD>(alpha) << 24 | c(GetRValue(ring)) << 16 | c(GetGValue(ring)) << 8 | c(GetBValue(ring));
             }
+        }
         POINT zero{ 0, 0 };
+        POINT pos{ at.x + strip.left, at.y + strip.top };
+        SIZE size{ sw, sh };
         BLENDFUNCTION blend{ AC_SRC_OVER, 0, 255, AC_SRC_ALPHA };
-        UpdateLayeredWindow(m_frame, screen, &at, &size, mem, &zero, 0, &blend, ULW_ALPHA);
+        UpdateLayeredWindow(piece.hwnd, screen, &pos, &size, mem, &zero, 0, &blend, ULW_ALPHA);
         SelectObject(mem, old);
-        m_painted = size;
-        m_paintedActive = m_active;
-        m_paintedVersion = m_lookVersion;
+        Painted(piece, size);
     }
     if (bmp)
         DeleteObject(bmp);
@@ -285,11 +356,13 @@ void RoundFrame::Paint(POINT at, SIZE size)
 // curve partly covers (showing whatever's behind, short of the curve). This window sits directly above the main
 // one (owned by it) and repaints only those mismatched pixels along the curve, blending the two looks by how
 // much the ideal curve actually covers each one, so the stair steps disappear. Everywhere else: fully transparent.
-void RoundFrame::PaintCap(const RECT& rc)
+void RoundFrame::PaintCap(Piece& piece, const RECT& rc, int x0, int y0, int box, bool bottom)
 {
     const int fw = rc.right - rc.left, fh = rc.bottom - rc.top;
+    if (box <= 0)
+        return;
     BITMAPINFO bi{};
-    bi.bmiHeader = { sizeof(BITMAPINFOHEADER), fw, -fh, 1, 32, BI_RGB };
+    bi.bmiHeader = { sizeof(BITMAPINFOHEADER), box, -box, 1, 32, BI_RGB };
     HDC screen = GetDC(nullptr);
     HDC mem = CreateCompatibleDC(screen);
     void* bits = nullptr;
@@ -302,56 +375,48 @@ void RoundFrame::PaintCap(const RECT& rc)
         const COLORREF ring = m_active ? m_look.border : m_look.borderInactive;
         const double ringA = (m_active ? m_look.borderAlpha : m_look.borderInactiveAlpha) / 255.0;
         const double shadowA = (m_active ? m_look.shadowAlpha : m_look.shadowInactiveAlpha) / 255.0;
-        // Only the four corner boxes can differ from fully transparent; everything else is zeroed up front
-        ZeroMemory(bits, static_cast<size_t>(fw) * fh * 4);
-        const int box = std::min({ r + 2, fw / 2, fh / 2 });
-        for (int cy = 0; cy < 2; ++cy)
-            for (int cx = 0; cx < 2; ++cx)
+        // This corner's box, in the window's coordinates (x, y): only it can differ from fully transparent
+        ZeroMemory(bits, static_cast<size_t>(box) * box * 4);
+        const COLORREF fill = bottom ? m_look.fillBottom : m_look.fillTop;
+        for (int y = y0; y < y0 + box; ++y)
+            for (int x = x0; x < x0 + box; ++x)
             {
-                const int x0 = cx ? fw - box : 0, y0 = cy ? fh - box : 0;
-                const COLORREF fill = cy ? m_look.fillBottom : m_look.fillTop;
-                for (int y = y0; y < y0 + box; ++y)
-                    for (int x = x0; x < x0 + box; ++x)
-                    {
-                        // Ideal coverage (1 = fully the window's color, 0 = fully outside it), 1px anti-alias band
-                        const double d = Distance(x + 0.5, y + 0.5, 0, 0, fw, fh, r);
-                        const double cv = std::clamp(0.5 - d, 0.0, 1.0);
-                        DWORD& p = px[static_cast<size_t>(y) * fw + x];
-                        if (cv >= 1.0 - 1.0 / 255.0)
-                            continue; // the region already keeps this pixel fully: nothing to fix
-                        const bool kept = m_capRegion && PtInRegion(m_capRegion, x, y);
-                        if (kept)
-                        {
-                            // The region wrongly kept a pixel the curve doesn't fully cover: paint the same
-                            // ring-over-shadow look m_frame draws behind the edge over it (identical formula, so
-                            // the two windows agree exactly along the seam), at how much it should NOT be the
-                            // window's color. ringCover's own color channels are already scaled by ringCover
-                            // (how saturated the ring color itself is at this pixel); mix is the overlay's alpha.
-                            const double ringCover = std::clamp(1.0 - std::abs(d - 0.5), 0.0, 1.0) * ringA;
-                            const double fade = d > 0 ? std::clamp(1.0 - d / m, 0.0, 1.0) : 0.0;
-                            const double outsideA = ringCover + shadowA * fade * fade * (1.0 - ringCover);
-                            const double mix = (1.0 - cv) * outsideA;
-                            const int alpha = static_cast<int>(mix * 255.0 + 0.5);
-                            const auto c = [&](int v) { return static_cast<DWORD>(std::min(static_cast<double>(alpha), v * ringCover) + 0.5); };
-                            p = static_cast<DWORD>(alpha) << 24 | c(GetRValue(ring)) << 16 | c(GetGValue(ring)) << 8 | c(GetBValue(ring));
-                        }
-                        else if (cv > 1.0 / 255.0)
-                        {
-                            // The region wrongly dropped a pixel the curve does partly cover: fill it back in with
-                            // the window's own flat corner color, at how much it should be that color
-                            p = Premultiplied(fill, cv);
-                        }
-                    }
+                // Ideal coverage (1 = fully the window's color, 0 = fully outside it), 1px anti-alias band
+                const double d = Distance(x + 0.5, y + 0.5, 0, 0, fw, fh, r);
+                const double cv = std::clamp(0.5 - d, 0.0, 1.0);
+                DWORD& p = px[static_cast<size_t>(y - y0) * box + (x - x0)];
+                if (cv >= 1.0 - 1.0 / 255.0)
+                    continue; // the region already keeps this pixel fully: nothing to fix
+                const bool kept = m_capRegion && PtInRegion(m_capRegion, x, y);
+                if (kept)
+                {
+                    // The region wrongly kept a pixel the curve doesn't fully cover: paint the same ring-over-shadow
+                    // look the frame draws behind the edge over it (identical formula, so the two agree exactly along
+                    // the seam), at how much it should NOT be the window's color. ringCover's own color channels are
+                    // already scaled by ringCover (how saturated the ring color itself is at this pixel); mix is the
+                    // overlay's alpha.
+                    const double ringCover = std::clamp(1.0 - std::abs(d - 0.5), 0.0, 1.0) * ringA;
+                    const double fade = d > 0 ? std::clamp(1.0 - d / m, 0.0, 1.0) : 0.0;
+                    const double outsideA = ringCover + shadowA * fade * fade * (1.0 - ringCover);
+                    const double mix = (1.0 - cv) * outsideA;
+                    const int alpha = static_cast<int>(mix * 255.0 + 0.5);
+                    const auto c = [&](int v) { return static_cast<DWORD>(std::min(static_cast<double>(alpha), v * ringCover) + 0.5); };
+                    p = static_cast<DWORD>(alpha) << 24 | c(GetRValue(ring)) << 16 | c(GetGValue(ring)) << 8 | c(GetBValue(ring));
+                }
+                else if (cv > 1.0 / 255.0)
+                {
+                    // The region wrongly dropped a pixel the curve does partly cover: fill it back in with the
+                    // window's own flat corner color, at how much it should be that color
+                    p = Premultiplied(fill, cv);
+                }
             }
         POINT zero{ 0, 0 };
-        SIZE size{ fw, fh };
-        POINT at{ rc.left, rc.top };
+        SIZE size{ box, box };
+        POINT at{ rc.left + x0, rc.top + y0 };
         BLENDFUNCTION blend{ AC_SRC_OVER, 0, 255, AC_SRC_ALPHA };
-        UpdateLayeredWindow(m_cap, screen, &at, &size, mem, &zero, 0, &blend, ULW_ALPHA);
+        UpdateLayeredWindow(piece.hwnd, screen, &at, &size, mem, &zero, 0, &blend, ULW_ALPHA);
         SelectObject(mem, old);
-        m_capPainted = { fw, fh };
-        m_capPaintedActive = m_active;
-        m_capPaintedVersion = m_lookVersion;
+        Painted(piece, { fw, fh });
     }
     if (bmp)
         DeleteObject(bmp);

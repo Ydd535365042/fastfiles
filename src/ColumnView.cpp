@@ -110,10 +110,10 @@ bool ColumnView::Create(HWND parent)
     RECT rc{};
     GetClientRect(parent, &rc);
     // Hidden until the first Open; the horizontal scroll bar only shows when the columns don't fit
-    if (!registered || !CreateWindowExW(WS_EX_CONTROLPARENT, kClass, L"", WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_HSCROLL,
+    if (!registered || !CreateWindowExW(WS_EX_CONTROLPARENT, kClass, L"", WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS,
             0, 0, rc.right, rc.bottom, parent, nullptr, GetModuleHandleW(nullptr), this))
         return false;
-    ShowScrollBar(m_hwnd, SB_HORZ, FALSE);
+    m_bar.Attach(m_hwnd, false, kBarTimer, m_theme, [this](int x) { ScrollTo(x); });
     ApplyTheme();
     return true;
 }
@@ -352,20 +352,16 @@ void ColumnView::Layout()
         m_content += c->width + gap;
     RECT client{};
     GetClientRect(m_hwnd, &client);
-    // The scroll bar appearing changes the client height (WM_SIZE comes back here: guarded)
-    SCROLLINFO si{ sizeof(si), SIF_RANGE | SIF_PAGE | SIF_POS };
-    si.nMin = 0;
-    si.nMax = std::max(0, m_content - 1);
-    si.nPage = static_cast<UINT>(std::max<LONG>(client.right, 0));
     m_scroll = std::clamp(m_scroll, 0, std::max(0, m_content - static_cast<int>(client.right)));
-    si.nPos = m_scroll;
-    SetScrollInfo(m_hwnd, SB_HORZ, &si, TRUE);
-    GetClientRect(m_hwnd, &client);
+    const bool bar = m_content > client.right;
+    const int strip = bar ? m_theme->S(12) : 0; // ScrollBarSize
+    m_bar.Set(bar ? m_content : 0, client.right, m_scroll, { 0, client.bottom - strip, client.right, client.bottom },
+        m_theme->S(40));
     int x = -m_scroll;
     for (int i = 0; i < Count(); ++i)
     {
         Column* c = m_columns[i].get();
-        c->rc = { x, 0, x + c->width, client.bottom };
+        c->rc = { x, 0, x + c->width, std::max<LONG>(0, client.bottom - strip) };
         c->list->Move(c->rc);
         ShowWindow(c->list->Hwnd(), SW_SHOWNA);
         x += c->width + gap;
@@ -489,7 +485,6 @@ void ColumnView::ApplyTheme()
 {
     if (!m_hwnd)
         return;
-    DarkMode::ApplyControl(m_hwnd, m_theme->dark); // the horizontal scroll bar
     for (const auto& c : m_columns)
         c->list->ApplyTheme();
     InvalidateRect(m_hwnd, nullptr, TRUE);
@@ -637,8 +632,8 @@ LRESULT ColumnView::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
         return 1;
     case WM_PAINT:
     {
-        PAINTSTRUCT ps;
-        HDC hdc = BeginPaint(m_hwnd, &ps);
+        BufferedPaint paint(m_hwnd);
+        const HDC hdc = paint.dc();
         RECT client{};
         GetClientRect(m_hwnd, &client);
         FillSolid(hdc, client, m_theme->content);
@@ -656,7 +651,7 @@ LRESULT ColumnView::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
             const COLORREF color = dragging ? m_theme->columnGripDrag : hot ? m_theme->columnGrip : m_theme->line;
             FillSolid(hdc, { mid - w / 2, 0, mid - w / 2 + w, client.bottom }, color);
         }
-        EndPaint(m_hwnd, &ps);
+        m_bar.Paint(hdc, paint.rect());
         return 0;
     }
     case WM_SETCURSOR:
@@ -665,7 +660,7 @@ LRESULT ColumnView::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
             POINT pt;
             GetCursorPos(&pt);
             ScreenToClient(m_hwnd, &pt);
-            if (m_dragGrip >= 0 || GripAt(pt.x) >= 0)
+            if (m_dragGrip >= 0 || (!m_bar.Over(pt) && !m_bar.Captured() && GripAt(pt.x) >= 0))
             {
                 SetCursor(LoadCursorW(nullptr, IDC_SIZEWE));
                 return TRUE;
@@ -683,17 +678,21 @@ LRESULT ColumnView::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
             Layout();
             return 0;
         }
-        const int hot = GripAt(x);
+        TRACKMOUSEEVENT tme{ sizeof(tme), TME_LEAVE, m_hwnd, 0 };
+        TrackMouseEvent(&tme);
+        // The scroll bar first (dragging it, or the pointer on its strip)
+        const bool held = m_bar.Captured();
+        const bool onBar = m_bar.OnMouseMove({ x, GET_Y_LPARAM(lp) }, (wp & MK_LBUTTON) != 0) || held;
+        const int hot = onBar ? -1 : GripAt(x);
         if (hot != m_hotGrip)
         {
             m_hotGrip = hot;
             InvalidateRect(m_hwnd, nullptr, FALSE);
-            TRACKMOUSEEVENT tme{ sizeof(tme), TME_LEAVE, m_hwnd, 0 };
-            TrackMouseEvent(&tme);
         }
         return 0;
     }
     case WM_MOUSELEAVE:
+        m_bar.OnMouseLeave();
         if (m_hotGrip >= 0)
         {
             m_hotGrip = -1;
@@ -701,7 +700,9 @@ LRESULT ColumnView::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
         }
         return 0;
     case WM_LBUTTONDOWN:
-        if (const int grip = GripAt(x); grip >= 0)
+        if (const POINT pt{ x, GET_Y_LPARAM(lp) }; m_bar.Over(pt))
+            m_bar.OnButtonDown(pt);
+        else if (const int grip = GripAt(x); grip >= 0)
         {
             m_dragGrip = grip;
             m_dragStartX = x;
@@ -711,6 +712,8 @@ LRESULT ColumnView::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
         return 0;
     case WM_LBUTTONUP:
     case WM_CAPTURECHANGED:
+        if (msg == WM_LBUTTONUP ? m_bar.OnButtonUp() : (m_bar.OnCaptureLost(), false))
+            return 0;
         if (m_dragGrip >= 0)
         {
             m_dragGrip = -1;
@@ -721,7 +724,9 @@ LRESULT ColumnView::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
         return 0;
     case WM_LBUTTONDBLCLK:
         // Files' BladeResizer_DoubleTapped: back to the width that fits the names
-        if (const int grip = GripAt(x); grip >= 0)
+        if (const POINT pt{ x, GET_Y_LPARAM(lp) }; m_bar.Over(pt))
+            m_bar.OnButtonDown(pt);
+        else if (const int grip = GripAt(x); grip >= 0)
         {
             m_columns[grip]->userWidth = false;
             Measure(grip, false);
@@ -729,17 +734,18 @@ LRESULT ColumnView::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
         return 0;
     case WM_HSCROLL:
     {
-        SCROLLINFO si{ sizeof(si), SIF_ALL };
-        GetScrollInfo(m_hwnd, SB_HORZ, &si);
+        // (Sent by accessibility tools; the overlay bar scrolls through ScrollTo itself)
+        RECT client{};
+        GetClientRect(m_hwnd, &client);
         int pos = m_scroll;
         const int line = m_theme->S(40);
         switch (LOWORD(wp))
         {
         case SB_LINELEFT: pos -= line; break;
         case SB_LINERIGHT: pos += line; break;
-        case SB_PAGELEFT: pos -= static_cast<int>(si.nPage); break;
-        case SB_PAGERIGHT: pos += static_cast<int>(si.nPage); break;
-        case SB_THUMBTRACK: case SB_THUMBPOSITION: pos = si.nTrackPos; break;
+        case SB_PAGELEFT: pos -= client.right; break;
+        case SB_PAGERIGHT: pos += client.right; break;
+        case SB_THUMBTRACK: case SB_THUMBPOSITION: pos = HIWORD(wp); break;
         case SB_LEFT: pos = 0; break;
         case SB_RIGHT: pos = m_content; break;
         }
@@ -763,7 +769,9 @@ LRESULT ColumnView::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
         }
         break;
     case WM_TIMER:
-        if (wp == kSelectionTimer)
+        if (wp == kBarTimer)
+            m_bar.OnTimer(wp);
+        else if (wp == kSelectionTimer)
         {
             if (GetKeyState(VK_LBUTTON) & 0x8000)
                 return 0; // still clicking or drawing a selection rectangle: looked at again shortly

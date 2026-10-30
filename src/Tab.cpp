@@ -518,6 +518,22 @@ void Tab::Focus()
         input->UIActivateIO(TRUE, nullptr);
 }
 
+void Tab::FocusByKeyboard(bool back)
+{
+    // Tab arrived from the window's Tab order: the same target as Focus, with the keyboard focus visual on
+    if (SettingsView* settings = Settings())
+        return settings->FocusByKeyboard(back);
+    if (m_onHome)
+    {
+        if (m_home && PageWindow() == m_home->Hwnd())
+            return m_home->FocusByKeyboard();
+        return Focus();
+    }
+    if (FileList* list = List())
+        return list->FocusByKeyboard();
+    Focus();
+}
+
 bool Tab::HasFocus() const
 {
     const HWND focus = GetFocus();

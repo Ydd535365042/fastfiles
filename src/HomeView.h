@@ -1,6 +1,7 @@
 #pragma once
 #include "Theme.h"
 #include "SmoothScroll.h"
+#include "ScrollOverlay.h"
 
 // One card or row on the home page. Built by MainWindow from the sidebar's entries and the recent-files scan.
 struct HomeItem
@@ -63,6 +64,7 @@ public:
     bool Create(HWND parent, const Theme* theme);
     void Destroy();
     HWND Hwnd() const { return m_hwnd; }
+    void FocusByKeyboard(); // Tab arrived: the focus visual on the stop that has it (the first one if none yet)
     void SetData(std::shared_ptr<const HomeData> data, unsigned collapsed, unsigned hidden); // Section bits
     void Relayout();
 
@@ -100,7 +102,6 @@ private:
     void SetHot(int cell);
     void ScrollTo(int offset);
     void EnsureVisible(int cell);
-    bool ThumbRect(RECT& thumb) const;
     void MoveFocus(int key);
     void Activate(int cell, OpenMode mode);
     void OpenLazy(const std::wstring& path, OpenMode mode, bool reveal = false);
@@ -119,11 +120,11 @@ private:
     int m_content = 0; // content height
     int m_scroll = 0;
     SmoothScroll m_smooth; // the wheel's animation (the scrollbar thumb drag stays immediate)
+    ScrollOverlay m_bar;   // the ScrollViewer's vertical bar (the same WinUI ScrollBar as the file list's)
+    static constexpr UINT_PTR kBarTimer = 1;
     int m_hot = -1, m_pressed = -1, m_focus = -1;
     bool m_keyboardFocus = false;
     bool m_tracking = false;
-    bool m_thumbDrag = false;
-    int m_thumbGrab = 0;
     int m_tipCell = -1;
     std::wstring m_tipText;
     std::vector<std::pair<long long, HICON>> m_iconCache; // (size << 32 | index) -> icon

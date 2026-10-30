@@ -10,7 +10,7 @@ namespace
 {
 constexpr wchar_t kButtonClass[] = L"FastFiles.StatusCenterButton";
 constexpr wchar_t kFlyoutClass[] = L"FastFiles.StatusCenter";
-constexpr UINT_PTR kTimer = 1, kTipTimer = 2;
+constexpr UINT_PTR kTimer = 1, kTipTimer = 2, kBarTimer = 3; // (kBarTimer: on the flyout)
 // StatusCenter.xaml: Width 400, MinHeight 120, MaxHeight 500; header 12,8 padding; list 12 sides; card padding 8
 constexpr int kWidth = 400, kMinHeight = 120, kMaxHeight = 500, kHead = 48, kSide = 12, kCardPad = 8, kCardGap = 4;
 
@@ -204,6 +204,7 @@ bool StatusCenter::Create(HWND parent, int id, const Theme* theme, Operations* o
     CreateWindowExW(WS_EX_TOOLWINDOW, kFlyoutClass, L"", WS_POPUP, 0, 0, 0, 0, parent, nullptr, GetModuleHandleW(nullptr), this);
     if (!registered || !m_button || !m_flyout)
         return false;
+    m_bar.Attach(m_flyout, true, kBarTimer, m_theme, [this](int y) { m_smooth.Reset(y); ScrollTo(y); });
     // The button's tooltip (Files: ToolTipService.ToolTip = 状态中心)
     if (HWND tip = CreateWindowExW(WS_EX_TOPMOST, TOOLTIPS_CLASSW, nullptr, WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP, 0, 0, 0, 0, m_button, nullptr,
             GetModuleHandleW(nullptr), nullptr))
@@ -288,6 +289,7 @@ LRESULT StatusCenter::ButtonMessage(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
         InvalidateRect(hwnd, nullptr, FALSE);
         return 0;
     case WM_LBUTTONDOWN:
+        m_focusRing = false; // a pointer press hides the keyboard focus visual
         m_down = true;
         SetCapture(hwnd);
         InvalidateRect(hwnd, nullptr, FALSE);
@@ -311,6 +313,19 @@ LRESULT StatusCenter::ButtonMessage(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
             Refresh();
         else if (wp == kTipTimer)
             HideTip();
+        return 0;
+    case WM_GETDLGCODE:
+        return DLGC_WANTCHARS;
+    case WM_KEYDOWN:
+        if (wp == VK_RETURN || wp == VK_SPACE)
+        {
+            Toggle(); // the keyboard's click (Files' Button)
+            return 0;
+        }
+        break;
+    case WM_SETFOCUS:
+    case WM_KILLFOCUS:
+        InvalidateRect(hwnd, nullptr, FALSE);
         return 0;
     case WM_DESTROY:
         KillTimer(hwnd, kTimer);
@@ -397,6 +412,12 @@ void StatusCenter::PaintButton(HDC hdc, const RECT& rc)
             DrawLabel(hdc, t.caption, L"!", badge, on, DT_CENTER);
         else
             DrawLabel(hdc, t.caption, std::to_wstring(running), badge, on, DT_CENTER);
+    }
+    if (m_focusRing && GetFocus() == m_button)
+    {
+        RECT client;
+        GetClientRect(m_button, &client);
+        DrawFocusVisual(hdc, t, rc, t.S(4), t.layer, &client);
     }
 }
 int StatusCenter::Running() const
@@ -505,6 +526,10 @@ void StatusCenter::Toggle()
     // Files' OnStatusCenterFlyoutOpened: the ring stays only while something runs or a failure is listed
     m_ring = Running() > 0 || InfoState() == 3;
     m_scroll = 0;
+    // Opened by the keyboard (the button had the focus visual): Tab goes on inside the flyout from its first stop
+    m_focusHit = HitNone;
+    m_focusId = 0;
+    m_flyRing = false;
     Resize();
     // The window keeps its active look meanwhile; painted at once (no frame of the flyout's previous content)
     m_showing = true;
@@ -658,8 +683,27 @@ void StatusCenter::Resize()
     const RECT list = ListRect();
     const int maxScroll = std::max(0, content - static_cast<int>(list.bottom - list.top));
     m_smooth.ClampTarget(maxScroll);
-    m_scroll = std::clamp(m_scroll, 0, maxScroll);
+    ScrollTo(m_scroll);
     InvalidateRect(m_flyout, nullptr, FALSE);
+}
+
+void StatusCenter::ScrollTo(int offset)
+{
+    if (!m_flyout)
+        return;
+    const RECT list = ListRect();
+    const int view = list.bottom - list.top;
+    const int content = m_views.empty() ? 0 : ContentHeight();
+    offset = std::clamp(offset, 0, std::max(0, content - view));
+    if (offset != m_scroll)
+    {
+        m_scroll = offset;
+        InvalidateRect(m_flyout, nullptr, FALSE);
+    }
+    RECT client{};
+    GetClientRect(m_flyout, &client);
+    const RECT strip{ client.right - m_theme->S(12), list.top, client.right, list.bottom };
+    m_bar.Set(content > view ? content : 0, view, m_scroll, strip, m_theme->S(48));
 }
 
 void StatusCenter::UpdateText()
@@ -759,6 +803,8 @@ void StatusCenter::PaintFlyout(HDC hdc, const RECT& rc)
     FillRound(hdc, clear, t.S(4), hot ? Mix(back, t.ink, 6) : Mix(back, t.fillWhite, t.dark ? 6 : 70));
     FrameRound(hdc, clear, t.S(4), Mix(back, t.ink, 12));
     DrawLabel(hdc, t.caption, Tr(L"清除已完成的条目"), clear, t.ink, DT_CENTER);
+    if (m_flyRing && m_focusHit == HitClear && GetFocus() == m_flyout)
+        DrawFocusVisual(hdc, t, clear, t.S(4), back, &client);
     const RECT list = ListRect();
     if (m_views.empty())
     {
@@ -777,13 +823,7 @@ void StatusCenter::PaintFlyout(HDC hdc, const RECT& rc)
         y += l.height + t.S(kCardGap);
     }
     RestoreDC(hdc, saved);
-    const int content = ContentHeight(), h = list.bottom - list.top;
-    if (content > h && h > 0)
-    {
-        const int th = std::max(t.S(24), MulDiv(h, h, content));
-        const int top = list.top + MulDiv(h - th, m_scroll, content - h);
-        FillRound(hdc, { client.right - t.S(6), top, client.right - t.S(3), top + th }, t.S(2), Mix(t.muted, back, 40));
-    }
+    m_bar.Paint(hdc, rc);
 }
 
 void StatusCenter::PaintCard(HDC hdc, const Operations::View& v, const RECT& card, const Layout& l)
@@ -827,6 +867,13 @@ void StatusCenter::PaintCard(HDC hdc, const Operations::View& v, const RECT& car
     const bool expanded = tr != m_tracks.end() && tr->second.expanded;
     button(l.expand, HitExpand, expanded ? L"\xE70E" : L"\xE70D");
     button(l.more, HitMore, L"\xE712");
+    // The keyboard's button (Tab)
+    if (m_flyRing && m_focusId == v.id && GetFocus() == m_flyout)
+    {
+        const RECT& r = m_focusHit == HitDismiss ? l.dismiss : m_focusHit == HitExpand ? l.expand : m_focusHit == HitMore ? l.more : RECT{};
+        if (!IsRectEmpty(&r))
+            DrawFocusVisual(hdc, t, at(r), t.S(4), fill, &card);
+    }
     if (!l.progress)
         return;
     const COLORREF track = Mix(fill, t.ink, 30);
@@ -927,6 +974,109 @@ StatusCenter::Hit StatusCenter::HitTest(POINT pt, unsigned& id) const
     return HitNone;
 }
 
+void StatusCenter::Activate(Hit hit, unsigned id, POINT anchor)
+{
+    switch (hit)
+    {
+    case HitClear:
+        m_ops->ForgetFinished(); // Files' RemoveAllCompletedItems
+        Refresh();
+        break;
+    case HitDismiss:
+        m_ops->Forget(id);
+        Refresh();
+        break;
+    case HitExpand:
+        m_tracks[id].expanded = !m_tracks[id].expanded;
+        Resize();
+        break;
+    case HitMore:
+    {
+        // Files' MoreOptions flyout: 取消
+        HMENU menu = CreatePopupMenu();
+        AppendMenuW(menu, MF_STRING, 1, Tr(L"取消"));
+        POINT screen = anchor;
+        ClientToScreen(m_flyout, &screen);
+        const UINT cmd = TrackPopupMenu(menu, TPM_RETURNCMD | TPM_RIGHTBUTTON, screen.x, screen.y, 0, m_flyout, nullptr);
+        DestroyMenu(menu);
+        if (cmd == 1)
+        {
+            m_ops->Cancel(id);
+            Refresh();
+        }
+        break;
+    }
+    default:
+        break;
+    }
+}
+
+std::vector<StatusCenter::FlyStop> StatusCenter::FlyStops() const
+{
+    // 清除已完成的条目, then each card's buttons in reading order (more / expand / dismiss as laid out left to right)
+    std::vector<FlyStop> stops{ { HitClear, 0 } };
+    const RECT list = ListRect();
+    for (const auto& v : m_views)
+    {
+        const Layout l = LayoutCard(v, list.right - list.left);
+        std::vector<std::pair<LONG, Hit>> parts;
+        if (!IsRectEmpty(&l.expand))
+            parts.push_back({ l.expand.left, HitExpand });
+        if (!IsRectEmpty(&l.more))
+            parts.push_back({ l.more.left, HitMore });
+        if (!IsRectEmpty(&l.dismiss))
+            parts.push_back({ l.dismiss.left, HitDismiss });
+        std::sort(parts.begin(), parts.end(), [](const auto& a, const auto& b) { return a.first < b.first; });
+        for (const auto& p : parts)
+            stops.push_back({ p.second, v.id });
+    }
+    return stops;
+}
+
+RECT StatusCenter::StopRect(const FlyStop& s) const
+{
+    if (s.hit == HitClear)
+        return ClearRect();
+    const RECT list = ListRect();
+    int y = list.top - m_scroll;
+    for (const auto& v : m_views)
+    {
+        const Layout l = LayoutCard(v, list.right - list.left);
+        if (v.id == s.id)
+        {
+            const RECT& r = s.hit == HitDismiss ? l.dismiss : s.hit == HitExpand ? l.expand : l.more;
+            const int top = y + m_theme->S(2);
+            return { list.left + r.left, top + r.top, list.left + r.right, top + r.bottom };
+        }
+        y += l.height + m_theme->S(kCardGap);
+    }
+    return {};
+}
+
+void StatusCenter::FocusFlyStop(bool back)
+{
+    const std::vector<FlyStop> stops = FlyStops();
+    const int n = static_cast<int>(stops.size());
+    int at = -1;
+    for (int i = 0; i < n; ++i)
+        if (stops[i].hit == m_focusHit && stops[i].id == m_focusId)
+            at = i;
+    const FlyStop& next = stops[at < 0 ? (back ? n - 1 : 0) : (at + (back ? n - 1 : 1)) % n];
+    m_focusHit = next.hit;
+    m_focusId = next.id;
+    m_flyRing = true;
+    // Scrolled into view (a card under the list's edge)
+    const RECT r = StopRect(next), list = ListRect();
+    if (next.hit != HitClear && !IsRectEmpty(&r))
+    {
+        if (r.top < list.top)
+            ScrollTo(m_scroll - (list.top - r.top) - m_theme->S(8));
+        else if (r.bottom > list.bottom)
+            ScrollTo(m_scroll + (r.bottom - list.bottom) + m_theme->S(8));
+    }
+    InvalidateRect(m_flyout, nullptr, FALSE);
+}
+
 LRESULT CALLBACK StatusCenter::FlyoutProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 {
     auto* self = reinterpret_cast<StatusCenter*>(GetWindowLongPtrW(hwnd, GWLP_USERDATA));
@@ -968,7 +1118,9 @@ LRESULT StatusCenter::FlyoutMessage(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
             m_flyTracking = TrackMouseEvent(&tme) != FALSE;
         }
         unsigned id = 0;
-        const Hit hit = HitTest({ GET_X_LPARAM(lp), GET_Y_LPARAM(lp) }, id);
+        const POINT pt{ GET_X_LPARAM(lp), GET_Y_LPARAM(lp) };
+        const bool held = m_bar.Captured();
+        const Hit hit = m_bar.OnMouseMove(pt, (wp & MK_LBUTTON) != 0) || held ? HitNone : HitTest(pt, id);
         if (id != m_tipId && m_cardTip)
             SendMessageW(m_cardTip, TTM_POP, 0, 0); // the next card's text on the next hover
         m_tipId = id;
@@ -982,6 +1134,7 @@ LRESULT StatusCenter::FlyoutMessage(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
     }
     case WM_MOUSELEAVE:
         m_flyTracking = false;
+        m_bar.OnMouseLeave();
         m_hotHit = HitNone;
         m_hotId = m_tipId = 0;
         InvalidateRect(hwnd, nullptr, FALSE);
@@ -990,55 +1143,34 @@ LRESULT StatusCenter::FlyoutMessage(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
     {
         unsigned id = 0;
         const POINT pt{ GET_X_LPARAM(lp), GET_Y_LPARAM(lp) };
-        switch (HitTest(pt, id))
-        {
-        case HitClear:
-            m_ops->ForgetFinished(); // Files' RemoveAllCompletedItems
-            Refresh();
-            break;
-        case HitDismiss:
-            m_ops->Forget(id);
-            Refresh();
-            break;
-        case HitExpand:
-            m_tracks[id].expanded = !m_tracks[id].expanded;
-            Resize();
-            break;
-        case HitMore:
-        {
-            // Files' MoreOptions flyout: 取消
-            HMENU menu = CreatePopupMenu();
-            AppendMenuW(menu, MF_STRING, 1, Tr(L"取消"));
-            POINT screen = pt;
-            ClientToScreen(hwnd, &screen);
-            const UINT cmd = TrackPopupMenu(menu, TPM_RETURNCMD | TPM_RIGHTBUTTON, screen.x, screen.y, 0, hwnd, nullptr);
-            DestroyMenu(menu);
-            if (cmd == 1)
-            {
-                m_ops->Cancel(id);
-                Refresh();
-            }
-            break;
-        }
-        default:
-            break;
-        }
+        if (m_bar.OnButtonUp() || m_bar.Over(pt))
+            return 0;
+        m_flyRing = false; // pointer: no focus visual
+        const Hit hit = HitTest(pt, id);
+        Activate(hit, id, pt);
         return 0;
     }
     case WM_MOUSEWHEEL:
     {
         const RECT list = ListRect();
         const int maxScroll = std::max(0, ContentHeight() - static_cast<int>(list.bottom - list.top));
-        m_scroll = m_smooth.OnWheel(hwnd, GET_WHEEL_DELTA_WPARAM(wp), m_theme->S(48), maxScroll);
-        InvalidateRect(m_flyout, nullptr, FALSE);
+        ScrollTo(m_smooth.OnWheel(hwnd, GET_WHEEL_DELTA_WPARAM(wp), m_theme->S(48), maxScroll));
         return 0;
     }
     case SmoothFrame::kMsgTick:
         if (m_smooth.Animating())
-        {
-            m_scroll = m_smooth.Tick();
-            InvalidateRect(m_flyout, nullptr, FALSE);
-        }
+            ScrollTo(m_smooth.Tick());
+        return 0;
+    case WM_TIMER:
+        if (wp == kBarTimer)
+            m_bar.OnTimer(wp);
+        return 0;
+    case WM_LBUTTONDOWN:
+        if (const POINT pt{ GET_X_LPARAM(lp), GET_Y_LPARAM(lp) }; m_bar.Over(pt))
+            m_bar.OnButtonDown(pt);
+        return 0;
+    case WM_CAPTURECHANGED:
+        m_bar.OnCaptureLost();
         return 0;
     case WM_KEYDOWN:
         if (wp == VK_ESCAPE)
@@ -1046,7 +1178,28 @@ LRESULT StatusCenter::FlyoutMessage(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
             Hide();
             return 0;
         }
+        if (wp == VK_TAB)
+        {
+            FocusFlyStop(GetKeyState(VK_SHIFT) < 0);
+            return 0;
+        }
+        if ((wp == VK_RETURN || wp == VK_SPACE) && m_focusHit != HitNone)
+        {
+            const RECT r = StopRect({ static_cast<Hit>(m_focusHit), m_focusId });
+            const Hit hit = static_cast<Hit>(m_focusHit);
+            const unsigned id = m_focusId;
+            if (hit == HitDismiss || hit == HitClear)
+                m_focusHit = HitNone, m_focusId = 0; // the card goes: the next Tab starts over
+            Activate(hit, id, { r.left, r.bottom });
+            m_flyRing = true;
+            if (hit == HitClear)
+                m_focusHit = HitClear; // still there
+            InvalidateRect(hwnd, nullptr, FALSE);
+            return 0;
+        }
         break;
+    case WM_GETDLGCODE:
+        return DLGC_WANTALLKEYS;
     case WM_COMMAND:
         if (LOWORD(wp) == kClearCompleted)
         {

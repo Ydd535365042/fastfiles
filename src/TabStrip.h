@@ -46,6 +46,12 @@ public:
     void Relayout();
     void SetActionsVisible(bool visible); // Files: 在标题栏中显示标签操作按钮 (default on)
     void SetLoading(int index, bool loading); // Files' LoadingStates: a ProgressRing instead of the tab's icon
+    // Keyboard focus (the window's Tab order): kFocusActions (the tab actions button, when shown), kFocusTabs (the
+    // tab list: Left / Right / Home / End select, Ctrl+F4 / Delete close, as WinUI's TabView) and kFocusNew ("+")
+    static constexpr int kFocusActions = 0, kFocusTabs = 1, kFocusNew = 2;
+    std::vector<int> FocusStops() const;
+    void FocusPart(int part); // takes the focus with the keyboard ring on that part
+    int FocusedPart() const;  // -1 when the strip doesn't have the focus
     // Clipboard format of a dragged tab (registered; shared by every FastFiles process)
     static CLIPFORMAT TabFormat();
 
@@ -114,6 +120,8 @@ private:
     int m_scroll = 0;      // pixels the tabs are scrolled left
     bool m_overflow = false;
     Hit m_hot, m_pressed;
+    int m_focusPart = kFocusTabs; // the part that has the keyboard focus while the strip has it
+    bool m_ring = false;          // the focus came from the keyboard (a mouse press hides the ring)
     bool m_tracking = false;
     bool m_windowActive = true;
     bool m_maximized = false;

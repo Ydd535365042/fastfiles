@@ -42,5 +42,7 @@ struct Layer
 void SetLayers(const std::vector<Layer>& layers);
 // Swaps the key pixels of a painted 32bpp top-down buffer (0x00RRGGBB) inside rc (client coordinates of hwnd).
 // extra: keys only this surface has (the file list's card and its row fills), checked after the window-wide ones.
-void Compose(HWND hwnd, uint32_t* bits, int width, const RECT& rc, const std::vector<Layer>* extra = nullptr);
+// paint: the BeginPaint DC; only the parts of rc in its visible region are composed (not the children's rectangles a
+// parent's rcPaint spans: the blit is clipped to that region, and the children compose their own pixels).
+void Compose(HWND hwnd, uint32_t* bits, int width, const RECT& rc, const std::vector<Layer>* extra = nullptr, HDC paint = nullptr);
 }

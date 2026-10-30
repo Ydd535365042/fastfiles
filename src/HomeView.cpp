@@ -45,6 +45,7 @@ bool HomeView::Create(HWND parent, const Theme* theme)
     if (!registered || !CreateWindowExW(0, kClass, Tr(L"主页"), WS_CHILD | WS_CLIPSIBLINGS | WS_TABSTOP, 0, 0, 0, 0,
             parent, nullptr, GetModuleHandleW(nullptr), this))
         return false;
+    m_bar.Attach(m_hwnd, true, kBarTimer, m_theme, [this](int y) { m_smooth.Reset(y); ScrollTo(y); });
     m_tooltip = CreateWindowExW(WS_EX_TOPMOST, TOOLTIPS_CLASSW, nullptr, WS_POPUP | TTS_ALWAYSTIP | TTS_NOPREFIX,
         CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, m_hwnd, nullptr, GetModuleHandleW(nullptr), nullptr);
     TTTOOLINFOW ti{ sizeof(ti) };
@@ -267,6 +268,11 @@ void HomeView::ScrollTo(int offset)
         m_scroll = offset;
         InvalidateRect(m_hwnd, nullptr, FALSE);
     }
+    if (m_hwnd && m_theme)
+    {
+        const RECT strip{ client.right - m_theme->S(12), 0, client.right, client.bottom };
+        m_bar.Set(m_content > client.bottom ? m_content : 0, client.bottom, m_scroll, strip, m_theme->S(32));
+    }
 }
 
 void HomeView::EnsureVisible(int cell)
@@ -285,20 +291,6 @@ void HomeView::EnsureVisible(int cell)
         return;
     m_smooth.Reset(y); // a key / selection jump, not the wheel: goes straight there
     ScrollTo(y);
-}
-
-bool HomeView::ThumbRect(RECT& thumb) const
-{
-    RECT client;
-    GetClientRect(m_hwnd, &client);
-    if (m_content <= client.bottom || client.bottom <= 0)
-        return false;
-    const int track = client.bottom - m_theme->S(4);
-    const int h = std::max(m_theme->S(24), MulDiv(track, client.bottom, m_content));
-    const int top = m_theme->S(2) + MulDiv(track - h, m_scroll, m_content - client.bottom);
-    const int w = m_thumbDrag ? m_theme->S(6) : m_theme->S(4);
-    thumb = { client.right - m_theme->S(2) - w, top, client.right - m_theme->S(2), top + h };
-    return true;
 }
 
 void HomeView::SetHot(int cell)
@@ -477,7 +469,7 @@ void HomeView::Paint(HDC hdc, const RECT& rc)
         const RECT r = ClientRect(static_cast<int>(i));
         if (r.bottom < rc.top || r.top > rc.bottom)
             continue;
-        const bool hot = static_cast<int>(i) == m_hot && !m_thumbDrag;
+        const bool hot = static_cast<int>(i) == m_hot && !m_bar.Captured();
         const bool down = static_cast<int>(i) == m_pressed && hot;
         if (cell.section == SecTags && cell.item != kHeader && cell.item != kHint)
         {
@@ -511,7 +503,5 @@ void HomeView::Paint(HDC hdc, const RECT& rc)
         if (focused && m_keyboardFocus && static_cast<int>(i) == m_focus)
             FrameRound(hdc, { r.left + 1, r.top + 1, r.right - 1, r.bottom - 1 }, t.S(6), t.ink);
     }
-    RECT thumb;
-    if ((m_tracking || m_thumbDrag) && ThumbRect(thumb))
-        FillRound(hdc, thumb, t.S(3), Mix(t.muted, t.content, m_thumbDrag ? 20 : 45));
+    m_bar.Paint(hdc, rc);
 }

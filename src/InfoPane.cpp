@@ -63,6 +63,21 @@ void DrawFit(HDC hdc, HBITMAP bmp, bool alpha, const RECT& box)
     SelectObject(mem, old);
     DeleteDC(mem);
 }
+
+// The previews' clipping parent: its children are wider / taller than it (their system scroll bars fall outside);
+// their colors and notifications go on to the pane
+constexpr wchar_t kClipClass[] = L"FastFiles.InfoPaneClip";
+LRESULT CALLBACK ClipProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
+{
+    switch (msg)
+    {
+    case WM_ERASEBKGND:
+        return 1; // the visible child covers it
+    case WM_CTLCOLOREDIT: case WM_CTLCOLORSTATIC: case WM_NOTIFY: case WM_COMMAND:
+        return SendMessageW(GetParent(hwnd), msg, wp, lp);
+    }
+    return DefWindowProcW(hwnd, msg, wp, lp);
+}
 }
 
 InfoPane::~InfoPane()
@@ -86,11 +101,24 @@ bool InfoPane::Create(HWND parent, int id, const Theme* theme)
     if (!registered || !CreateWindowExW(0, kClass, Tr(L"详情窗格"), WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, 0, 0, 0, 0,
             parent, MenuId(id), inst, this))
         return false;
+    m_bar.Attach(m_hwnd, true, kBarTimer, m_theme, [this](int y) { m_smooth.Reset(y); ScrollTo(y); });
+    static const bool clipRegistered = [inst]
+    {
+        WNDCLASSEXW wc{ sizeof(wc) };
+        wc.lpfnWndProc = ClipProc;
+        wc.hInstance = inst;
+        wc.hCursor = LoadCursorW(nullptr, IDC_ARROW);
+        wc.lpszClassName = kClipClass;
+        return RegisterClassExW(&wc) != 0 || GetLastError() == ERROR_CLASS_ALREADY_EXISTS;
+    }();
+    m_clip = clipRegistered ? CreateWindowExW(WS_EX_CONTROLPARENT, kClipClass, L"", WS_CHILD | WS_CLIPCHILDREN, 0, 0, 0, 0, m_hwnd, nullptr, inst, nullptr)
+                            : nullptr;
+    const HWND previews = m_clip ? m_clip : m_hwnd;
     m_text = CreateWindowExW(0, WC_EDITW, L"", WS_CHILD | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP | ES_MULTILINE | ES_READONLY |
-        ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_NOHIDESEL, 0, 0, 0, 0, m_hwnd, nullptr, inst, nullptr);
+        ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_NOHIDESEL, 0, 0, 0, 0, previews, nullptr, inst, nullptr);
     SendMessageW(m_text, EM_SETLIMITTEXT, 4 * 1024 * 1024, 0);
     m_list = CreateWindowExW(0, WC_LISTVIEWW, L"", WS_CHILD | WS_TABSTOP | LVS_REPORT | LVS_OWNERDATA | LVS_SHAREIMAGELISTS |
-        LVS_NOSORTHEADER | LVS_SINGLESEL, 0, 0, 0, 0, m_hwnd, nullptr, inst, nullptr);
+        LVS_NOSORTHEADER | LVS_SINGLESEL, 0, 0, 0, 0, previews, nullptr, inst, nullptr);
     ListView_SetExtendedListViewStyle(m_list, LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER);
     SetWindowTheme(m_list, L"Explorer", nullptr);
     SHFILEINFOW sfi{};
@@ -110,11 +138,19 @@ bool InfoPane::Create(HWND parent, int id, const Theme* theme)
     static const bool richLoaded = LoadLibraryExW(L"Msftedit.dll", nullptr, LOAD_LIBRARY_SEARCH_SYSTEM32) != nullptr;
     if (richLoaded)
     {
+        // ES_DISABLENOSCROLL: both bars always there (cut off by m_clip), so the text's width doesn't jump with them
         m_rich = CreateWindowExW(0, MSFTEDIT_CLASS, L"", WS_CHILD | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP | ES_MULTILINE | ES_READONLY |
-            ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_NOHIDESEL, 0, 0, 0, 0, m_hwnd, nullptr, inst, nullptr);
+            ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_NOHIDESEL | ES_DISABLENOSCROLL, 0, 0, 0, 0, previews, nullptr, inst, nullptr);
         SendMessageW(m_rich, EM_SETEVENTMASK, 0, ENM_LINK);
         SendMessageW(m_rich, EM_SETEDITSTYLEEX, SES_EX_HANDLEFRIENDLYURL, SES_EX_HANDLEFRIENDLYURL);
         SendMessageW(m_rich, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELPARAM(6, 6));
+    }
+    if (m_clip)
+    {
+        // (ids 0xFF51.. : the controls' own timers are small numbers)
+        m_textBars.Attach(m_text, NativeBars::Kind::Edit, m_theme, 0xFF51, 0xFF52);
+        m_listBars.Attach(m_list, NativeBars::Kind::List, m_theme, 0xFF51, 0xFF52);
+        m_richBars.Attach(m_rich, NativeBars::Kind::Rich, m_theme, 0xFF51, 0xFF52);
     }
     m_media = new MediaPreview();
     if (!m_media->Create(m_hwnd, m_theme))
@@ -135,7 +171,7 @@ void InfoPane::Destroy()
     m_media = nullptr;
     if (m_hwnd)
         DestroyWindow(m_hwnd);
-    m_hwnd = m_text = m_list = m_host = m_rich = nullptr;
+    m_hwnd = m_text = m_list = m_host = m_rich = m_clip = nullptr;
     for (HGDIOBJ* o : { reinterpret_cast<HGDIOBJ*>(&m_mono), reinterpret_cast<HGDIOBJ*>(&m_bold), reinterpret_cast<HGDIOBJ*>(&m_contentBrush) })
         if (*o)
         {
@@ -244,6 +280,31 @@ RECT InfoPane::DetailsRect() const
     return { body.left, ThumbRect().bottom + m_theme->S(12), body.right, body.bottom };
 }
 
+void InfoPane::ScrollTo(int offset)
+{
+    const RECT body = BodyRect();
+    offset = std::clamp(offset, 0, std::max(0, m_contentHeight - static_cast<int>(body.bottom - body.top)));
+    if (offset != m_scroll)
+    {
+        m_scroll = offset;
+        InvalidateRect(m_hwnd, nullptr, FALSE);
+    }
+    UpdateBar();
+}
+
+// The Details page's ScrollViewer bar along the pane's right edge, over the body (the Preview page's controls scroll themselves)
+void InfoPane::UpdateBar()
+{
+    if (!m_hwnd || !m_theme)
+        return;
+    RECT client{};
+    GetClientRect(m_hwnd, &client);
+    const RECT body = BodyRect();
+    const int view = body.bottom - body.top;
+    const RECT strip{ client.right - m_theme->S(12), body.top, client.right, body.bottom };
+    m_bar.Set(m_page == Page::Details && m_contentHeight > view ? m_contentHeight : 0, view, m_scroll, strip, m_theme->S(32));
+}
+
 int InfoPane::HitTab(POINT pt) const
 {
     const Theme& t = *m_theme;
@@ -271,13 +332,37 @@ void InfoPane::LayoutChildren()
     if (m_kind == Kind::Archive)
         body.top += t.S(44); // the two summary rows
     const int w = std::max<int>(0, body.right - body.left), h = std::max<int>(0, body.bottom - body.top);
-    SetWindowPos(m_text, nullptr, body.left, body.top, w, h, SWP_NOZORDER | SWP_NOACTIVATE);
-    SetWindowPos(m_list, nullptr, body.left, body.top, w, h, SWP_NOZORDER | SWP_NOACTIVATE);
+    if (m_clip)
+    {
+        // The clip shows exactly the body; each control is as much bigger as its system bars take, so its client area
+        // is the body and its bars lie outside (a bar the control hides or shows changes that: placed again)
+        SetWindowPos(m_clip, nullptr, body.left, body.top, w, h, SWP_NOZORDER | SWP_NOACTIVATE);
+        const int cx = GetSystemMetricsForDpi(SM_CXVSCROLL, t.dpi), cy = GetSystemMetricsForDpi(SM_CYHSCROLL, t.dpi);
+        for (HWND c : { m_text, m_list, m_rich })
+            for (int pass = 0; c && pass < 3; ++pass)
+            {
+                const LONG_PTR style = GetWindowLongPtrW(c, GWL_STYLE);
+                const int ew = w + ((style & WS_VSCROLL) ? cx : 0), eh = h + ((style & WS_HSCROLL) ? cy : 0);
+                RECT now{};
+                GetWindowRect(c, &now);
+                if (now.right - now.left == ew && now.bottom - now.top == eh && pass > 0)
+                    break;
+                SetWindowPos(c, nullptr, 0, 0, ew, eh, SWP_NOZORDER | SWP_NOACTIVATE);
+            }
+        ShowWindow(m_clip, (GetWindowLongPtrW(m_text, GWL_STYLE) & WS_VISIBLE) || (GetWindowLongPtrW(m_list, GWL_STYLE) & WS_VISIBLE) ||
+            (m_rich && (GetWindowLongPtrW(m_rich, GWL_STYLE) & WS_VISIBLE)) ? SW_SHOWNA : SW_HIDE);
+    }
+    else
+    {
+        SetWindowPos(m_text, nullptr, body.left, body.top, w, h, SWP_NOZORDER | SWP_NOACTIVATE);
+        SetWindowPos(m_list, nullptr, body.left, body.top, w, h, SWP_NOZORDER | SWP_NOACTIVATE);
+        if (m_rich)
+            SetWindowPos(m_rich, nullptr, body.left, body.top, w, h, SWP_NOZORDER | SWP_NOACTIVATE);
+    }
     ListView_SetColumnWidth(m_list, 1, t.S(80));
-    ListView_SetColumnWidth(m_list, 0, std::max(t.S(80), w - t.S(80) - GetSystemMetricsForDpi(SM_CXVSCROLL, t.dpi) - t.S(4)));
+    // (room for the overlay bar on the right: WinUI's sits over the list, beside the sizes)
+    ListView_SetColumnWidth(m_list, 0, std::max(t.S(80), w - t.S(80) - (m_clip ? t.S(12) : GetSystemMetricsForDpi(SM_CXVSCROLL, t.dpi)) - t.S(4)));
     SetWindowPos(m_host, nullptr, body.left, body.top, w, h, SWP_NOZORDER | SWP_NOACTIVATE);
-    if (m_rich)
-        SetWindowPos(m_rich, nullptr, body.left, body.top, w, h, SWP_NOZORDER | SWP_NOACTIVATE);
     if (m_media)
         m_media->Move({ body.left, body.top, body.left + w, body.top + h });
     if (m_handler)
@@ -301,6 +386,61 @@ void InfoPane::SetPage(Page page)
     if (m_kind != Kind::Many)
         Start();
     InvalidateRect(m_hwnd, nullptr, FALSE);
+}
+
+std::vector<int> InfoPane::FocusParts() const
+{
+    std::vector<int> parts;
+    if (!m_hwnd || !IsWindowVisible(m_hwnd))
+        return parts;
+    parts = { PartPages, PartClose };
+    if (m_page == Page::Details && m_tagsShown && m_kind != Kind::Many)
+        parts.push_back(PartTags);
+    return parts;
+}
+
+void InfoPane::FocusPart(int part)
+{
+    m_focusPart = part;
+    m_ring = true;
+    m_revealTags = part == PartTags;
+    NameFocus();
+    SetFocus(m_hwnd);
+    InvalidateRect(m_hwnd, nullptr, FALSE);
+}
+
+// The window's name is the focused button's (what a screen reader reads, as the toolbar's; tests read it too)
+void InfoPane::NameFocus()
+{
+    // (the labels it shows: no new strings)
+    const wchar_t* name = m_focusPart == PartClose ? Tr(L"关闭") : m_focusPart == PartTags ? (m_tags.empty() ? Tr(L"+ 添加标签") : Tr(L"编辑"))
+                        : m_page == Page::Details ? Tr(L"详情") : Tr(L"预览");
+    SetWindowTextW(m_hwnd, name);
+}
+
+int InfoPane::FocusedPart() const
+{
+    return GetFocus() == m_hwnd ? m_focusPart : -1;
+}
+
+void InfoPane::Press(int part)
+{
+    switch (part)
+    {
+    case PartPages:
+        break; // (a RadioButton: Space on the checked one does nothing)
+    case PartClose:
+        m_events->OnInfoPaneClose();
+        break;
+    case PartTags:
+        if (!IsRectEmpty(&m_tagsButton))
+        {
+            POINT screen{ m_tagsButton.left, m_tagsButton.bottom };
+            ClientToScreen(m_hwnd, &screen);
+            m_events->OnInfoPaneTags(screen);
+        }
+        break;
+    }
 }
 
 void InfoPane::ShowItem(PCIDLIST_ABSOLUTE pidl)
@@ -534,6 +674,11 @@ void InfoPane::Paint(HDC hdc, const RECT& rc)
             DrawLabel(hdc, t.ui, i == 0 ? Tr(L"详情") : Tr(L"预览"), tabs[i], t.ink, DT_CENTER);
         else
             DrawGlyph(hdc, t.iconsSmall, Glyph::Close, tabs[i], t.muted);
+        // The focus visual: on the checked page button (the pair's one stop), or on the close button
+        const bool focused = m_ring && GetFocus() == m_hwnd &&
+            ((m_focusPart == PartPages && on) || (m_focusPart == PartClose && i == 2));
+        if (focused)
+            DrawFocusVisual(hdc, t, tabs[i], t.S(5), on ? t.selected : t.toolbar, &client);
     }
 
     const RECT body = BodyRect();
@@ -586,7 +731,7 @@ void InfoPane::Paint(HDC hdc, const RECT& rc)
         y += t.S(10);
 
         const int labelW = std::clamp(static_cast<int>(details.right - details.left) * 38 / 100, t.S(56), t.S(110));
-        m_tagsRect = {};
+        m_tagsRect = m_tagsButton = {};
         if (m_tagsShown && m_kind != Kind::Many)
         {
             // Files' details pane: the item's tags as colored chips; the row opens the tag menu
@@ -611,6 +756,12 @@ void InfoPane::Paint(HDC hdc, const RECT& rc)
                 }
                 DrawLabel(hdc, t.caption, text, { rc.left + (add ? t.S(8) : t.S(21)), rc.top, rc.right - t.S(6), rc.bottom },
                     add ? (m_tagsHot ? t.accent : t.muted) : t.ink);
+                if (add)
+                {
+                    m_tagsButton = rc;
+                    if (m_focusPart == PartTags && m_ring && GetFocus() == m_hwnd)
+                        DrawFocusVisual(hdc, t, rc, chipH / 2, t.toolbar, &client);
+                }
                 x += w + gap;
             };
             for (const auto& [tagName, tagColor] : m_tags)
@@ -619,6 +770,14 @@ void InfoPane::Paint(HDC hdc, const RECT& rc)
             const int h = rowY + chipH - y;
             DrawLabel(hdc, t.caption, Tr(L"标签"), { details.left, y, details.left + labelW, y + std::min(h, chipH) }, t.muted);
             m_tagsRect = { details.left, y, details.right, y + h };
+            if (std::exchange(m_revealTags, false))
+            {
+                // Keyboard focus on the row: into view (the next paint shows it there)
+                if (m_tagsButton.top < body.top)
+                    PostMessageW(m_hwnd, kMsgReveal, 0, m_scroll - (body.top - m_tagsButton.top) - t.S(8));
+                else if (m_tagsButton.bottom > body.bottom)
+                    PostMessageW(m_hwnd, kMsgReveal, 0, m_scroll + (m_tagsButton.bottom - body.bottom) + t.S(8));
+            }
             y += h + t.S(10);
         }
         std::vector<std::pair<std::wstring, std::wstring>> rows = m_props;
@@ -712,6 +871,8 @@ void InfoPane::Paint(HDC hdc, const RECT& rc)
         }
     }
     RestoreDC(hdc, saved);
+    UpdateBar(); // the content height is known once the details are laid out (here)
+    m_bar.Paint(hdc, rc);
 }
 
 LRESULT CALLBACK InfoPane::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
@@ -760,6 +921,15 @@ LRESULT InfoPane::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
             TRACKMOUSEEVENT tme{ sizeof(tme), TME_LEAVE, m_hwnd, 0 };
             m_tracking = TrackMouseEvent(&tme) != FALSE;
         }
+        if (const bool held = m_bar.Captured(); m_bar.OnMouseMove(pt, (wp & MK_LBUTTON) != 0) || held)
+        {
+            if (m_tagsHot)
+            {
+                m_tagsHot = false;
+                InvalidateRect(m_hwnd, nullptr, FALSE);
+            }
+            return 0;
+        }
         if (const int hot = HitTab(pt); hot != m_hotTab)
         {
             m_hotTab = hot;
@@ -780,11 +950,56 @@ LRESULT InfoPane::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
         break;
     case WM_MOUSELEAVE:
         m_tracking = false;
+        m_bar.OnMouseLeave();
         m_hotTab = -1;
         m_tagsHot = false;
         InvalidateRect(m_hwnd, nullptr, FALSE);
         return 0;
+    case WM_LBUTTONDOWN:
+    case WM_LBUTTONDBLCLK:
+        if (m_ring)
+        {
+            m_ring = false; // a pointer press hides the keyboard focus visual (WinUI FocusState.Pointer)
+            InvalidateRect(m_hwnd, nullptr, FALSE);
+        }
+        if (m_bar.Over(pt))
+            m_bar.OnButtonDown(pt);
+        return 0;
+    case WM_GETDLGCODE:
+        return GetFocus() == m_hwnd ? DLGC_WANTARROWS | DLGC_WANTCHARS : 0;
+    case WM_KEYDOWN:
+        if (GetFocus() != m_hwnd)
+            break;
+        if (m_focusPart == PartPages && (wp == VK_LEFT || wp == VK_RIGHT || wp == VK_UP || wp == VK_DOWN))
+        {
+            // RadioButtons: the arrows move the check (and the focus) to the other page
+            const Page to = (wp == VK_LEFT || wp == VK_UP) ? Page::Details : Page::Preview;
+            m_ring = true;
+            SetPage(to);
+            NameFocus();
+            InvalidateRect(m_hwnd, nullptr, FALSE);
+            return 0;
+        }
+        if ((wp == VK_RETURN || wp == VK_SPACE) && m_focusPart >= 0)
+        {
+            Press(m_focusPart);
+            return 0;
+        }
+        break;
+    case WM_SETFOCUS:
+    case WM_KILLFOCUS:
+        InvalidateRect(m_hwnd, nullptr, FALSE);
+        return 0;
+    case kMsgReveal:
+        m_smooth.Reset(static_cast<int>(lp));
+        ScrollTo(static_cast<int>(lp));
+        return 0;
+    case WM_CAPTURECHANGED:
+        m_bar.OnCaptureLost();
+        return 0;
     case WM_LBUTTONUP:
+        if (m_bar.OnButtonUp() || m_bar.Over(pt))
+            return 0;
         if (m_page == Page::Details && PtInRect(&m_tagsRect, pt))
         {
             POINT screen = pt;
@@ -804,20 +1019,12 @@ LRESULT InfoPane::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
         {
             const RECT body = BodyRect();
             const int maxScroll = std::max(0, m_contentHeight - static_cast<int>(body.bottom - body.top));
-            const int scroll = m_smooth.OnWheel(m_hwnd, GET_WHEEL_DELTA_WPARAM(wp), m_theme->S(48), maxScroll);
-            if (scroll != m_scroll)
-            {
-                m_scroll = scroll;
-                InvalidateRect(m_hwnd, nullptr, FALSE);
-            }
+            ScrollTo(m_smooth.OnWheel(m_hwnd, GET_WHEEL_DELTA_WPARAM(wp), m_theme->S(48), maxScroll));
         }
         return 0;
     case SmoothFrame::kMsgTick:
         if (m_smooth.Animating())
-        {
-            m_scroll = m_smooth.Tick();
-            InvalidateRect(m_hwnd, nullptr, FALSE);
-        }
+            ScrollTo(m_smooth.Tick());
         return 0;
     case WM_CTLCOLORSTATIC:
     case WM_CTLCOLOREDIT:
@@ -850,6 +1057,11 @@ LRESULT InfoPane::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
         }
         break;
     case WM_TIMER:
+        if (wp == kBarTimer)
+        {
+            m_bar.OnTimer(wp);
+            return 0;
+        }
         KillTimer(m_hwnd, wp);
         if (wp == kHandlerTimer)
             LoadHandler();

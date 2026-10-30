@@ -76,6 +76,12 @@ void FileList::Paint(HWND hwnd, bool header)
                     DeleteObject(stroke);
                 }
             }
+            if (!header)
+            {
+                // The scroll bars, over everything (WinUI's sit above the content)
+                m_barV.Paint(c.dc, ps.rcPaint);
+                m_barH.Paint(c.dc, ps.rcPaint);
+            }
             BitBlt(target, ps.rcPaint.left, ps.rcPaint.top, ps.rcPaint.right - ps.rcPaint.left, ps.rcPaint.bottom - ps.rcPaint.top,
                 c.dc, ps.rcPaint.left, ps.rcPaint.top, SRCCOPY);
         }
@@ -416,7 +422,8 @@ void FileList::ApplyTheme()
     if (m_editBrush)
         DeleteObject(m_editBrush);
     m_editBrush = CreateSolidBrush(t.field);
-    DarkMode::ApplyControl(m_list, t.dark); // scroll bars
+    DarkMode::ApplyControl(m_list, t.dark); // (its scroll bars are ScrollOverlay's now; the theme still feeds the tooltips)
+    UpdateBars();
     SendMessageW(m_header, WM_SETFONT, reinterpret_cast<WPARAM>(t.caption), FALSE);
     // Column widths follow the DPI (kept at 96 DPI)
     if (m_header && m_columnDpi != static_cast<int>(t.dpi))

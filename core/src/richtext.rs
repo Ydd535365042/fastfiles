@@ -1,13 +1,20 @@
 //! Rich previews for the details pane, as RTF for a RichEdit control: Files' CodePreview (ColorCode languages and
 //! colors) and MarkdownPreview (MarkdownTextBlock). Text is already decoded and cut to Files' 10 000 characters.
 
-/// Files' CodePreviewViewModel extension table; 0 = not code
+/// Files' CodePreviewViewModel extension table (1..15), then the source and config files Files leaves to Windows'
+/// TXT previewer (black on white, whatever the theme) or plain text: highlighted the same way here. 0 = not code
 pub fn language_for(ext: &str) -> u8 {
     let e = ext.trim_start_matches('.').to_ascii_lowercase();
-    let table: [(u8, &str); 15] = [
+    let table: &[(u8, &str)] = &[
         (1, "aspx"), (2, "acsx"), (3, "cpp,c++,cc,cp,cxx,h,h++,hh,hpp,hxx,inc,inl,ino,ipp,re,tcc,tpp"), (4, "cs,cake,csx,linq"),
         (5, "css,scss"), (6, "fs,fsi,fsx"), (7, "hs"), (8, "razor,cshtml,vbhtml,svelte"), (9, "java"), (10, "js,jsx"), (11, "php"),
         (12, "pwsh,ps1,psd1,psm1"), (13, "ts,tsx"), (14, "vb,vbs"), (15, "xml,axml,xaml,xsd,xsl,xslt,xlf"),
+        // Beyond Files' table
+        (3, "c,cu,m,mm"), (5, "less,sass"), (8, "vue"), (9, "gradle,groovy,scala"), (10, "mjs,cjs"), (13, "mts,cts"),
+        (15, "csproj,vcxproj,props,targets,config,resx,manifest,plist,svg,nuspec,wxs,filters,ruleset"),
+        (16, "py,pyw,pyi"), (17, "sql"), (18, "bat,cmd"), (19, "sh,bash,zsh,ksh"), (20, "rs"), (21, "go"), (22, "lua"),
+        (23, "rb,rake,gemspec"), (24, "kt,kts,swift,dart"), (25, "pl,pm"), (26, "json,jsonc,json5,geojson,webmanifest"),
+        (27, "ini,inf,cfg,conf,toml,yaml,yml,properties,env,editorconfig,gitattributes,gitconfig,reg"),
     ];
     table.iter().find(|(_, list)| list.split(',').any(|x| x == e)).map_or(0, |(id, _)| *id)
 }
@@ -118,7 +125,9 @@ struct Lang {
     keywords: &'static [&'static str],
     ignore_case: bool,
     preproc: bool,  // '#' at the start of a line
-    sigil: bool,    // $variables (PowerShell, PHP)
+    sigil: bool,    // $variables (PowerShell, PHP, shells, Perl)
+    escapes: bool,  // backslash escapes in strings
+    triple: bool,   // """ / ''' strings spanning lines (Python)
 }
 
 const C_KW: &[&str] = &["auto", "break", "case", "char", "const", "continue", "default", "do", "double", "else", "enum", "extern",
@@ -172,8 +181,45 @@ const FS_KW: &[&str] = &["abstract", "and", "as", "assert", "base", "begin", "cl
 const HS_KW: &[&str] = &["case", "class", "data", "default", "deriving", "do", "else", "if", "import", "in", "infix", "infixl",
     "infixr", "instance", "let", "module", "newtype", "of", "then", "type", "where", "qualified", "as", "hiding", "forall"];
 
+const PY_KW: &[&str] = &["False", "None", "True", "and", "as", "assert", "async", "await", "break", "class", "continue", "def", "del",
+    "elif", "else", "except", "finally", "for", "from", "global", "if", "import", "in", "is", "lambda", "nonlocal", "not", "or", "pass",
+    "raise", "return", "try", "while", "with", "yield", "match", "case", "self"];
+const SQL_KW: &[&str] = &["select", "from", "where", "and", "or", "not", "insert", "into", "values", "update", "set", "delete", "create",
+    "table", "view", "index", "drop", "alter", "add", "column", "primary", "key", "foreign", "references", "join", "inner", "left",
+    "right", "outer", "full", "cross", "on", "as", "group", "by", "order", "having", "limit", "offset", "union", "all", "distinct",
+    "case", "when", "then", "else", "end", "null", "is", "in", "like", "between", "exists", "begin", "commit", "rollback", "declare",
+    "procedure", "function", "returns", "return", "if", "int", "integer", "varchar", "nvarchar", "char", "text", "date", "datetime",
+    "bit", "decimal", "float", "default", "unique", "check", "constraint", "with", "top", "asc", "desc", "go", "exec", "trigger"];
+const BAT_KW: &[&str] = &["echo", "set", "if", "else", "for", "in", "do", "goto", "call", "exit", "not", "exist", "defined", "errorlevel",
+    "setlocal", "endlocal", "shift", "pause", "cd", "pushd", "popd", "start", "equ", "neq", "lss", "leq", "gtr", "geq", "off", "on"];
+const SH_KW: &[&str] = &["if", "then", "else", "elif", "fi", "case", "esac", "for", "while", "until", "do", "done", "in", "function",
+    "select", "return", "exit", "break", "continue", "local", "export", "readonly", "declare", "source", "echo", "set", "unset", "shift",
+    "trap", "eval", "exec", "true", "false"];
+const RS_KW: &[&str] = &["as", "async", "await", "break", "const", "continue", "crate", "dyn", "else", "enum", "extern", "false", "fn",
+    "for", "if", "impl", "in", "let", "loop", "match", "mod", "move", "mut", "pub", "ref", "return", "self", "Self", "static", "struct",
+    "super", "trait", "true", "type", "unsafe", "use", "where", "while", "bool", "char", "str", "u8", "u16", "u32", "u64", "u128",
+    "usize", "i8", "i16", "i32", "i64", "i128", "isize", "f32", "f64", "String", "Vec", "Option", "Result", "Some", "None", "Ok", "Err"];
+const GO_KW: &[&str] = &["break", "case", "chan", "const", "continue", "default", "defer", "else", "fallthrough", "for", "func", "go",
+    "goto", "if", "import", "interface", "map", "package", "range", "return", "select", "struct", "switch", "type", "var", "true",
+    "false", "nil", "iota", "int", "int8", "int16", "int32", "int64", "uint", "uint8", "uint16", "uint32", "uint64", "uintptr",
+    "float32", "float64", "string", "byte", "rune", "bool", "error", "any"];
+const LUA_KW: &[&str] = &["and", "break", "do", "else", "elseif", "end", "false", "for", "function", "goto", "if", "in", "local", "nil",
+    "not", "or", "repeat", "return", "then", "true", "until", "while", "self"];
+const RB_KW: &[&str] = &["BEGIN", "END", "alias", "and", "begin", "break", "case", "class", "def", "defined?", "do", "else", "elsif",
+    "end", "ensure", "false", "for", "if", "in", "module", "next", "nil", "not", "or", "redo", "rescue", "retry", "return", "self",
+    "super", "then", "true", "undef", "unless", "until", "when", "while", "yield", "require", "attr_accessor", "attr_reader", "puts"];
+// Kotlin, Swift and Dart share one list (their C-like syntax colors the same way)
+const KT_KW: &[&str] = &["abstract", "as", "async", "await", "break", "case", "catch", "class", "const", "continue", "data", "default",
+    "defer", "do", "else", "enum", "extension", "extends", "false", "final", "finally", "for", "fun", "func", "guard", "if", "import",
+    "in", "init", "interface", "internal", "is", "let", "late", "mixin", "nil", "null", "object", "open", "override", "package",
+    "private", "protected", "protocol", "public", "required", "return", "sealed", "self", "static", "struct", "super", "switch",
+    "this", "throw", "throws", "true", "try", "typealias", "val", "var", "void", "when", "where", "while", "with"];
+const PL_KW: &[&str] = &["my", "our", "local", "sub", "if", "elsif", "else", "unless", "while", "until", "for", "foreach", "do", "last",
+    "next", "redo", "return", "use", "no", "package", "require", "print", "eq", "ne", "lt", "gt", "le", "ge", "and", "or", "not"];
+
 fn lang(id: u8) -> Option<Lang> {
-    let c_like = |keywords| Lang { line: &["//"], block: &[("/*", "*/")], quotes: "\"'", keywords, ignore_case: false, preproc: false, sigil: false };
+    let c_like = |keywords| Lang { line: &["//"], block: &[("/*", "*/")], quotes: "\"'", keywords, ignore_case: false, preproc: false,
+        sigil: false, escapes: true, triple: false };
     Some(match id {
         3 => Lang { preproc: true, ..c_like(C_KW) },
         4 => Lang { preproc: true, ..c_like(CS_KW) },
@@ -181,10 +227,20 @@ fn lang(id: u8) -> Option<Lang> {
         10 => Lang { quotes: "\"'`", ..c_like(JS_KW) },
         13 => Lang { quotes: "\"'`", ..c_like(TS_KW) },
         11 => Lang { line: &["//", "#"], sigil: true, ..c_like(PHP_KW) },
-        12 => Lang { line: &["#"], block: &[("<#", "#>")], quotes: "\"'", keywords: PS_KW, ignore_case: true, preproc: false, sigil: true },
-        14 => Lang { line: &["'", "REM "], block: &[], quotes: "\"", keywords: VB_KW, ignore_case: true, preproc: false, sigil: false },
-        6 => Lang { line: &["//"], block: &[("(*", "*)")], quotes: "\"", keywords: FS_KW, ignore_case: false, preproc: true, sigil: false },
-        7 => Lang { line: &["--"], block: &[("{-", "-}")], quotes: "\"", keywords: HS_KW, ignore_case: false, preproc: false, sigil: false },
+        12 => Lang { line: &["#"], block: &[("<#", "#>")], ignore_case: true, sigil: true, escapes: false, ..c_like(PS_KW) },
+        14 => Lang { line: &["'", "REM "], block: &[], quotes: "\"", ignore_case: true, escapes: false, ..c_like(VB_KW) },
+        6 => Lang { block: &[("(*", "*)")], quotes: "\"", preproc: true, escapes: false, ..c_like(FS_KW) },
+        7 => Lang { line: &["--"], block: &[("{-", "-}")], quotes: "\"", escapes: false, ..c_like(HS_KW) },
+        16 => Lang { line: &["#"], block: &[], triple: true, ..c_like(PY_KW) },
+        17 => Lang { line: &["--"], quotes: "'\"", ignore_case: true, escapes: false, ..c_like(SQL_KW) },
+        18 => Lang { line: &["::", "REM ", "@REM "], block: &[], quotes: "\"", ignore_case: true, escapes: false, ..c_like(BAT_KW) },
+        19 => Lang { line: &["#"], block: &[], sigil: true, ..c_like(SH_KW) },
+        20 => Lang { quotes: "\"", preproc: true, ..c_like(RS_KW) },
+        21 => Lang { quotes: "\"'`", ..c_like(GO_KW) },
+        22 => Lang { line: &["--"], block: &[("--[[", "]]")], ..c_like(LUA_KW) },
+        23 => Lang { line: &["#"], block: &[("=begin", "=end")], ..c_like(RB_KW) },
+        24 => c_like(KT_KW),
+        25 => Lang { line: &["#"], block: &[], sigil: true, ..c_like(PL_KW) },
         _ => return None,
     })
 }
@@ -249,6 +305,14 @@ fn lex_generic(text: &str, l: &Lang) -> Vec<(Tok, String)> {
             i = end;
             continue;
         }
+        if l.triple && (starts(&chars, i, "\"\"\"", false) || starts(&chars, i, "'''", false)) {
+            // Python's """ / ''' strings (docstrings) run over lines
+            let close: String = std::iter::repeat(c).take(3).collect();
+            let end = (i + 3..chars.len()).find(|&j| starts(&chars, j, &close, false)).map_or(chars.len(), |j| j + 3);
+            push(Tok::Str, chars[i..end].iter().collect());
+            i = end;
+            continue;
+        }
         if l.quotes.contains(c) {
             // C# verbatim @"..." doubles its quotes; elsewhere backslash escapes
             let verbatim = i > 0 && chars[i - 1] == '@';
@@ -261,7 +325,7 @@ fn lex_generic(text: &str, l: &Lang) -> Vec<(Tok, String)> {
                     }
                     break;
                 }
-                if chars[j] == '\\' && !verbatim && l.quotes != "\"" {
+                if chars[j] == '\\' && !verbatim && l.escapes {
                     j += 2;
                     continue;
                 }
@@ -414,10 +478,141 @@ fn lex_css(text: &str) -> Vec<(Tok, String)> {
     out
 }
 
+/// JSON: keys (a string followed by ':') as attributes, string values, numbers, true / false / null
+fn lex_json(text: &str) -> Vec<(Tok, String)> {
+    let chars: Vec<char> = text.chars().collect();
+    let mut out: Vec<(Tok, String)> = Vec::new();
+    let mut i = 0;
+    while i < chars.len() {
+        let c = chars[i];
+        if c == '"' {
+            let mut j = i + 1;
+            while j < chars.len() && chars[j] != '"' && chars[j] != '\n' {
+                j += if chars[j] == '\\' { 2 } else { 1 };
+            }
+            let end = (j + 1).min(chars.len());
+            let mut k = end;
+            while k < chars.len() && (chars[k] == ' ' || chars[k] == '\t') {
+                k += 1;
+            }
+            let t = if chars.get(k) == Some(&':') { Tok::Attr } else { Tok::Str };
+            out.push((t, chars[i..end].iter().collect()));
+            i = end;
+        } else if starts(&chars, i, "//", false) {
+            // JSONC / JSON5 comments
+            let end = (i..chars.len()).find(|&j| chars[j] == '\n').unwrap_or(chars.len());
+            out.push((Tok::Comment, chars[i..end].iter().collect()));
+            i = end;
+        } else if starts(&chars, i, "/*", false) {
+            let end = (i + 2..chars.len()).find(|&j| starts(&chars, j, "*/", false)).map_or(chars.len(), |j| j + 2);
+            out.push((Tok::Comment, chars[i..end].iter().collect()));
+            i = end;
+        } else if c == '-' || c.is_ascii_digit() {
+            let mut j = i + 1;
+            while j < chars.len() && (chars[j].is_ascii_alphanumeric() || ".+-".contains(chars[j])) {
+                j += 1;
+            }
+            out.push((Tok::Number, chars[i..j].iter().collect()));
+            i = j;
+        } else if c.is_alphabetic() {
+            let mut j = i + 1;
+            while j < chars.len() && ident(chars[j]) {
+                j += 1;
+            }
+            let word: String = chars[i..j].iter().collect();
+            let t = if ["true", "false", "null"].contains(&word.as_str()) { Tok::Keyword } else { Tok::Text };
+            out.push((t, word));
+            i = j;
+        } else {
+            out.push((Tok::Text, c.to_string()));
+            i += 1;
+        }
+    }
+    out
+}
+
+/// INI / TOML / YAML / .properties / .reg: comments, [sections], keys before '=' or ':', then the value
+fn lex_keyvalue(text: &str) -> Vec<(Tok, String)> {
+    let mut out: Vec<(Tok, String)> = Vec::new();
+    for (n, line) in text.split('\n').enumerate() {
+        if n > 0 {
+            out.push((Tok::Text, "\n".into()));
+        }
+        let body = line.trim_start();
+        let indent = &line[..line.len() - body.len()];
+        if !indent.is_empty() {
+            out.push((Tok::Text, indent.into()));
+        }
+        if body.starts_with('#') || body.starts_with(';') || body.starts_with("//") {
+            out.push((Tok::Comment, body.into()));
+            continue;
+        }
+        if body.starts_with('[') {
+            out.push((Tok::Keyword, body.into()));
+            continue;
+        }
+        if body == "---" || body == "..." {
+            out.push((Tok::Preproc, body.into()));
+            continue;
+        }
+        // YAML list items: "- " then the rest as a value or a key
+        let (dash, rest) = match body.strip_prefix("- ") {
+            Some(r) => ("- ", r),
+            None => ("", body),
+        };
+        if !dash.is_empty() {
+            out.push((Tok::Text, dash.into()));
+        }
+        let split = rest.char_indices().find(|&(_, c)| c == '=' || c == ':').map(|(k, _)| k)
+            .filter(|&k| k > 0 && !rest[..k].contains('"') && !rest[..k].contains('\''));
+        let (key, value) = match split {
+            Some(k) => (&rest[..k], &rest[k..]),
+            None => ("", rest),
+        };
+        if !key.is_empty() {
+            out.push((Tok::Attr, key.into()));
+        }
+        // The value: its separator, then a trailing " #" comment apart
+        let mut v = value;
+        if let Some(sep) = v.chars().next().filter(|c| *c == '=' || *c == ':') {
+            out.push((Tok::Text, sep.to_string()));
+            v = &v[1..];
+        }
+        // (a '#' inside a quoted value is not a comment: the quotes before it must be balanced)
+        let (val, comment) = match v.find(" #").or_else(|| v.find(" ;")) {
+            Some(k) if v[..k].matches('"').count() % 2 == 0 && v[..k].matches('\'').count() % 2 == 0 => (&v[..k], &v[k..]),
+            _ => (v, ""),
+        };
+        let t = val.trim();
+        let kind = if t.is_empty() {
+            Tok::Text
+        } else if t.starts_with('"') || t.starts_with('\'') {
+            Tok::Str
+        } else if t.parse::<f64>().is_ok() || t.starts_with("0x") || t.starts_with("dword:") {
+            Tok::Number
+        } else if ["true", "false", "yes", "no", "on", "off", "null", "~"].contains(&t.to_ascii_lowercase().as_str()) {
+            Tok::Keyword
+        } else if key.is_empty() && dash.is_empty() {
+            Tok::Text
+        } else {
+            Tok::Str
+        };
+        if !val.is_empty() {
+            out.push((kind, val.into()));
+        }
+        if !comment.is_empty() {
+            out.push((Tok::Comment, comment.into()));
+        }
+    }
+    out
+}
+
 fn tokens(text: &str, language: u8) -> Vec<(Tok, String)> {
     match language {
         1 | 2 | 8 | 15 => lex_markup(text),
         5 => lex_css(text),
+        26 => lex_json(text),
+        27 => lex_keyvalue(text),
         id => match lang(id) {
             Some(l) => lex_generic(text, &l),
             None => vec![(Tok::Text, text.to_string())],
@@ -769,7 +964,7 @@ mod tests {
         assert_eq!(language_for("hpp"), 3);
         assert_eq!(language_for(".xaml"), 15);
         assert_eq!(language_for(".ps1"), 12);
-        assert_eq!(language_for(".py"), 0);
+        assert_eq!(language_for(".log"), 0);
         assert_eq!(language_for(".txt"), 0);
     }
 
@@ -792,6 +987,51 @@ mod tests {
         assert!(ps.contains(&(Tok::Keyword, "-eq".into())));
         let vb = tokens("Dim s As String ' c", 14);
         assert!(vb.contains(&(Tok::Keyword, "Dim".into())) && vb.contains(&(Tok::Comment, "' c".into())));
+    }
+
+    #[test]
+    fn languages_beyond_files_table() {
+        for (ext, id) in [(".py", 16), (".SQL", 17), (".bat", 18), (".sh", 19), (".rs", 20), (".go", 21), (".lua", 22), (".rb", 23),
+            (".kt", 24), (".swift", 24), (".pl", 25), (".json", 26), (".yaml", 27), (".ini", 27), (".toml", 27), (".c", 3), (".mjs", 10),
+            (".csproj", 15), (".vue", 8)] {
+            assert_eq!(language_for(ext), id, "{ext}");
+        }
+        assert_eq!(language_for(".log"), 0);
+        assert_eq!(language_for(".csv"), 0);
+        assert_eq!(language_for(".html"), 0, "HTML keeps its preview handler (the page, as Files)");
+        // Every id in the table has a lexer (none falls back to one plain run)
+        for id in [3, 4, 6, 7, 9, 10, 11, 12, 13, 14, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25] {
+            assert!(lang(id).is_some(), "language {id} has no lexer");
+        }
+    }
+
+    #[test]
+    fn new_lexers() {
+        let py = tokens("def f(x):\n    \"\"\"doc\nmore\"\"\"\n    return 'a' # c", 16);
+        assert!(py.contains(&(Tok::Keyword, "def".into())) && py.contains(&(Tok::Keyword, "return".into())));
+        assert!(py.contains(&(Tok::Str, "\"\"\"doc\nmore\"\"\"".into())), "docstring over lines: {py:?}");
+        assert!(py.contains(&(Tok::Comment, "# c".into())));
+        let sql = tokens("SELECT name FROM t WHERE x = 'it''s' -- c", 17);
+        assert!(sql.contains(&(Tok::Keyword, "SELECT".into())) && sql.contains(&(Tok::Keyword, "WHERE".into())));
+        assert!(sql.contains(&(Tok::Comment, "-- c".into())));
+        let bat = tokens("@echo off\nREM note\n:: also\nset X=\"C:\\a\\\"", 18);
+        assert!(bat.contains(&(Tok::Comment, "REM note".into())) && bat.contains(&(Tok::Comment, ":: also".into())));
+        assert!(bat.contains(&(Tok::Str, "\"C:\\a\\\"".into())), "no backslash escapes in batch: {bat:?}");
+        let rs = tokens("#[derive(Debug)]\nfn main() { let s = \"a\\\"b\"; } // c", 20);
+        assert!(rs.contains(&(Tok::Preproc, "#[derive(Debug)]".into())) && rs.contains(&(Tok::Keyword, "fn".into())));
+        assert!(rs.contains(&(Tok::Str, "\"a\\\"b\"".into())));
+        let ps = tokens("$p = \"C:\\dir\\\" # c", 12);
+        assert!(ps.contains(&(Tok::Str, "\"C:\\dir\\\"".into())), "PowerShell escapes with `, not \\: {ps:?}");
+        let json = tokens("{ \"name\": \"x\", \"n\": -1.5e3, \"ok\": true }", 26);
+        assert!(json.contains(&(Tok::Attr, "\"name\"".into())) && json.contains(&(Tok::Str, "\"x\"".into())));
+        assert!(json.contains(&(Tok::Number, "-1.5e3".into())) && json.contains(&(Tok::Keyword, "true".into())));
+        let ini = tokens("[core]\n; c\nname = \"x\" # t\ncount=3\nenabled: yes\n- item", 27);
+        assert!(ini.contains(&(Tok::Keyword, "[core]".into())) && ini.contains(&(Tok::Comment, "; c".into())));
+        assert!(ini.contains(&(Tok::Attr, "name ".into())) && ini.contains(&(Tok::Str, " \"x\"".into())));
+        assert!(ini.contains(&(Tok::Comment, " # t".into())) && ini.contains(&(Tok::Number, "3".into())));
+        assert!(ini.contains(&(Tok::Keyword, " yes".into())));
+        let text: String = ini.iter().map(|(_, s)| s.as_str()).collect();
+        assert_eq!(text, "[core]\n; c\nname = \"x\" # t\ncount=3\nenabled: yes\n- item", "no text lost or added");
     }
 
     #[test]

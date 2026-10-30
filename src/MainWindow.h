@@ -314,6 +314,7 @@ private:
     bool HandleKey(MSG* msg);
     void FocusAddress();
     void FocusSearch();
+    bool CycleFocus(bool back); // Tab / Shift+Tab through the window (MainWindowInput.cpp); false: not ours to take
     void NavigateAddress();
     void RunSearch();
     void SetStatusText(const std::wstring& text, bool hold);

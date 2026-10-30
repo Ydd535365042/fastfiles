@@ -167,6 +167,7 @@ public:
     void Move(const RECT& rc);
     void Close();
     void Focus();
+    void FocusByKeyboard(bool back); // Focus with the keyboard focus visual (the window's Tab order arrived here)
     bool HasFocus() const;
     bool TranslateAccelerator(MSG* msg);
 

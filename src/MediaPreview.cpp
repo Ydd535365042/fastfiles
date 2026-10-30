@@ -34,8 +34,8 @@ LRESULT CALLBACK VideoProc(HWND w, UINT msg, WPARAM wp, LPARAM lp)
         BeginPaint(w, &ps);
         if (auto* player = reinterpret_cast<IMFPMediaPlayer*>(GetWindowLongPtrW(w, GWLP_USERDATA)))
             player->UpdateVideo();
-        else
-            FillRect(ps.hdc, &ps.rcPaint, static_cast<HBRUSH>(GetStockObject(BLACK_BRUSH)));
+        else if (const auto* theme = static_cast<const Theme*>(GetPropW(w, L"FastFiles.Theme")))
+            FillSolid(ps.hdc, ps.rcPaint, theme->videoBackground);
         EndPaint(w, &ps);
         return 0;
     }
@@ -111,6 +111,8 @@ bool MediaPreview::Create(HWND parent, const Theme* theme)
     if (!m_hwnd)
         return false;
     m_video = CreateWindowExW(0, kVideoClass, L"", WS_CHILD | WS_CLIPSIBLINGS, 0, 0, 0, 0, m_hwnd, nullptr, GetModuleHandleW(nullptr), nullptr);
+    if (m_video)
+        SetPropW(m_video, L"FastFiles.Theme", const_cast<Theme*>(theme)); // VideoProc's letterbox color
     return true;
 }
 

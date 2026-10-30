@@ -263,6 +263,36 @@ void ButtonBar::Relayout()
     InvalidateRect(m_hwnd, nullptr, FALSE);
 }
 
+std::vector<int> ButtonBar::FocusableIds() const
+{
+    std::vector<int> ids;
+    if (!m_hwnd || !IsWindowVisible(m_hwnd))
+        return ids;
+    for (const Item& item : m_items)
+        if (item.id > 0 && item.visible && item.enabled && !IsRectEmpty(&item.rc))
+            ids.push_back(item.id);
+    return ids;
+}
+
+void ButtonBar::FocusItem(int id)
+{
+    m_focus = -1;
+    for (size_t i = 0; i < m_items.size(); ++i)
+        if (m_items[i].id == id)
+            m_focus = static_cast<int>(i);
+    m_ring = true;
+    // The bar's name is the focused button's (what a screen reader reads; tests read it too)
+    if (m_focus >= 0)
+        SetWindowTextW(m_hwnd, (m_items[m_focus].tip.empty() ? m_items[m_focus].label : m_items[m_focus].tip).c_str());
+    SetFocus(m_hwnd);
+    InvalidateRect(m_hwnd, nullptr, FALSE);
+}
+
+int ButtonBar::FocusedId() const
+{
+    return GetFocus() == m_hwnd && m_focus >= 0 && m_focus < static_cast<int>(m_items.size()) ? m_items[m_focus].id : 0;
+}
+
 int ButtonBar::HitTest(POINT pt) const
 {
     for (size_t i = 0; i < m_items.size(); ++i)
@@ -364,6 +394,12 @@ void ButtonBar::Paint(HDC hdc, const RECT& rc)
             DrawLabel(hdc, t.ui, item.label, { x, r.top, r.right - (item.dropdown ? t.S(20) : t.S(6)), r.bottom }, ink);
         if (item.dropdown)
             DrawGlyph(hdc, t.iconsSmall, Glyph::ChevronDown, { r.right - t.S(label ? 22 : 16), r.top, r.right - t.S(label ? 6 : 2), r.bottom }, Mix(ink, background, 25));
+        if (static_cast<int>(i) == m_focus && m_ring && GetFocus() == m_hwnd)
+        {
+            RECT client;
+            GetClientRect(m_hwnd, &client);
+            DrawFocusVisual(hdc, t, r, t.S(4), background, &client);
+        }
     }
     // Next frame of a fade (WM_TIMER repaints until every fill has arrived)
     if (fading)
@@ -417,6 +453,7 @@ LRESULT ButtonBar::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
     case WM_LBUTTONDOWN:
     {
         const int index = HitTest(pt);
+        m_ring = false; // a pointer press hides the keyboard focus visual (WinUI FocusState.Pointer)
         if (index < 0 || !m_items[index].enabled)
             return 0;
         m_pressed = index;
@@ -492,6 +529,26 @@ LRESULT ButtonBar::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
             m_pressed = -1;
             InvalidateRect(m_hwnd, nullptr, FALSE);
         }
+        return 0;
+    case WM_GETDLGCODE:
+        return DLGC_WANTCHARS;
+    case WM_KEYDOWN:
+        // Enter / Space press the focused button (a dropdown opens its menu); the button may have gone meanwhile
+        if ((wp == VK_RETURN || wp == VK_SPACE) && m_focus >= 0 && m_focus < static_cast<int>(m_items.size()) &&
+            m_items[m_focus].visible && m_items[m_focus].enabled)
+        {
+            const int index = m_focus;
+            m_flash = index;
+            InvalidateRect(m_hwnd, nullptr, FALSE);
+            UpdateWindow(m_hwnd);
+            SetTimer(m_hwnd, kFlashTimer, static_cast<UINT>(kFlashMs), nullptr);
+            Fire(index);
+            return 0;
+        }
+        break;
+    case WM_SETFOCUS:
+    case WM_KILLFOCUS:
+        InvalidateRect(m_hwnd, nullptr, FALSE);
         return 0;
     case WM_DESTROY:
         if (m_tooltip)
@@ -597,6 +654,13 @@ LRESULT CALLBACK StatusBar::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
             }
         }
         return 0;
+    case WM_LBUTTONDOWN:
+        if (self && self->m_ring)
+        {
+            self->m_ring = false; // a pointer press hides the keyboard focus visual (WinUI FocusState.Pointer)
+            InvalidateRect(hwnd, nullptr, FALSE);
+        }
+        return 0;
     case WM_LBUTTONUP:
         if (self)
         {
@@ -606,6 +670,22 @@ LRESULT CALLBACK StatusBar::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
                     MAKEWPARAM(GetDlgCtrlID(hwnd), chip == kBranch ? kBranchClick : kSyncClick),
                     reinterpret_cast<LPARAM>(hwnd));
         }
+        return 0;
+    case WM_GETDLGCODE:
+        return DLGC_WANTCHARS;
+    case WM_KEYDOWN:
+        // Enter / Space press the focused chip (its flyout opens); the chip may have gone meanwhile
+        if (self && (wp == VK_RETURN || wp == VK_SPACE) && self->m_focus >= 0 && self->m_focus < kChips &&
+            !self->m_chips[self->m_focus].text.empty())
+        {
+            SendMessageW(GetParent(hwnd), WM_COMMAND,
+                MAKEWPARAM(GetDlgCtrlID(hwnd), self->m_focus == kBranch ? kBranchClick : kSyncClick), reinterpret_cast<LPARAM>(hwnd));
+            return 0;
+        }
+        break;
+    case WM_SETFOCUS:
+    case WM_KILLFOCUS:
+        InvalidateRect(hwnd, nullptr, FALSE);
         return 0;
     case WM_PAINT:
         if (self && self->m_theme)
@@ -628,6 +708,30 @@ void StatusBar::SetBranch(const std::wstring& branch)
     c.glyph = Glyph::Branch;
     if (m_hwnd)
         InvalidateRect(m_hwnd, nullptr, FALSE);
+}
+
+std::vector<int> StatusBar::FocusableIds() const
+{
+    std::vector<int> ids;
+    if (!m_hwnd || !IsWindowVisible(m_hwnd))
+        return ids;
+    for (int i = 0; i < kChips; ++i) // kSync sits left of kBranch
+        if (!m_chips[i].text.empty() && !IsRectEmpty(&m_chips[i].rc))
+            ids.push_back(i);
+    return ids;
+}
+
+void StatusBar::FocusItem(int chip)
+{
+    m_focus = chip;
+    m_ring = true;
+    SetFocus(m_hwnd);
+    InvalidateRect(m_hwnd, nullptr, FALSE);
+}
+
+int StatusBar::FocusedId() const
+{
+    return GetFocus() == m_hwnd && m_focus >= 0 && m_focus < kChips ? m_focus : -1;
 }
 
 int StatusBar::HitChip(POINT pt) const
@@ -674,6 +778,12 @@ void StatusBar::Paint(HDC hdc, RECT rc)
         DrawGlyph(hdc, t.iconsMid, c.glyph, glyph, t.muted);
         const int x = glyph.right + t.S(4);
         DrawLabel(hdc, t.caption, c.text, { x, c.rc.top, c.rc.right - pad, c.rc.bottom }, hot ? t.ink : t.muted);
+        if (i == m_focus && m_ring && GetFocus() == m_hwnd)
+        {
+            RECT client{};
+            GetClientRect(m_hwnd, &client);
+            DrawFocusVisual(hdc, t, c.rc, t.S(4), hot ? t.hover : t.content, &client);
+        }
         rc.right = c.rc.left - t.S(6);
     }
     // Tooltips follow the chips (hidden chips get an empty rect)

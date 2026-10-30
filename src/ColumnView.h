@@ -1,5 +1,6 @@
 #pragma once
 #include "FileList.h"
+#include "ScrollOverlay.h"
 
 // Files' column view (Views/Layouts/ColumnsLayoutPage + ColumnLayoutPage, a BladeView of ColumnShellPages): one
 // column per folder from a root (drive, pinned or cloud folder) down to the current one, side by side in a
@@ -68,7 +69,7 @@ public:
     void OnFocus(Column* column);
 
 private:
-    static constexpr UINT_PTR kSelectionTimer = 1;
+    static constexpr UINT_PTR kSelectionTimer = 1, kBarTimer = 2;
     static LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
     LRESULT HandleMessage(UINT msg, WPARAM wp, LPARAM lp);
     bool AddColumn();
@@ -93,6 +94,9 @@ private:
     int m_active = 0;
     int m_scroll = 0;          // pixels scrolled right
     int m_content = 0;         // total width of the columns
+    // The BladeView ScrollViewer's horizontal bar (the file list's WinUI ScrollBar). The columns are child windows over
+    // the strip, so while it's needed they stop above it instead of running under it.
+    ScrollOverlay m_bar;
     bool m_inLayout = false;
     int m_dragGrip = -1;       // column whose right edge is being dragged
     int m_dragStartX = 0, m_dragStartWidth = 0;

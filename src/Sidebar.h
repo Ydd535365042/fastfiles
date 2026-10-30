@@ -1,6 +1,7 @@
 #pragma once
 #include "Theme.h"
 #include "SmoothScroll.h"
+#include "ScrollOverlay.h"
 #include <functional>
 #include <unordered_map>
 
@@ -26,6 +27,7 @@ public:
     void Move(const RECT& rc);
     void Relayout(); // after a theme / DPI change
     HWND Hwnd() const { return m_hwnd; }
+    void FocusByKeyboard() { m_keyboardFocus = true; SetFocus(m_hwnd); InvalidateRect(m_hwnd, nullptr, FALSE); } // Tab arrived
 
     void SetLocation(PCIDLIST_ABSOLUTE pidl);
     unsigned HiddenSections() const { return m_hidden; }
@@ -95,7 +97,7 @@ private:
     struct DevicePayload;  // worker -> UI: scanned device entries
     struct ResolvePayload; // worker -> UI: a lazy path parsed into a PIDL
     static constexpr UINT kMsgDevices = WM_APP + 20, kMsgResolved = WM_APP + 21, kMsgChange = WM_APP + 22, kMsgChildren = WM_APP + 23;
-    static constexpr UINT_PTR kRefreshTimer = 1, kDragScrollTimer = 2;
+    static constexpr UINT_PTR kRefreshTimer = 1, kDragScrollTimer = 2, kBarTimer = 3;
 
     static const wchar_t* SectionName(int section);
     static LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
@@ -150,7 +152,6 @@ private:
     void UpdateDrop(POINTL screen, DWORD keys, DWORD* effect);
     void ClearDropTarget();
     std::wstring TipFor(int row) const;
-    bool ThumbRect(RECT& thumb) const;
 
     LONG m_ref = 1;
     SidebarEvents* m_events;
@@ -184,12 +185,10 @@ private:
 
     int m_scroll = 0;
     SmoothScroll m_smooth; // the wheel's animation (the scrollbar thumb drag stays immediate)
+    ScrollOverlay m_bar;   // the ScrollViewer's vertical bar (the same WinUI ScrollBar as the file list's)
     int m_hot = -1, m_pressed = -1, m_focus = -1;
     bool m_keyboardFocus = false;
     bool m_tracking = false;
-    bool m_thumbDrag = false;
-    int m_thumbGrab = 0;
-    bool m_overBar = false;
     POINT m_downPt{};
     int m_tipRow = -1;
     std::wstring m_tipText;

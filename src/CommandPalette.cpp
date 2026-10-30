@@ -5,6 +5,7 @@ namespace
 {
 constexpr wchar_t kClass[] = L"FastFiles.Palette";
 constexpr int kRow = 36, kMaxRows = 10, kPad = 4;
+constexpr UINT_PTR kBarTimer = 1;
 
 std::wstring Lower(std::wstring s)
 {
@@ -37,7 +38,26 @@ bool CommandPalette::Create(HWND owner, const Theme* theme)
     // Never activated: the omnibar edit keeps the focus and the caret while the list follows the typing
     m_hwnd = CreateWindowExW(WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW | WS_EX_TOPMOST, kClass, L"", WS_POPUP, 0, 0, 0, 0, owner, nullptr,
         GetModuleHandleW(nullptr), this);
+    if (m_hwnd)
+        m_bar.Attach(m_hwnd, true, kBarTimer, m_theme, [this](int row)
+        {
+            m_smooth.Reset(row);
+            m_scroll = row;
+            UpdateBar();
+            InvalidateRect(m_hwnd, nullptr, FALSE);
+        });
     return registered && m_hwnd;
+}
+
+void CommandPalette::UpdateBar()
+{
+    if (!m_hwnd)
+        return;
+    RECT client{};
+    GetClientRect(m_hwnd, &client);
+    const int n = static_cast<int>(m_shown.size());
+    const RECT strip{ client.right - 1 - m_theme->S(12), m_theme->S(kPad) + 1, client.right - 1, client.bottom - m_theme->S(kPad) - 1 };
+    m_bar.Set(n > kMaxRows ? n : 0, kMaxRows, m_scroll, strip, 1);
 }
 
 void CommandPalette::Show(const RECT& below)
@@ -101,6 +121,7 @@ void CommandPalette::Resize()
     const int rows = std::max(1, std::min(static_cast<int>(m_shown.size()), kMaxRows));
     const int h = rows * t.S(kRow) + t.S(kPad) * 2 + 2;
     SetWindowPos(m_hwnd, HWND_TOPMOST, m_below.left, m_below.bottom + t.S(4), m_below.right - m_below.left, h, SWP_NOACTIVATE);
+    UpdateBar();
     InvalidateRect(m_hwnd, nullptr, FALSE);
 }
 
@@ -113,6 +134,7 @@ void CommandPalette::EnsureVisible()
     else
         return;
     m_smooth.Reset(m_scroll); // arrow-key navigation jumps straight there, like a native ListBox
+    UpdateBar();
 }
 
 int CommandPalette::RowAt(int y) const
@@ -164,6 +186,7 @@ void CommandPalette::Paint(HDC hdc, const RECT& rc)
         DrawLabel(hdc, t.ui, e.name, name, t.ink);
         DrawLabel(hdc, t.caption, e.category, { name.right + t.S(10), r.top, right - t.S(4), r.bottom }, t.muted);
     }
+    m_bar.Paint(hdc, rc);
 }
 
 LRESULT CALLBACK CommandPalette::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
@@ -194,21 +217,37 @@ LRESULT CommandPalette::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
     }
     case WM_MOUSEMOVE:
     {
-        const int row = RowAt(GET_Y_LPARAM(lp));
+        const POINT pt{ GET_X_LPARAM(lp), GET_Y_LPARAM(lp) };
+        TRACKMOUSEEVENT tme{ sizeof(tme), TME_LEAVE, m_hwnd, 0 };
+        TrackMouseEvent(&tme);
+        const bool held = m_bar.Captured();
+        const int row = m_bar.OnMouseMove(pt, (wp & MK_LBUTTON) != 0) || held ? -1 : RowAt(pt.y);
         if (row != m_hot)
         {
             m_hot = row;
-            TRACKMOUSEEVENT tme{ sizeof(tme), TME_LEAVE, m_hwnd, 0 };
-            TrackMouseEvent(&tme);
             InvalidateRect(m_hwnd, nullptr, FALSE);
         }
         return 0;
     }
     case WM_MOUSELEAVE:
+        m_bar.OnMouseLeave();
         m_hot = -1;
         InvalidateRect(m_hwnd, nullptr, FALSE);
         return 0;
+    case WM_LBUTTONDOWN:
+        if (const POINT pt{ GET_X_LPARAM(lp), GET_Y_LPARAM(lp) }; m_bar.Over(pt))
+            m_bar.OnButtonDown(pt);
+        return 0;
+    case WM_CAPTURECHANGED:
+        m_bar.OnCaptureLost();
+        return 0;
+    case WM_TIMER:
+        if (wp == kBarTimer)
+            m_bar.OnTimer(wp);
+        return 0;
     case WM_LBUTTONUP:
+        if (const POINT pt{ GET_X_LPARAM(lp), GET_Y_LPARAM(lp) }; m_bar.OnButtonUp() || m_bar.Over(pt))
+            return 0;
         if (const int row = RowAt(GET_Y_LPARAM(lp)); row >= 0)
             PostMessageW(m_owner, kMsgRun, static_cast<WPARAM>(m_all[m_shown[row]].id), 0);
         return 0;
@@ -216,6 +255,7 @@ LRESULT CommandPalette::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
     {
         const int n = static_cast<int>(m_shown.size());
         m_scroll = m_smooth.OnWheel(m_hwnd, GET_WHEEL_DELTA_WPARAM(wp), 3, std::max(0, n - kMaxRows));
+        UpdateBar();
         InvalidateRect(m_hwnd, nullptr, FALSE);
         return 0;
     }
@@ -223,6 +263,7 @@ LRESULT CommandPalette::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
         if (m_smooth.Animating())
         {
             m_scroll = m_smooth.Tick();
+            UpdateBar();
             InvalidateRect(m_hwnd, nullptr, FALSE);
         }
         return 0;

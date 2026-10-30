@@ -2,6 +2,7 @@
 #include "Lang.h"
 #include "DarkMode.h"
 #include "SmoothScroll.h"
+#include "ScrollOverlay.h"
 
 namespace ContentDialog
 {
@@ -11,8 +12,9 @@ constexpr wchar_t kClass[] = L"FastFiles.ContentDialog", kSmokeClass[] = L"FastF
 // 96-DPI layout from DefaultContentDialogStyle: 24 padding, 20px semibold title, 12 between parts, 80px button band
 constexpr int kW = 448, kPad = 24, kTitle = 28, kGap = 12, kRow = 50, kMaxRows = 7, kBox = 32, kLabel = 20, kError = 18, kFoot = 80;
 constexpr int kBrowseW = 72, kCheck = 32, kCheckBox = 20;
-constexpr UINT_PTR kFadeTimer = 1, kPollTimer = 2;
+constexpr UINT_PTR kFadeTimer = 1, kPollTimer = 2, kBarTimer = 3;
 constexpr int kComboId = 300, kCheckId = 400; // hit ids next to IDOK / IDCANCEL / 100 + field (浏览)
+constexpr int kListStop = 500;                // the item list as a keyboard stop
 constexpr int kSmokeAlpha = 77; // SmokeFillColorDefault: black at 30%
 
 HFONT Resize(HFONT base, int px, int weight)
@@ -70,9 +72,14 @@ struct Dialog
     std::vector<HWND> edits;
     std::vector<std::wstring> textLines;
     Result result = Closed;
-    bool done = false, syncing = false, focusCheck = false; // focusCheck: the check box has the keyboard (Tab)
+    bool done = false, syncing = false;
+    // The drawn stop with the keyboard while the window itself has the focus (WinUI ContentDialog: Tab reaches every
+    // control, the buttons too): kListStop, kCheckId, IDOK, IDCANCEL, 100 + field (浏览), kComboId + field. 0 = a text box.
+    int focusStop = 0;
+    bool ring = false; // the focus visual: after Tab, not after a click (WinUI keyboard focus)
     int hot = -1, focusRow = -1, scroll = 0;
     SmoothScroll smoothScroll; // the item list's wheel animation
+    ScrollOverlay bar;         // the ListView's ScrollViewer bar (the file list's WinUI ScrollBar)
     int hotButton = 0, pressed = 0; // IDOK / IDCANCEL / 100 + field (浏览)
     ULONGLONG fadeStart = 0;
 
@@ -143,6 +150,16 @@ struct Dialog
             FrameRound(hdc, r, S(4), t.controlStroke);
         const COLORREF ink = primary ? t.textOnAccent : t.ink;
         DrawLabel(hdc, t.ui, text, r, enabled ? ink : Mix(ink, fill, 45), DT_CENTER);
+        FocusRing(hdc, id, r, t.dialogFooter);
+    }
+    bool Keyboard(int stop) const { return ring && focusStop == stop && GetFocus() == hwnd; }
+    void FocusRing(HDC hdc, int stop, const RECT& r, COLORREF under) const
+    {
+        if (Keyboard(stop))
+        {
+            const RECT c = Client();
+            DrawFocusVisual(hdc, *theme, r, S(4), under, &c);
+        }
     }
     void Paint(HDC hdc, const RECT& rc)
     {
@@ -169,9 +186,10 @@ struct Dialog
                 if (r.bottom < list.top || r.top > list.bottom)
                     continue;
                 const Item& item = spec->items[i];
+                const bool listFocus = GetFocus() == hwnd && focusStop == kListStop;
                 if (i == hot || i == focusRow)
-                    FillRound(hdc, { r.left, r.top + S(2), r.right, r.bottom - S(2) }, S(4), i == focusRow && GetFocus() == hwnd ? t.selected : t.hover);
-                if (i == focusRow && GetFocus() == hwnd)
+                    FillRound(hdc, { r.left, r.top + S(2), r.right, r.bottom - S(2) }, S(4), i == focusRow && listFocus ? t.selected : t.hover);
+                if (i == focusRow && listFocus)
                     FillRound(hdc, { r.left, r.top + S(16), r.left + S(3), r.bottom - S(16) }, S(2), t.accent);
                 const RECT icon{ r.left + S(12), (r.top + r.bottom) / 2 - S(12), r.left + S(36), (r.top + r.bottom) / 2 + S(12) };
                 if (item.icon)
@@ -183,13 +201,7 @@ struct Dialog
                 DrawLabel(hdc, t.caption, item.subheader, { x, r.top + S(26), r.right - S(8), r.bottom - S(6) }, t.muted, DT_END_ELLIPSIS);
             }
             RestoreDC(hdc, saved);
-            const int content = Rows() * S(kRow), h = list.bottom - list.top;
-            if (content > h && h > 0)
-            {
-                const int th = std::max(S(24), MulDiv(h, h, content));
-                const int top = list.top + MulDiv(h - th, scroll, content - h);
-                FillRound(hdc, { list.right - S(4), top, list.right - S(1), top + th }, S(2), Mix(t.muted, t.layer, 40));
-            }
+            bar.Paint(hdc, rc);
         }
         // Text boxes: label above, WinUI TextBox look (accent underline while focused), error line under it
         for (int i = 0; i < static_cast<int>(spec->fields.size()); ++i)
@@ -208,6 +220,7 @@ struct Dialog
                 const int chosen = std::clamp(f.choice, 0, static_cast<int>(f.choices.size()) - 1);
                 DrawLabel(hdc, t.ui, f.choices[chosen], { box.left + S(11), box.top, box.right - S(36), box.bottom }, t.ink, DT_END_ELLIPSIS);
                 DrawGlyph(hdc, t.iconsSmall, L"\xE70D", { box.right - S(32), box.top, box.right - S(8), box.bottom }, t.muted);
+                FocusRing(hdc, id, box, t.layer);
                 continue;
             }
             const bool focused = GetFocus() == edits[i];
@@ -225,6 +238,7 @@ struct Dialog
                 FillRound(hdc, b, S(4), pressed == id ? t.controlFillPressed : hotButton == id ? t.controlFillHover : t.controlFill);
                 FrameRound(hdc, b, S(4), t.controlStroke);
                 DrawLabel(hdc, t.ui, Tr(L"浏览"), b, t.ink, DT_CENTER);
+                FocusRing(hdc, id, b, t.layer);
             }
         }
         // WinUI CheckBox: 20px rounded box (accent with a check mark when on), the label beside it
@@ -246,7 +260,7 @@ struct Dialog
             }
             DrawLabel(hdc, t.ui, spec->check, { box.right + S(8), r.top, r.right, r.bottom }, spec->checkEnabled ? t.ink : Mix(t.ink, t.layer, 55),
                 DT_END_ELLIPSIS);
-            if (GetFocus() == hwnd && focusCheck)
+            if (GetFocus() == hwnd && focusStop == kCheckId)
                 FrameRound(hdc, { r.left - S(3), r.top + S(2), r.right, r.bottom - S(2) }, S(4), t.ink);
         }
         if (!spec->primary.empty())
@@ -284,7 +298,7 @@ struct Dialog
             const int eh = S(20);
             SetWindowPos(edits[i], nullptr, b.left + S(10), (b.top + b.bottom - eh) / 2, b.right - b.left - S(20), eh, SWP_NOZORDER | SWP_NOACTIVATE);
         }
-        InvalidateRect(hwnd, nullptr, FALSE);
+        ScrollTo(scroll); // the list's rows may have changed (poll): clamped, the bar follows
     }
     // --- State ---
     std::wstring EditText(HWND edit) const
@@ -367,24 +381,48 @@ struct Dialog
         }
         InvalidateRect(hwnd, nullptr, FALSE);
     }
-    // Tab order: the text boxes, then the check box
+    // Tab order (WinUI ContentDialog: the content, then the buttons, primary first): the item list, each field (its
+    // text box or ComboBox, then its 浏览), the check box, the primary button, the close button. Disabled ones skipped.
+    struct Stop { HWND edit; int id; };
+    std::vector<Stop> Stops() const
+    {
+        std::vector<Stop> stops;
+        if (!spec->items.empty())
+            stops.push_back({ nullptr, kListStop });
+        for (int i = 0; i < static_cast<int>(spec->fields.size()); ++i)
+        {
+            if (IsCombo(i))
+                stops.push_back({ nullptr, kComboId + i });
+            else if (edits[i])
+                stops.push_back({ edits[i], 0 });
+            if (spec->fields[i].browse)
+                stops.push_back({ nullptr, 100 + i });
+        }
+        if (!spec->check.empty() && spec->checkEnabled)
+            stops.push_back({ nullptr, kCheckId });
+        if (!spec->primary.empty() && spec->primaryEnabled)
+            stops.push_back({ nullptr, IDOK });
+        stops.push_back({ nullptr, IDCANCEL });
+        return stops;
+    }
     void FocusNext(HWND from, bool back)
     {
-        std::vector<HWND> stops;
-        for (HWND e : edits)
-            if (e)
-                stops.push_back(e);
-        if (!spec->check.empty())
-            stops.push_back(hwnd);
-        if (stops.empty())
-            return;
-        const auto it = std::find(stops.begin(), stops.end(), from);
-        const int n = static_cast<int>(stops.size()), i = it == stops.end() ? 0 : static_cast<int>(it - stops.begin());
-        HWND next = stops[(i + (back ? n - 1 : 1)) % n];
-        focusCheck = next == hwnd;
-        SetFocus(next);
-        if (next != hwnd)
-            SendMessageW(next, EM_SETSEL, 0, -1);
+        const std::vector<Stop> stops = Stops();
+        const int n = static_cast<int>(stops.size());
+        int at = -1;
+        for (int i = 0; i < n; ++i)
+            if (from != hwnd ? stops[i].edit == from : (!stops[i].edit && stops[i].id == focusStop))
+                at = i;
+        const Stop& next = stops[at < 0 ? (back ? n - 1 : 0) : (at + (back ? n - 1 : 1)) % n];
+        ring = true;
+        focusStop = next.edit ? 0 : next.id;
+        if (next.edit)
+        {
+            SetFocus(next.edit);
+            SendMessageW(next.edit, EM_SETSEL, 0, -1);
+        }
+        else
+            SetFocus(hwnd);
         InvalidateRect(hwnd, nullptr, FALSE);
     }
     void EnsureVisible(int row)
@@ -398,7 +436,20 @@ struct Dialog
         if (y == scroll)
             return;
         smoothScroll.Reset(y); // a key jump, not the wheel: goes straight there
-        scroll = y;
+        ScrollTo(y);
+    }
+    void ScrollTo(int y)
+    {
+        scroll = std::clamp(y, 0, std::max(0, Rows() * S(kRow) - ListHeight()));
+        InvalidateRect(hwnd, nullptr, FALSE);
+        UpdateBar();
+    }
+    void UpdateBar()
+    {
+        const RECT list = ListRect();
+        const RECT strip{ list.right - S(12), list.top, list.right, list.bottom };
+        const int content = Rows() * S(kRow);
+        bar.Set(!spec->items.empty() && content > ListHeight() ? content : 0, ListHeight(), scroll, strip, S(kRow));
     }
     // --- Hit testing ---
     HWND FirstEdit() const
@@ -455,7 +506,7 @@ struct Dialog
         if (msg == WM_CHAR && (wp == VK_RETURN || wp == VK_ESCAPE || wp == VK_TAB))
             return 0; // no beep
         if (msg == WM_SETFOCUS)
-            self->focusCheck = false;
+            self->focusStop = 0;
         if (msg == WM_SETFOCUS || msg == WM_KILLFOCUS)
             InvalidateRect(self->hwnd, nullptr, FALSE);
         return DefSubclassProc(w, msg, wp, lp);
@@ -490,7 +541,9 @@ struct Dialog
         {
             TRACKMOUSEEVENT tme{ sizeof(tme), TME_LEAVE, hwnd };
             TrackMouseEvent(&tme);
-            const int row = RowAt(pt), button = ButtonAt(pt);
+            const bool held = bar.Captured();
+            const bool onBar = !pressed && (bar.OnMouseMove(pt, (wp & MK_LBUTTON) != 0) || held);
+            const int row = onBar ? -1 : RowAt(pt), button = onBar ? 0 : ButtonAt(pt);
             if (row != hot || button != hotButton)
             {
                 hot = row;
@@ -500,15 +553,25 @@ struct Dialog
             return 0;
         }
         case WM_MOUSELEAVE:
+            bar.OnMouseLeave();
             hot = -1;
             hotButton = 0;
             InvalidateRect(hwnd, nullptr, FALSE);
             return 0;
+        case WM_CAPTURECHANGED:
+            bar.OnCaptureLost();
+            return 0;
         case WM_LBUTTONDOWN:
+            if (bar.Over(pt))
+            {
+                bar.OnButtonDown(pt);
+                return 0;
+            }
             pressed = ButtonAt(pt);
+            ring = false; // pointer focus: no focus visual
             if (pressed == kCheckId)
             {
-                focusCheck = true;
+                focusStop = kCheckId;
                 SetFocus(hwnd);
             }
             if (pressed)
@@ -519,6 +582,8 @@ struct Dialog
             return 0;
         case WM_LBUTTONUP:
         {
+            if (bar.OnButtonUp())
+                return 0;
             const int id = pressed;
             pressed = 0;
             if (GetCapture() == hwnd)
@@ -532,33 +597,37 @@ struct Dialog
             if (!spec->items.empty())
             {
                 const int content = Rows() * S(kRow);
-                scroll = smoothScroll.OnWheel(hwnd, GET_WHEEL_DELTA_WPARAM(wp), S(kRow) * 2, std::max(0, content - ListHeight()));
-                InvalidateRect(hwnd, nullptr, FALSE);
+                ScrollTo(smoothScroll.OnWheel(hwnd, GET_WHEEL_DELTA_WPARAM(wp), S(kRow) * 2, std::max(0, content - ListHeight())));
             }
             return 0;
         case SmoothFrame::kMsgTick:
             if (smoothScroll.Animating())
-            {
-                scroll = smoothScroll.Tick();
-                InvalidateRect(hwnd, nullptr, FALSE);
-            }
+                ScrollTo(smoothScroll.Tick());
             return 0;
-        case WM_KEYDOWN: // list dialogs keep the focus on the window; so does the check box
+        case WM_KEYDOWN: // the window has the keyboard for the list, the check box, the buttons, 浏览 and the ComboBoxes
+        {
+            const bool onList = focusStop == kListStop || (focusStop == 0 && Rows() > 0);
             if (wp == VK_ESCAPE)
                 Press(IDCANCEL);
-            else if (wp == VK_SPACE && focusCheck)
-                Press(kCheckId);
-            else if (wp == VK_TAB && focusCheck)
+            else if (wp == VK_TAB)
                 FocusNext(hwnd, GetKeyState(VK_SHIFT) < 0);
+            else if ((wp == VK_SPACE || wp == VK_RETURN) && (focusStop == IDOK || focusStop == IDCANCEL ||
+                         (focusStop >= 100 && focusStop < kCheckId)))
+                Press(focusStop); // Button / 浏览 / ComboBox (Enter and Space press it, F4 below opens a ComboBox too)
+            else if (wp == VK_F4 && focusStop >= kComboId && focusStop < kCheckId)
+                Press(focusStop);
+            else if (wp == VK_SPACE && focusStop == kCheckId)
+                Press(kCheckId);
             else if (wp == VK_RETURN)
-                focusRow >= 0 ? Pick(focusRow) : Press(spec->defaultClose ? IDCANCEL : IDOK);
-            else if ((wp == VK_UP || wp == VK_DOWN || wp == VK_HOME || wp == VK_END) && Rows() > 0)
+                onList && focusRow >= 0 ? Pick(focusRow) : Press(spec->defaultClose ? IDCANCEL : IDOK);
+            else if ((wp == VK_UP || wp == VK_DOWN || wp == VK_HOME || wp == VK_END) && Rows() > 0 && onList)
             {
                 focusRow = wp == VK_HOME ? 0 : wp == VK_END ? Rows() - 1 : std::clamp(focusRow + (wp == VK_UP ? -1 : 1), 0, Rows() - 1);
                 EnsureVisible(focusRow);
                 InvalidateRect(hwnd, nullptr, FALSE);
             }
             return 0;
+        }
         case WM_GETDLGCODE:
             return DLGC_WANTALLKEYS;
         case WM_COMMAND:
@@ -570,7 +639,9 @@ struct Dialog
                 Press(LOWORD(wp));
             return 0;
         case WM_TIMER:
-            if (wp == kFadeTimer && smoke)
+            if (wp == kBarTimer)
+                bar.OnTimer(wp);
+            else if (wp == kFadeTimer && smoke)
             {
                 const double p = AnimProgress(fadeStart, 160);
                 SetLayeredWindowAttributes(smoke, 0, static_cast<BYTE>(kSmokeAlpha * p), LWA_ALPHA);
@@ -591,9 +662,14 @@ struct Dialog
             return reinterpret_cast<LRESULT>(focused ? fieldBrush : restBrush);
         }
         case WM_SETFOCUS:
-            if (!focusCheck)
+            // Activation (no stop of its own yet): the first text box, else the list
+            if (focusStop == 0)
+            {
                 if (HWND first = FirstEdit())
                     SetFocus(first);
+                else if (Rows() > 0)
+                    focusStop = kListStop;
+            }
             InvalidateRect(hwnd, nullptr, FALSE);
             return 0;
         case WM_KILLFOCUS:
@@ -639,7 +715,7 @@ LRESULT CALLBACK SmokeProc(HWND w, UINT msg, WPARAM wp, LPARAM lp)
     {
         RECT rc{};
         GetClientRect(w, &rc);
-        FillRect(reinterpret_cast<HDC>(wp), &rc, static_cast<HBRUSH>(GetStockObject(BLACK_BRUSH)));
+        FillSolid(reinterpret_cast<HDC>(wp), rc, static_cast<COLORREF>(GetWindowLongPtrW(w, GWLP_USERDATA))); // Theme::smoke
         return 1;
     }
     return DefWindowProcW(w, msg, wp, lp);
@@ -693,6 +769,8 @@ Result Show(HWND owner, const Theme* theme, Spec& spec)
             frame.right - frame.left, frame.bottom - frame.top, owner, nullptr, GetModuleHandleW(nullptr), nullptr);
         if (d.smoke)
         {
+            SetWindowLongPtrW(d.smoke, GWLP_USERDATA, static_cast<LONG_PTR>(theme->smoke)); // its color (SmokeProc)
+            InvalidateRect(d.smoke, nullptr, TRUE);
             const bool fade = AnimationsEnabled();
             SetLayeredWindowAttributes(d.smoke, 0, fade ? 0 : kSmokeAlpha, LWA_ALPHA);
             ShowWindow(d.smoke, SW_SHOWNOACTIVATE);
@@ -709,6 +787,7 @@ Result Show(HWND owner, const Theme* theme, Spec& spec)
         return Closed;
     }
     g_open = hwnd;
+    d.bar.Attach(hwnd, true, kBarTimer, theme, [&d](int y) { d.smoothScroll.Reset(y); d.ScrollTo(y); });
     DarkMode::ApplyWindow(hwnd, theme->dark);
     for (int i = 0; i < static_cast<int>(spec.fields.size()); ++i)
     {

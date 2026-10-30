@@ -497,9 +497,11 @@ void SampleRow(POINT origin, int y, int x0, int x1, uint32_t* out)
     }
 }
 
-// The material under `hwnd`'s rows: from the cache once the window has painted twice at the same screen position
-// with the same material (rows filled as they're first needed, kept across resizes); a window being moved has no
-// cache and gets nullptr (Compose samples those rows itself, as it always did)
+// The material under a top-level window's client area: from the cache once the window has painted twice at the same
+// screen position with the same material (rows filled as they're first needed, kept across resizes). Its children read
+// their part of it at their offset, so a child that moves or resizes inside the window (a splitter drag: the list,
+// the details pane) keeps reading the cache instead of sampling every row again. A window being moved on the screen
+// has no cache and gets nullptr (Compose samples those rows itself, as it always did).
 Sampled* SampledFor(HWND hwnd, POINT origin, int width, int height)
 {
     auto& cache = SampledCache();
@@ -634,7 +636,7 @@ bool OnImage(WPARAM wp, LPARAM lp)
     return gi.picture != nullptr;
 }
 
-void Compose(HWND hwnd, uint32_t* bits, int width, const RECT& rc, const std::vector<Layer>* extra)
+void Compose(HWND hwnd, uint32_t* bits, int width, const RECT& rc, const std::vector<Layer>* extra, HDC paint)
 {
     if (!Active() || g.layers.empty() || !GetPropW(GetAncestor(hwnd, GA_ROOT), L"FastFiles.Backdrop"))
         return;
@@ -683,43 +685,83 @@ void Compose(HWND hwnd, uint32_t* bits, int width, const RECT& rc, const std::ve
             tables[i].ch[1][v] = static_cast<uint8_t>(m >> 8);
             tables[i].ch[2][v] = static_cast<uint8_t>(m);
         }
-    // The material under this window, sampled once for its position and size (SampledFor)
+    // The material under this window: the top-level window's cache (SampledFor), read at this window's offset in it
     const int x0 = std::max(0L, rc.left), x1 = std::min<int>(rc.right, width);
     Sampled* sampled = nullptr;
-    std::vector<uint32_t> direct; // the rows of a window that has no cache (being moved), sampled as before
+    POINT offset{ 0, 0 }; // this window's client top-left in the top-level window's client area
+    std::vector<uint32_t> direct; // rows the cache can't give (window being moved, or outside it), sampled as before
     if (live && x1 > x0)
     {
-        RECT client{};
+        const HWND root = GetAncestor(hwnd, GA_ROOT);
+        POINT rootOrigin{ 0, 0 };
+        ClientToScreen(root, &rootOrigin);
+        offset = { origin.x - rootOrigin.x, origin.y - rootOrigin.y };
+        RECT client{}, rootClient{};
         GetClientRect(hwnd, &client);
-        // Sized by the window, not by `width` (the paint buffer's row stride, which can be wider: PaintBuffer)
-        sampled = SampledFor(hwnd, origin, std::max<int>(client.right, x1), std::max<int>(client.bottom, rc.bottom));
-        if (!sampled)
-            direct.resize(static_cast<size_t>(x1 - x0));
+        GetClientRect(root, &rootClient);
+        // Sized by the windows, not by `width` (the paint buffer's row stride, which can be wider: PaintBuffer)
+        if (offset.x >= 0 && offset.y >= 0)
+            sampled = SampledFor(root, rootOrigin, std::max<int>(rootClient.right, offset.x + std::max<int>(client.right, x1)),
+                std::max<int>(rootClient.bottom, offset.y + std::max<int>(client.bottom, rc.bottom)));
+        direct.resize(static_cast<size_t>(x1 - x0));
     }
-    for (int y = std::max(0L, rc.top); y < rc.bottom; ++y)
+    // The rectangles to compose: rc, or its parts in the paint DC's visible region (screen coordinates)
+    const RECT whole{ x0, std::max(0L, rc.top), x1, rc.bottom };
+    std::vector<RECT> parts;
+    if (paint)
+        if (HRGN rgn = CreateRectRgn(0, 0, 0, 0))
+        {
+            if (GetRandomRgn(paint, rgn, SYSRGN) == 1)
+                if (const DWORD size = GetRegionData(rgn, 0, nullptr))
+                {
+                    std::vector<BYTE> buf(size);
+                    auto* data = reinterpret_cast<RGNDATA*>(buf.data());
+                    if (GetRegionData(rgn, size, data) == size)
+                    {
+                        const RECT* r = reinterpret_cast<const RECT*>(data->Buffer);
+                        for (DWORD i = 0; i < data->rdh.nCount; ++i)
+                        {
+                            RECT part = r[i];
+                            OffsetRect(&part, -origin.x, -origin.y);
+                            if (IntersectRect(&part, &part, &whole))
+                                parts.push_back(part);
+                        }
+                        if (parts.empty())
+                            parts.push_back(RECT{}); // nothing of rc is visible
+                    }
+                }
+            DeleteObject(rgn);
+        }
+    if (parts.empty())
+        parts.push_back(whole);
+    for (const RECT& part : parts)
+    for (int y = part.top; y < part.bottom; ++y)
     {
         uint32_t* row = bits + static_cast<ptrdiff_t>(y) * width;
         const uint32_t* under = nullptr;
-        if (sampled)
+        const int xa = part.left, xb = part.right;
+        const int cy = y + offset.y, cx1 = xb + offset.x;
+        if (sampled && cy < static_cast<int>(sampled->filled.size()) && cx1 <= sampled->stride)
         {
             // The columns this paint needs that no earlier paint sampled (the next paints read them)
-            uint32_t* cached = sampled->px.data() + static_cast<ptrdiff_t>(y) * sampled->stride;
-            int& done = sampled->filled[static_cast<size_t>(y)];
-            if (done < x1)
+            uint32_t* cached = sampled->px.data() + static_cast<ptrdiff_t>(cy) * sampled->stride;
+            int& done = sampled->filled[static_cast<size_t>(cy)];
+            if (done < cx1)
             {
-                SampleRow(origin, y, done, x1, cached + done);
-                done = x1;
+                const POINT rootOrigin{ origin.x - offset.x, origin.y - offset.y };
+                SampleRow(rootOrigin, cy, done, cx1, cached + done);
+                done = cx1;
             }
-            under = cached;
+            under = cached + offset.x;
         }
         else if (!direct.empty())
         {
-            SampleRow(origin, y, x0, x1, direct.data());
-            under = direct.data() - x0;
+            SampleRow(origin, y, xa, xb, direct.data());
+            under = direct.data() - xa;
         }
         uint32_t lastKey = 0xFF000000; // (no pixel has it: the masked colors are 24-bit)
         int lastHit = -1;
-        for (int x = x0; x < x1; ++x)
+        for (int x = xa; x < xb; ++x)
         {
             const uint32_t c = row[x] & 0xFFFFFF;
             if (c != lastKey)

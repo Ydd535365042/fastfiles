@@ -41,6 +41,11 @@ public:
     RECT ScreenRect(int id) const;
     int IdealWidth();
     void Relayout();
+    // Keyboard focus (the window's Tab order): the buttons Tab stops at, in order, and the one that has it. Each
+    // button is its own stop, as WinUI buttons are; Enter / Space presses it. The ring shows only after keyboard focus.
+    std::vector<int> FocusableIds() const;
+    void FocusItem(int id); // takes the focus with the ring on that button
+    int FocusedId() const;  // 0 when the bar doesn't have the focus
 
 private:
     static LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
@@ -69,6 +74,8 @@ private:
     bool m_tracking = false;
     bool m_sidebarLook = false;
     bool m_buttonLook = false;
+    int m_focus = -1;    // item index with the keyboard focus (-1 none)
+    bool m_ring = false; // the focus came from the keyboard (a press with the mouse hides the ring again)
 };
 
 // Single-line status area: "left\tright" puts the part after the tab on the right edge. An optional Git branch chip
@@ -85,6 +92,10 @@ public:
     // Files' GitNetworkActions: "outgoing / incoming" commits, left of the branch; empty text hides it
     void SetSync(const std::wstring& text, const std::wstring& tip);
     RECT SyncScreenRect() const { return ChipScreenRect(kSync); }
+    // Keyboard (Files' GitNetworkActions / GitBranch are Buttons: each its own Tab stop, Enter / Space press them)
+    std::vector<int> FocusableIds() const; // the shown chips, left to right
+    void FocusItem(int chip);
+    int FocusedId() const;                 // -1 when the bar hasn't the focus
 
 private:
     enum { kSync, kBranch, kChips };
@@ -104,5 +115,7 @@ private:
     Chip m_chips[kChips];
     int m_hot = -1;
     bool m_tracking = false;
+    int m_focus = -1;
+    bool m_ring = false;      // the focus visual: after keyboard focus only (a pointer press hides it)
     HWND m_tooltip = nullptr; // one tool per chip; text from Chip::tip
 };

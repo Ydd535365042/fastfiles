@@ -4,6 +4,7 @@
 #include "Tags.h"
 #include "FileItems.h"
 #include "SmoothScroll.h"
+#include "ScrollOverlay.h"
 #include <atomic>
 #include <unordered_map>
 
@@ -65,6 +66,7 @@ public:
     bool Create(HWND parent);
     HWND Hwnd() const { return m_hwnd; }     // the container (child of the tab host)
     HWND List() const { return m_list; }     // the items window (focus, menus)
+    void FocusByKeyboard() { m_keyboardFocus = true; SetFocus(m_list); InvalidateRect(m_list, nullptr, FALSE); } // Tab arrived
     void Move(const RECT& rc);
 
     // Lists `folder` (a file system folder); `select` is a name in it to select and focus once listed
@@ -220,6 +222,10 @@ private:
     ItemsSelection m_sel;
     POINT m_scroll{ 0, 0 };
     SmoothScroll m_smoothX, m_smoothY; // the wheel's animation (ScrollTo itself stays immediate: keys, drag, EnsureVisible)
+    // WinUI's scroll bars drawn over the items (no system scroll bar: it stays light in dark mode on Windows 10)
+    ScrollOverlay m_barV, m_barH;
+    static constexpr UINT_PTR kBarTimerV = 6, kBarTimerH = 7; // on the items window
+    void UpdateBars();
     int m_downRow = -1;                    // row the left button went down on (selection on release / drag)
     POINT m_downAt{};
     WPARAM m_downKeys = 0;

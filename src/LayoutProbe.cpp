@@ -50,6 +50,12 @@ struct State
     HWND hwnd = nullptr;
     const wchar_t* tag = L"";
     Frame before;
+    HRGN beforeShape = nullptr; // the window's region at the start (rounded corners), window coordinates; null: none
+    POINT beforeWindow{};       // the window's top left on the screen at the start
+    Frame early; // (Uncovered: the new size, not laid out yet)
+    bool hasEarly = false;
+    HRGN shape = nullptr; // the window's region then (Windows 8 / 10's rounded corners), client coordinates; null: none
+    POINT shapeAt{};      // the client area's top left in the window
     HHOOK pre = nullptr, post = nullptr;
     std::vector<Pending> pending; // (a paint can erase inside it: nested)
     std::vector<Mid> mids;
@@ -224,14 +230,45 @@ bool Start(HWND hwnd, const wchar_t* tag)
     g.since = GetTickCount64();
     g.hwnd = nullptr;
     g.mids.clear();
+    g.hasEarly = false;
+    if (g.beforeShape)
+        DeleteObject(g.beforeShape);
+    g.beforeShape = nullptr;
     if (hwnd && IsWindowVisible(hwnd) && !IsIconic(hwnd) && Grab(hwnd, g.before))
     {
+        g.beforeShape = CreateRectRgn(0, 0, 0, 0);
+        if (g.beforeShape && GetWindowRgn(hwnd, g.beforeShape) == ERROR)
+        {
+            DeleteObject(g.beforeShape);
+            g.beforeShape = nullptr;
+        }
+        RECT wr{};
+        GetWindowRect(hwnd, &wr);
+        g.beforeWindow = { wr.left, wr.top };
         g.hwnd = hwnd;
         g.tag = tag;
         g.pre = SetWindowsHookExW(WH_CALLWNDPROC, BeforePaint, nullptr, GetCurrentThreadId());
         g.post = SetWindowsHookExW(WH_CALLWNDPROCRET, AfterPaint, nullptr, GetCurrentThreadId());
     }
     return true;
+}
+
+void Uncovered(HWND hwnd)
+{
+    if (!Enabled() || !g.hwnd || hwnd != g.hwnd || g.hasEarly)
+        return;
+    g.hasEarly = Grab(hwnd, g.early);
+    if (g.shape)
+        DeleteObject(g.shape);
+    g.shape = CreateRectRgn(0, 0, 0, 0);
+    if (g.shape && GetWindowRgn(hwnd, g.shape) == ERROR)
+    {
+        DeleteObject(g.shape);
+        g.shape = nullptr;
+    }
+    RECT wr{};
+    GetWindowRect(hwnd, &wr);
+    g.shapeAt = { g.early.origin.x - wr.left, g.early.origin.y - wr.top };
 }
 
 void Finish()
@@ -263,7 +300,9 @@ void Finish()
         for (const Sample& s : mid.drawn)
         {
             uint32_t v = 0;
-            if ((g.before.At(s.x, s.y, v) && Same(s.v, v)) || (moved.At(s.x, s.y, v) && Same(s.v, v)) || (painted.At(s.x, s.y, v) && Same(s.v, v)))
+            // (and what the new size showed before its layout: the background a frame drag fills a grown strip with)
+            if ((g.before.At(s.x, s.y, v) && Same(s.v, v)) || (moved.At(s.x, s.y, v) && Same(s.v, v)) || (painted.At(s.x, s.y, v) && Same(s.v, v)) ||
+                (g.hasEarly && g.early.At(s.x, s.y, v) && Same(s.v, v)))
                 continue;
             ++n;
             const LONG cx = s.x - painted.origin.x, cy = s.y - painted.origin.y;
@@ -278,19 +317,36 @@ void Finish()
     }
     int ghosts = 0;
     RECT box{ moved.w, moved.h, 0, 0 };
+    // (pixels the rounded corners cut off, Windows 8 / 10: never on screen)
+    HRGN shape = CreateRectRgn(0, 0, 0, 0);
+    if (shape && GetWindowRgn(hwnd, shape) == ERROR)
+    {
+        DeleteObject(shape);
+        shape = nullptr;
+    }
+    RECT wr{};
+    GetWindowRect(hwnd, &wr);
+    const POINT at{ moved.origin.x - wr.left, moved.origin.y - wr.top };
     for (int y = 0; y < moved.h; ++y)
         for (int x = 0; x < moved.w; ++x)
         {
+            if (shape && !PtInRegion(shape, x + at.x, y + at.y))
+                continue;
             const uint32_t b = moved.px[static_cast<size_t>(y) * moved.w + x];
             const uint32_t c = painted.px[static_cast<size_t>(y) * painted.w + x];
             uint32_t a = 0;
-            // Newly uncovered (no "before" there): only the repaint counts
-            const bool hadBefore = g.before.At(moved.origin.x + x, moved.origin.y + y, a);
+            // Newly uncovered (no "before" there, or there only outside the rounded corners then): only the repaint
+            // counts
+            const int sx = moved.origin.x + x, sy = moved.origin.y + y;
+            const bool hadBefore = g.before.At(sx, sy, a) &&
+                (!g.beforeShape || PtInRegion(g.beforeShape, sx - g.beforeWindow.x, sy - g.beforeWindow.y));
             if (Same(b, c) || (hadBefore && Same(b, a)) || !hadBefore)
                 continue;
             ++ghosts;
             box = { std::min<LONG>(box.left, x), std::min<LONG>(box.top, y), std::max<LONG>(box.right, x + 1), std::max<LONG>(box.bottom, y + 1) };
         }
+    if (shape)
+        DeleteObject(shape);
     FILE* fp = nullptr;
     if (_wfopen_s(&fp, (Sandbox::Dir() + L"layout-trace.txt").c_str(), L"a, ccs=UTF-8") != 0 || !fp)
         return;
@@ -310,6 +366,39 @@ void Finish()
     }
     else
         fwprintf(fp, L"%s flash 0 (%zu moments)\n", g.tag, g.mids.size());
+    // Blank: what the size uncovered (no "before" there), still unpainted (black) before the layout, where the full
+    // repaint draws something
+    if (g.hasEarly)
+    {
+        int blank = 0;
+        RECT bb{ LONG_MAX, LONG_MAX, LONG_MIN, LONG_MIN };
+        for (int y = 0; y < g.early.h; ++y)
+            for (int x = 0; x < g.early.w; ++x)
+            {
+                const int sx = g.early.origin.x + x, sy = g.early.origin.y + y;
+                uint32_t v = 0, c = 0;
+                // (uncovered: no "before" at that spot of the screen, or past the old client size, where the left /
+                // top edge's drag leaves the old picture at the top left and the rest of the window unpainted)
+                const bool fresh = !g.before.At(sx, sy, v) || x >= g.before.w || y >= g.before.h;
+                if (!fresh || !painted.At(sx, sy, c))
+                    continue;
+                // (cut off by the rounded corners: not the window's)
+                if (g.shape && !PtInRegion(g.shape, x + g.shapeAt.x, y + g.shapeAt.y))
+                    continue;
+                if ((g.early.px[static_cast<size_t>(y) * g.early.w + x] & 0xFFFFFFu) != 0 || (c & 0xFFFFFFu) == 0)
+                    continue;
+                ++blank;
+                bb = { std::min<LONG>(bb.left, x), std::min<LONG>(bb.top, y), std::max<LONG>(bb.right, x + 1), std::max<LONG>(bb.bottom, y + 1) };
+            }
+        if (blank)
+            fwprintf(fp, L"%s blank %d %ld,%ld,%ld,%ld\n", g.tag, blank, bb.left, bb.top, bb.right, bb.bottom);
+        else
+            fwprintf(fp, L"%s blank 0\n", g.tag);
+        g.hasEarly = false;
+        if (g.shape)
+            DeleteObject(g.shape);
+        g.shape = nullptr;
+    }
     fclose(fp);
 }
 }

@@ -204,6 +204,13 @@ LRESULT MainWindow::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
         RECT now{};
         GetWindowRect(m_hwnd, &now);
         const bool resized = !(pos->flags & SWP_NOSIZE) && (pos->cx != now.right - now.left || pos->cy != now.bottom - now.top);
+        if (resized)
+        {
+            // (WM_SIZE paints what the new size uncovers: it needs where the old client area was)
+            GetClientRect(m_hwnd, &m_sizeFrom);
+            MapWindowPoints(m_hwnd, nullptr, reinterpret_cast<POINT*>(&m_sizeFrom), 2);
+            GetWindowRect(m_hwnd, &m_sizeFromWindow);
+        }
         m_probeSteps.push_back(resized && LayoutProbe::Start(m_hwnd, L"size"));
         break;
     }
@@ -254,12 +261,28 @@ LRESULT MainWindow::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
             return 0;
         break;
     case WM_SIZE:
+    {
         m_strip.SetMaximized(wp == SIZE_MAXIMIZED || m_fullScreen);
+        // Bigger: the strip the new size adds shows nothing (black) until the layout and its paint are done (a frame
+        // drag: the edge the mouse holds blinking on every step; a snap / maximize: one black flash); painted with
+        // the window's own background now
+        RECT uncovered[10]{};
+        if (!IsRectEmpty(&m_sizeFrom) &&
+            (LOWORD(lp) > m_sizeFrom.right - m_sizeFrom.left || HIWORD(lp) > m_sizeFrom.bottom - m_sizeFrom.top))
+            PaintUncovered(m_sizeFrom, m_moving, uncovered);
+        m_sizeFrom = {};
+        LayoutProbe::Uncovered(m_hwnd); // (test mode: what the new size shows before its layout)
         Layout();
+        // (what was uncovered, a child included: the sidebar / the tab row a left / top edge's drag reaches, which the
+        // layout doesn't touch when their size stays)
+        for (const RECT& s : uncovered)
+            if (!IsRectEmpty(&s))
+                RedrawWindow(m_hwnd, &s, nullptr, RDW_INVALIDATE | RDW_ALLCHILDREN);
         // Dragging the frame: each size is painted whole before the next one (see WM_MOUSEMOVE's splitter drags)
         if (m_moving)
             RedrawWindow(m_hwnd, nullptr, nullptr, RDW_UPDATENOW | RDW_ALLCHILDREN);
         return 0;
+    }
     case WM_DPICHANGED:
     {
         m_dpi = HIWORD(wp);

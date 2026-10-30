@@ -1,4 +1,5 @@
 #include "MainWindow.h"
+#include "Backdrop.h"
 #include "Lang.h"
 #include "DWriteText.h"
 #include "LayoutProbe.h"
@@ -263,6 +264,96 @@ bool MainWindow::StatusWanted() const
     const Tab* tab = Active();
     const TabSlot* slot = m_active >= 0 && m_active < static_cast<int>(m_tabList.size()) ? &m_tabList[m_active] : nullptr;
     return m_statusVisible && !(tab && tab->OnHome() && !(slot && slot->Split()));
+}
+
+void MainWindow::PaintUncovered(const RECT& was, bool dragged, RECT (&strips)[10])
+{
+    for (RECT& s : strips)
+        s = {};
+    RECT rc{};
+    GetClientRect(m_hwnd, &rc);
+    POINT origin{};
+    ClientToScreen(m_hwnd, &origin);
+    // What the old picture doesn't cover. Where Windows left it: a size at once (WVR_REDRAW) where it was on the
+    // screen; a frame drag at the window's top left or (a left / top edge) where it was on the screen, both seen, so
+    // there both. Before the layout: only the flat background there (the tab row's, the layer's, through the
+    // material), the rest of the layout isn't known yet; over the children too (the grown side reaches the sidebar /
+    // the tab row, which have that background). The strips are returned: after the layout everything there gets its
+    // real paint from its own window.
+    const RECT old{ was.left - origin.x, was.top - origin.y, was.right - origin.x, was.bottom - origin.y }; // (client)
+    strips[0] = { 0, 0, std::max(0L, old.left), rc.bottom };
+    strips[1] = { std::max(0L, old.right), 0, rc.right, rc.bottom };
+    strips[2] = { 0, 0, rc.right, std::max(0L, old.top) };
+    strips[3] = { 0, std::max(0L, old.bottom), rc.right, rc.bottom };
+    if (dragged)
+    {
+        strips[4] = { was.right - was.left, 0, rc.right, rc.bottom };
+        strips[5] = { 0, was.bottom - was.top, rc.right, rc.bottom };
+    }
+    // Windows 8 / 10: the old picture's rounded corners were never painted (outside the window's region then); only
+    // what was outside it (corner) is filled, the rest of the corner box is the old picture
+    HRGN corner = nullptr;
+    if (m_round.Custom() && !IsRectEmpty(&m_sizeFromWindow) && m_round.Radius() > 0)
+    {
+        const RECT& w = m_sizeFromWindow;
+        const int d = 2 * m_round.Radius();
+        corner = CreateRectRgn(rc.left, rc.top, rc.right, rc.bottom);
+        if (HRGN round = CreateRoundRectRgn(w.left - origin.x, w.top - origin.y, w.right - origin.x + 1, w.bottom - origin.y + 1, d, d))
+        {
+            CombineRgn(corner, corner, round, RGN_DIFF);
+            DeleteObject(round);
+        }
+        const LONG box = m_round.Radius() + 2;
+        strips[6] = { old.left, old.top, old.left + box, old.top + box };
+        strips[7] = { old.right - box, old.top, old.right, old.top + box };
+        strips[8] = { old.left, old.bottom - box, old.left + box, old.bottom };
+        strips[9] = { old.right - box, old.bottom - box, old.right, old.bottom };
+        for (int i = 6; i < 10; ++i)
+            IntersectRect(&strips[i], &strips[i], &rc);
+    }
+    RECT all{};
+    for (RECT& s : strips)
+    {
+        if (s.right <= s.left || s.bottom <= s.top)
+            s = {};
+        UnionRect(&all, &all, &s);
+    }
+    HDC hdc = IsRectEmpty(&all) ? nullptr : GetDCEx(m_hwnd, nullptr, DCX_CACHE);
+    if (!hdc)
+    {
+        if (corner)
+            DeleteObject(corner);
+        return;
+    }
+    {
+        const Theme& t = m_theme;
+        PaintBuffer buffer(hdc, rc.right, rc.bottom, all);
+        const int title = t.S(kTitleRow);
+        const bool material = buffer.bits && Backdrop::Active();
+        for (int i = 0; i < 10; ++i)
+        {
+            const RECT& s = strips[i];
+            if (IsRectEmpty(&s))
+                continue;
+            // Each strip on its own (their union spans the whole window once the corners are in): filled again
+            // first, so where two overlap the material isn't laid over itself
+            FillSolid(buffer.dc, { s.left, s.top, s.right, std::min<LONG>(s.bottom, title) }, t.chrome);
+            FillSolid(buffer.dc, { s.left, std::max<LONG>(s.top, title), s.right, s.bottom }, t.layer);
+            if (material)
+            {
+                GdiFlush();
+                Backdrop::Compose(m_hwnd, buffer.bits, buffer.width, s);
+            }
+            if (i >= 6 && corner)
+                SelectClipRgn(hdc, corner);
+            BitBlt(hdc, s.left, s.top, s.right - s.left, s.bottom - s.top, buffer.dc, s.left, s.top, SRCCOPY);
+            if (i >= 6 && corner)
+                SelectClipRgn(hdc, nullptr);
+        }
+    }
+    if (corner)
+        DeleteObject(corner);
+    ReleaseDC(m_hwnd, hdc);
 }
 
 void MainWindow::PaintChrome(HDC hdc, const RECT& rc)

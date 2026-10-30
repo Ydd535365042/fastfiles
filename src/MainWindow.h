@@ -152,6 +152,9 @@ private:
     void UpdateFonts();
     void Layout();
     void PaintChrome(HDC hdc, const RECT& rc);
+    // The window got bigger (was: the old client area, screen; dragged: a frame drag): what it uncovered, painted
+    // with the background at once; `strips` (client) get their real paint after the layout
+    void PaintUncovered(const RECT& was, bool dragged, RECT (&strips)[10]);
     RECT ViewRect() const { return m_viewRect; }
     bool OverSplitter(int x, int y) const;
     bool OverInfoSplitter(int x, int y) const;
@@ -516,6 +519,7 @@ private:
     bool m_paletteOpen = false;
     // Dragging the window over the live material: no repaint while it moves, once it rests or is dropped (WM_MOVE)
     bool m_moving = false;
+    RECT m_sizeFrom{}, m_sizeFromWindow{}; // the client area / the window on the screen right before a size change
     std::vector<bool> m_probeSteps; // test mode: WM_WINDOWPOSCHANGING / CHANGED pairs that started a LayoutProbe step
     void RepaintMaterial(); // our surfaces that show the material, for where the window is now
     // Files' search mode suggestions under the search box (MainWindowInput.cpp)

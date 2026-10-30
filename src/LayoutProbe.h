@@ -12,6 +12,10 @@ namespace LayoutProbe
 {
 bool Start(HWND hwnd, const wchar_t* tag); // true: a Finish() must follow
 void Finish();
+// The window right after Windows gave it its new size, before it was laid out for it: what a frame drag shows until
+// the layout and its paint are done. Finish counts the pixels the size uncovered that this frame left unpainted
+// (black, which no surface of either theme is) while the full repaint has something there: "<tag> blank <pixels>"
+void Uncovered(HWND hwnd);
 
 struct Scope
 {

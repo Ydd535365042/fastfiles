@@ -54,13 +54,10 @@ HWND MakeEdit(HWND parent, int id, const Theme* theme)
     return edit;
 }
 
-// Without its old picture (SWP_NOCOPYBITS): Windows copies a moved or resized window's pixels to its new top left, which
-// put whatever isn't pinned there (the toolbar's 筛选 / 选择 / 排序 / 布局, scroll bars, the caption buttons, centered
-// pages) one step off until the repaint, and dragging a splitter or the frame made it jitter. Every step is repainted
-// whole right after anyway (WM_MOUSEMOVE's splitter drags, WM_SIZE).
+// (MoveChild: resized without the old picture, so the toolbar's 筛选 / 选择 / 排序 / 布局 don't jitter on a splitter drag)
 void Place(HWND w, int x, int y, int cx, int cy)
 {
-    SetWindowPos(w, nullptr, x, y, std::max(0, cx), std::max(0, cy), SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOCOPYBITS);
+    MoveChild(w, x, y, std::max(0, cx), std::max(0, cy));
 }
 }
 

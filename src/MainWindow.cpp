@@ -174,21 +174,24 @@ LRESULT MainWindow::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
         {
             // Keep the standard frame on three sides; the caption and top border become client area (Files/Chrome style)
             auto* params = reinterpret_cast<NCCALCSIZE_PARAMS*>(lp);
-            // WVR_REDRAW: the old picture isn't kept (CS_HREDRAW | CS_VREDRAW). Windows keeps it at the top left, which
-            // drew everything pinned right or at the bottom (the caption buttons, the search box, the details pane, the
-            // status bar) one step off while the left or top edge was dragged; each size is painted whole anyway.
+            // A frame drag keeps the old picture: throwing it away (WVR_REDRAW) had every window of the window painted
+            // again on each step, and the whole window flashed while it was resized. Each size of a drag is painted
+            // whole in WM_SIZE before the next one (m_moving), so what moves with the left or top edge is right again
+            // within the step. A size change at once (maximize, restore, snap) is painted whole anyway: there the old
+            // picture at the top left would show the page one size off (Home's centered cards) until then.
+            const LRESULT keep = m_moving ? 0 : WVR_REDRAW;
             // Rounded by a region (Windows 8 / 10): no frame at all, RoundFrame's window outside takes the resize band
             if (m_round.Custom() && !IsZoomed(m_hwnd) && !m_fullScreen)
-                return WVR_REDRAW;
+                return keep;
             const int top = params->rgrc[0].top;
-            DefWindowProcW(m_hwnd, msg, wp, lp);
+            const LRESULT r = DefWindowProcW(m_hwnd, msg, wp, lp);
             params->rgrc[0].top = top;
             if (IsZoomed(m_hwnd) && !m_fullScreen)
             {
                 const UINT dpi = GetDpiForWindow(m_hwnd);
                 params->rgrc[0].top += GetSystemMetricsForDpi(SM_CYFRAME, dpi) + GetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi);
             }
-            return WVR_REDRAW;
+            return r | keep;
         }
         break;
     case WM_NCHITTEST:

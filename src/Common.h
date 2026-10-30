@@ -51,6 +51,19 @@ inline int PidlIcon(PCIDLIST_ABSOLUTE p)
 
 inline int Scale(int value, UINT dpi) { return MulDiv(value, static_cast<int>(dpi), 96); }
 
+// A layout move of a child window (x, y in its parent). Resized: without its old picture (SWP_NOCOPYBITS), which
+// Windows would put at the new top left, so whatever is pinned right / bottom / centered inside (the toolbar's right
+// group, scroll bars, centered pages) showed one step off until the repaint. Only moved: the old picture is right
+// as it is at the new place, so it's kept and the window isn't painted again (painting every window on every step
+// of a frame drag made a step slower than a frame)
+inline void MoveChild(HWND w, int x, int y, int cx, int cy)
+{
+    RECT now{};
+    GetWindowRect(w, &now);
+    const bool sized = now.right - now.left != cx || now.bottom - now.top != cy;
+    SetWindowPos(w, nullptr, x, y, cx, cy, SWP_NOZORDER | SWP_NOACTIVATE | (sized ? SWP_NOCOPYBITS : 0));
+}
+
 inline HMENU MenuId(int id) { return reinterpret_cast<HMENU>(static_cast<INT_PTR>(id)); }
 
 // Where a folder chosen in the sidebar / home page / a menu should open

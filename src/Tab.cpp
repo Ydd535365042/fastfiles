@@ -137,7 +137,7 @@ LRESULT CALLBACK Tab::HostProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
             self->m_list->Move(rc);
         for (HWND page : { self && self->m_home ? self->m_home->Hwnd() : nullptr, self && self->m_settings ? self->m_settings->Hwnd() : nullptr })
             if (page)
-                SetWindowPos(page, nullptr, 0, 0, rc.right, rc.bottom, SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOCOPYBITS);
+                MoveChild(page, 0, 0, rc.right, rc.bottom);
         return 0;
     }
     if (msg == WM_ERASEBKGND)
@@ -277,12 +277,19 @@ void Tab::Show(const RECT& rc)
     if (first && !CreateHost(rc))
         return;
     Move(rc);
+    // A new tab on Home / Settings (a new pane, 设置 in a new tab): the page is up inside the host before the host shows,
+    // so the first thing on screen is the page (shown empty first, the host flashed its flat color before the page)
+    if (first && IsPagePidl(m_current.get()))
+    {
+        ShowHome();
+        ShowWindow(m_host, SW_SHOW);
+        RedrawWindow(m_host, nullptr, nullptr, RDW_UPDATENOW | RDW_ALLCHILDREN);
+        return;
+    }
     ShowWindow(m_host, SW_SHOW);
     if (!first)
         return;
-    if (IsPagePidl(m_current.get()))
-        ShowHome();
-    else if (m_current)
+    if (m_current)
         OpenLocation(m_current.get(), m_currentColumns ? ModeHint::Columns : ModeHint::None); // restored tabs too
 }
 
@@ -473,7 +480,7 @@ void Tab::Hide()
 void Tab::Move(const RECT& rc)
 {
     if (m_host)
-        SetWindowPos(m_host, nullptr, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOCOPYBITS);
+        MoveChild(m_host, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top);
 }
 
 void Tab::Close()

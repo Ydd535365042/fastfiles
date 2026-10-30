@@ -516,6 +516,7 @@ private:
     bool m_paletteOpen = false;
     // Dragging the window over the live material: no repaint while it moves, once it rests or is dropped (WM_MOVE)
     bool m_moving = false;
+    std::vector<bool> m_probeSteps; // test mode: WM_WINDOWPOSCHANGING / CHANGED pairs that started a LayoutProbe step
     void RepaintMaterial(); // our surfaces that show the material, for where the window is now
     // Files' search mode suggestions under the search box (MainWindowInput.cpp)
     SearchSuggest m_suggest;

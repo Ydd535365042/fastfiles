@@ -112,7 +112,7 @@ bool FileList::Create(HWND parent)
 void FileList::Move(const RECT& rc)
 {
     if (m_hwnd)
-        SetWindowPos(m_hwnd, nullptr, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, SWP_NOZORDER | SWP_NOACTIVATE);
+        SetWindowPos(m_hwnd, nullptr, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOCOPYBITS);
 }
 
 int FileList::SelectedCount() const { return m_sel.SelectedCount(); }
@@ -846,7 +846,7 @@ void FileList::PlaceHeader()
         GetWindowRect(m_list, &items);
         MapWindowPoints(nullptr, m_hwnd, reinterpret_cast<POINT*>(&items), 2);
         if (items.top != 0 || items.right - items.left != host.right || items.bottom - items.top != host.bottom)
-            SetWindowPos(m_list, nullptr, 0, 0, host.right, host.bottom, SWP_NOZORDER | SWP_NOACTIVATE);
+            SetWindowPos(m_list, nullptr, 0, 0, host.right, host.bottom, SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOCOPYBITS);
         return;
     }
     int columns = 0;
@@ -858,7 +858,7 @@ void FileList::PlaceHeader()
     GetWindowRect(m_list, &items);
     MapWindowPoints(nullptr, m_hwnd, reinterpret_cast<POINT*>(&items), 2);
     if (items.top != h || items.right - items.left != host.right || items.bottom - items.top != host.bottom - h)
-        SetWindowPos(m_list, nullptr, 0, h, host.right, std::max<LONG>(0, host.bottom - h), SWP_NOZORDER | SWP_NOACTIVATE);
+        SetWindowPos(m_list, nullptr, 0, h, host.right, std::max<LONG>(0, host.bottom - h), SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOCOPYBITS);
 }
 
 void FileList::ScrollTo(int x, int y)

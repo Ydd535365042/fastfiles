@@ -1,5 +1,6 @@
 #include "MainWindow.h"
 #include "Backdrop.h"
+#include "LayoutProbe.h"
 #include "Sandbox.h"
 #include "Share.h"
 #include "SmoothScroll.h"
@@ -173,25 +174,49 @@ LRESULT MainWindow::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
         {
             // Keep the standard frame on three sides; the caption and top border become client area (Files/Chrome style)
             auto* params = reinterpret_cast<NCCALCSIZE_PARAMS*>(lp);
+            // WVR_REDRAW: the old picture isn't kept (CS_HREDRAW | CS_VREDRAW). Windows keeps it at the top left, which
+            // drew everything pinned right or at the bottom (the caption buttons, the search box, the details pane, the
+            // status bar) one step off while the left or top edge was dragged; each size is painted whole anyway.
             // Rounded by a region (Windows 8 / 10): no frame at all, RoundFrame's window outside takes the resize band
             if (m_round.Custom() && !IsZoomed(m_hwnd) && !m_fullScreen)
-                return 0;
+                return WVR_REDRAW;
             const int top = params->rgrc[0].top;
-            const LRESULT r = DefWindowProcW(m_hwnd, msg, wp, lp);
+            DefWindowProcW(m_hwnd, msg, wp, lp);
             params->rgrc[0].top = top;
             if (IsZoomed(m_hwnd) && !m_fullScreen)
             {
                 const UINT dpi = GetDpiForWindow(m_hwnd);
                 params->rgrc[0].top += GetSystemMetricsForDpi(SM_CYFRAME, dpi) + GetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi);
             }
-            return r;
+            return WVR_REDRAW;
         }
         break;
     case WM_NCHITTEST:
         return HitTestFrame({ GET_X_LPARAM(lp), GET_Y_LPARAM(lp) });
-    case WM_WINDOWPOSCHANGED:
-        m_round.Update();
+    case WM_WINDOWPOSCHANGING:
+    {
+        // Test mode: a size change is one layout step as well (LayoutProbe; nothing otherwise)
+        // Only a real size change: an unchanged one gets no WM_WINDOWPOSCHANGED to finish it
+        const auto* pos = reinterpret_cast<const WINDOWPOS*>(lp);
+        RECT now{};
+        GetWindowRect(m_hwnd, &now);
+        const bool resized = !(pos->flags & SWP_NOSIZE) && (pos->cx != now.right - now.left || pos->cy != now.bottom - now.top);
+        m_probeSteps.push_back(resized && LayoutProbe::Start(m_hwnd, L"size"));
         break;
+    }
+    case WM_WINDOWPOSCHANGED:
+    {
+        m_round.Update();
+        // (WM_SIZE and its Layout come from DefWindowProc here)
+        const LRESULT r = DefWindowProcW(m_hwnd, msg, wp, lp);
+        if (!m_probeSteps.empty())
+        {
+            if (m_probeSteps.back())
+                LayoutProbe::Finish();
+            m_probeSteps.pop_back();
+        }
+        return r;
+    }
     case WM_NCACTIVATE:
     {
         const bool active = wp != FALSE || m_center.KeepsWindowActive();

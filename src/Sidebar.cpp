@@ -100,7 +100,7 @@ void Sidebar::Destroy()
 void Sidebar::Move(const RECT& rc)
 {
     if (m_hwnd)
-        SetWindowPos(m_hwnd, nullptr, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, SWP_NOZORDER | SWP_NOACTIVATE);
+        SetWindowPos(m_hwnd, nullptr, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOCOPYBITS);
 }
 
 void Sidebar::Relayout()

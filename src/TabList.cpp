@@ -88,6 +88,7 @@ bool Tab::EnterList(PCIDLIST_ABSOLUTE pidlIn, ViewLayout layout)
     RECT rc{};
     GetClientRect(m_host, &rc);
     SetWindowPos(m_list->Hwnd(), HWND_TOP, 0, 0, rc.right, rc.bottom, SWP_SHOWWINDOW | SWP_NOACTIVATE);
+    UpdateWindow(m_list->Hwnd()); // painted before the view it replaces goes (no blank frame between them)
     if (m_columns)
         DestroyColumns();
     DropBrowser();

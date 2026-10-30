@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(FastFiles VERSION 1.0.0.10 LANGUAGES CXX)
+project(FastFiles VERSION 1.0.0.11 LANGUAGES CXX)
 
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
@@ -70,6 +70,7 @@ src/ContentDialog.cpp src/NewItem.cpp src/MainWindowNewItem.cpp src/SevenZip.cpp
     src/InfoPane.cpp
     src/InfoPaneData.cpp
     src/Sandbox.cpp
+    src/LayoutProbe.cpp
     src/SmoothScroll.cpp
     src/ScrollOverlay.cpp
     src/Backdrop.cpp

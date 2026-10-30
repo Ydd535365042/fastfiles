@@ -166,7 +166,7 @@ void MediaPreview::Unload()
 void MediaPreview::Move(const RECT& rc)
 {
     if (m_hwnd)
-        SetWindowPos(m_hwnd, nullptr, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, SWP_NOZORDER | SWP_NOACTIVATE);
+        SetWindowPos(m_hwnd, nullptr, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOCOPYBITS);
 }
 
 void MediaPreview::Show(bool show)
@@ -328,7 +328,7 @@ void MediaPreview::Layout()
     RECT rc{};
     GetClientRect(m_hwnd, &rc);
     const RECT bar = BarRect();
-    SetWindowPos(m_video, nullptr, rc.left, rc.top, rc.right - rc.left, std::max<LONG>(0, bar.top - rc.top - m_theme->S(4)), SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(m_video, nullptr, rc.left, rc.top, rc.right - rc.left, std::max<LONG>(0, bar.top - rc.top - m_theme->S(4)), SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOCOPYBITS);
     if (m_player && m_hasVideo)
         m_player->UpdateVideo();
     InvalidateRect(m_hwnd, nullptr, FALSE);

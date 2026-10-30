@@ -350,11 +350,13 @@ void Tab::ShowColumnsSurface()
         if (HWND page = PageWindow())
             ShowWindow(page, SW_HIDE);
     }
-    SetBrowserShown(false);
-    HideList();
+    // The columns shown and painted before the list goes: hidden first, the host showed blank for a frame between them
     RECT rc{};
     GetClientRect(m_host, &rc);
     SetWindowPos(m_columns->Hwnd(), HWND_TOP, 0, 0, rc.right, rc.bottom, SWP_SHOWWINDOW | SWP_NOACTIVATE);
+    UpdateWindow(m_columns->Hwnd());
+    SetBrowserShown(false);
+    HideList();
 }
 
 void Tab::DestroyColumns()

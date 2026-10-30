@@ -1,4 +1,5 @@
 #include "MainWindow.h"
+#include "LayoutProbe.h"
 
 // Dual pane (Files' "dual pane" / ShellPanesPage): each tab slot holds one or two panes,
 // side by side or stacked, with a draggable splitter and an accent bar over the focused pane.
@@ -36,6 +37,7 @@ void MainWindow::PlacePanes()
     TabSlot* slot = ActiveSlot();
     if (!slot)
         return;
+    const LayoutProbe::Scope probe(m_hwnd, L"panes");
     // A pane's first Show goes straight to its home page (no navigation event), so make sure there is data for it
     for (const auto& pane : slot->panes)
         if (pane && IsHomePidl(pane->Location()))

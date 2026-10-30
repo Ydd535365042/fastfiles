@@ -1,6 +1,7 @@
 #include "MainWindow.h"
 #include "Lang.h"
 #include "DWriteText.h"
+#include "LayoutProbe.h"
 
 namespace
 {
@@ -53,15 +54,11 @@ HWND MakeEdit(HWND parent, int id, const Theme* theme)
     return edit;
 }
 
+// Without its old picture (SWP_NOCOPYBITS): Windows copies a moved or resized window's pixels to its new top left, which
+// put whatever isn't pinned there (the toolbar's 筛选 / 选择 / 排序 / 布局, scroll bars, the caption buttons, centered
+// pages) one step off until the repaint, and dragging a splitter or the frame made it jitter. Every step is repainted
+// whole right after anyway (WM_MOUSEMOVE's splitter drags, WM_SIZE).
 void Place(HWND w, int x, int y, int cx, int cy)
-{
-    SetWindowPos(w, nullptr, x, y, std::max(0, cx), std::max(0, cy), SWP_NOZORDER | SWP_NOACTIVATE);
-}
-
-// A bar with a part pinned to its right end (the toolbar's 筛选 / 选择 / 排序 / 布局, the status bar's selection): its
-// old picture isn't carried along. Windows copies a moved window's pixels to its new left edge, which put the right
-// part one step off until the repaint: dragging the sidebar splitter made it flicker.
-void PlaceRightPinned(HWND w, int x, int y, int cx, int cy)
 {
     SetWindowPos(w, nullptr, x, y, std::max(0, cx), std::max(0, cy), SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOCOPYBITS);
 }
@@ -148,6 +145,7 @@ void MainWindow::Layout()
 {
     if (!m_strip.Hwnd() || !m_status.Hwnd() || !m_cmd.Hwnd() || !m_crumb.Hwnd())
         return;
+    const LayoutProbe::Scope probe(m_hwnd, L"layout");
     RECT rc;
     GetClientRect(m_hwnd, &rc);
     const Theme& t = m_theme;
@@ -221,7 +219,7 @@ void MainWindow::Layout()
     const int right = width - t.S(kCardMargin), bottom = static_cast<int>(rc.bottom) - t.S(kCardMargin);
     const int pad = std::max(1, t.S(kCardInset));
     m_cmdCard = cmd ? RECT{ innerLeft, m_bodyTop, right, m_bodyTop + cmd } : RECT{};
-    PlaceRightPinned(m_cmd.Hwnd(), m_cmdCard.left + pad, m_cmdCard.top + pad, m_cmdCard.right - m_cmdCard.left - 2 * pad, cmd - 2 * pad);
+    Place(m_cmd.Hwnd(), m_cmdCard.left + pad, m_cmdCard.top + pad, m_cmdCard.right - m_cmdCard.left - 2 * pad, cmd - 2 * pad);
     const int cardTop = m_bodyTop + (cmd ? cmd + t.S(kCardGap) : 0);
     // Details/preview pane: its own card. Files' InfoPane.UpdatePosition: on the right while the content area is wider
     // than 700, under the file area otherwise (MinHeight 140); the file area keeps at least 300 / 120
@@ -251,7 +249,7 @@ void MainWindow::Layout()
         ShowWindow(m_info->Hwnd(), info ? SW_SHOWNA : SW_HIDE);
     }
     const int innerL = m_fileCard.left + pad, innerR = m_fileCard.right - pad, innerB = m_fileCard.bottom - pad;
-    PlaceRightPinned(m_status.Hwnd(), innerL, innerB - status, innerR - innerL, status);
+    Place(m_status.Hwnd(), innerL, innerB - status, innerR - innerL, status);
     const int filterTop = m_fileCard.top + pad;
     m_filterFrame = filter ? RECT{ innerL + t.S(8), filterTop + t.S(4), innerR - t.S(8), filterTop + filter - t.S(4) } : RECT{};
     if (filter)

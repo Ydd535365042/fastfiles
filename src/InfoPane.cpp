@@ -191,7 +191,7 @@ void InfoPane::ClearThumb()
 void InfoPane::Move(const RECT& rc)
 {
     if (m_hwnd)
-        SetWindowPos(m_hwnd, nullptr, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, SWP_NOZORDER | SWP_NOACTIVATE);
+        SetWindowPos(m_hwnd, nullptr, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOCOPYBITS);
 }
 
 void InfoPane::Relayout()
@@ -336,7 +336,7 @@ void InfoPane::LayoutChildren()
     {
         // The clip shows exactly the body; each control is as much bigger as its system bars take, so its client area
         // is the body and its bars lie outside (a bar the control hides or shows changes that: placed again)
-        SetWindowPos(m_clip, nullptr, body.left, body.top, w, h, SWP_NOZORDER | SWP_NOACTIVATE);
+        SetWindowPos(m_clip, nullptr, body.left, body.top, w, h, SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOCOPYBITS);
         const int cx = GetSystemMetricsForDpi(SM_CXVSCROLL, t.dpi), cy = GetSystemMetricsForDpi(SM_CYHSCROLL, t.dpi);
         for (HWND c : { m_text, m_list, m_rich })
             for (int pass = 0; c && pass < 3; ++pass)
@@ -347,22 +347,22 @@ void InfoPane::LayoutChildren()
                 GetWindowRect(c, &now);
                 if (now.right - now.left == ew && now.bottom - now.top == eh && pass > 0)
                     break;
-                SetWindowPos(c, nullptr, 0, 0, ew, eh, SWP_NOZORDER | SWP_NOACTIVATE);
+                SetWindowPos(c, nullptr, 0, 0, ew, eh, SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOCOPYBITS);
             }
         ShowWindow(m_clip, (GetWindowLongPtrW(m_text, GWL_STYLE) & WS_VISIBLE) || (GetWindowLongPtrW(m_list, GWL_STYLE) & WS_VISIBLE) ||
             (m_rich && (GetWindowLongPtrW(m_rich, GWL_STYLE) & WS_VISIBLE)) ? SW_SHOWNA : SW_HIDE);
     }
     else
     {
-        SetWindowPos(m_text, nullptr, body.left, body.top, w, h, SWP_NOZORDER | SWP_NOACTIVATE);
-        SetWindowPos(m_list, nullptr, body.left, body.top, w, h, SWP_NOZORDER | SWP_NOACTIVATE);
+        SetWindowPos(m_text, nullptr, body.left, body.top, w, h, SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOCOPYBITS);
+        SetWindowPos(m_list, nullptr, body.left, body.top, w, h, SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOCOPYBITS);
         if (m_rich)
-            SetWindowPos(m_rich, nullptr, body.left, body.top, w, h, SWP_NOZORDER | SWP_NOACTIVATE);
+            SetWindowPos(m_rich, nullptr, body.left, body.top, w, h, SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOCOPYBITS);
     }
     ListView_SetColumnWidth(m_list, 1, t.S(80));
     // (room for the overlay bar on the right: WinUI's sits over the list, beside the sizes)
     ListView_SetColumnWidth(m_list, 0, std::max(t.S(80), w - t.S(80) - (m_clip ? t.S(12) : GetSystemMetricsForDpi(SM_CXVSCROLL, t.dpi)) - t.S(4)));
-    SetWindowPos(m_host, nullptr, body.left, body.top, w, h, SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(m_host, nullptr, body.left, body.top, w, h, SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOCOPYBITS);
     if (m_media)
         m_media->Move({ body.left, body.top, body.left + w, body.top + h });
     if (m_handler)

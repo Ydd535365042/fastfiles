@@ -137,12 +137,17 @@ LRESULT CALLBACK Tab::HostProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
             self->m_list->Move(rc);
         for (HWND page : { self && self->m_home ? self->m_home->Hwnd() : nullptr, self && self->m_settings ? self->m_settings->Hwnd() : nullptr })
             if (page)
-                SetWindowPos(page, nullptr, 0, 0, rc.right, rc.bottom, SWP_NOZORDER | SWP_NOACTIVATE);
+                SetWindowPos(page, nullptr, 0, 0, rc.right, rc.bottom, SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOCOPYBITS);
         return 0;
     }
     if (msg == WM_ERASEBKGND)
     {
-        // Seen only between views (the browser covers it otherwise): the palette, not the class's white
+        // Seen only between views: the palette, not the class's white. While a view is shown it covers the host and
+        // paints itself; erasing then filled the strip a resize uncovers before the view's own resize (in WM_SIZE,
+        // after this) reached it, a flat band at its right / bottom edge on every splitter or frame drag step
+        for (HWND child = GetWindow(hwnd, GW_CHILD); child; child = GetWindow(child, GW_HWNDNEXT))
+            if (IsWindowVisible(child))
+                return 1;
         auto* self = reinterpret_cast<Tab*>(GetWindowLongPtrW(hwnd, GWLP_USERDATA));
         if (self && self->m_prefs && self->m_prefs->theme)
         {
@@ -358,6 +363,8 @@ void Tab::ShowHome()
     RECT rc{};
     GetClientRect(m_host, &rc);
     SetWindowPos(page, HWND_TOP, 0, 0, rc.right, rc.bottom, SWP_SHOWWINDOW | SWP_NOACTIVATE);
+    // Painted before anything else of the step: shown, it is blank until its WM_PAINT (a flash on the way to it)
+    UpdateWindow(page);
     // Only one of the two pages is ever up
     if (HWND other = settings ? (m_home ? m_home->Hwnd() : nullptr) : (m_settings ? m_settings->Hwnd() : nullptr))
         ShowWindow(other, SW_HIDE);
@@ -466,7 +473,7 @@ void Tab::Hide()
 void Tab::Move(const RECT& rc)
 {
     if (m_host)
-        SetWindowPos(m_host, nullptr, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, SWP_NOZORDER | SWP_NOACTIVATE);
+        SetWindowPos(m_host, nullptr, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOCOPYBITS);
 }
 
 void Tab::Close()

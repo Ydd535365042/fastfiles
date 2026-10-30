@@ -487,11 +487,20 @@ bool AnimationsEnabled()
     return !SystemParametersInfoW(SPI_GETCLIENTAREAANIMATION, 0, &on, 0) || on;
 }
 
+ULONGLONG AnimNow()
+{
+    static const double freq = [] { LARGE_INTEGER f{}; QueryPerformanceFrequency(&f); return static_cast<double>(f.QuadPart); }();
+    LARGE_INTEGER q{};
+    QueryPerformanceCounter(&q);
+    return 1 + static_cast<ULONGLONG>(static_cast<double>(q.QuadPart) * 1000.0 / freq);
+}
+
 double AnimProgress(ULONGLONG start, int ms)
 {
     if (!start || ms <= 0)
         return 1.0;
-    const double x = std::min(1.0, static_cast<double>(GetTickCount64() - start) / ms);
+    const ULONGLONG now = AnimNow();
+    const double x = std::min(1.0, static_cast<double>(now > start ? now - start : 0) / ms);
     const double inv = 1.0 - x;
     return 1.0 - inv * inv * inv; // cubic ease-out (WinUI's decelerate curve)
 }
@@ -500,7 +509,7 @@ int StateFade::Level() const
 {
     if (!start || from == to)
         return to;
-    const ULONGLONG t = GetTickCount64() - start;
+    const ULONGLONG now = AnimNow(), t = now > start ? now - start : 0;
     if (t >= kMs)
         return to;
     return from + static_cast<int>((to - from) * static_cast<long long>(t) / kMs);
@@ -512,7 +521,7 @@ void StateFade::Set(int level, bool snap)
         return;
     from = snap || !AnimationsEnabled() ? level : Level();
     to = level;
-    start = from == to ? 0 : GetTickCount64();
+    start = from == to ? 0 : AnimNow();
 }
 
 COLORREF FadeFill(COLORREF base, COLORREF hover, COLORREF pressed, int level)

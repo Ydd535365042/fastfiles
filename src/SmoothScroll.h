@@ -34,9 +34,14 @@ public:
 
 private:
     void StartOrRetarget(HWND hwnd, int newTarget, bool immediate);
-    double m_current = 0, m_from = 0;
+    // The curve of the running animation at `now` (ms, NowMs): position and velocity (px per ms). A cubic from
+    // (m_from, m_v0) to (m_target, 0) over kDurationMs: a fresh start (m_v0 = 3 * distance / duration) is exactly the
+    // cubic ease-out; a retarget starts from the current position and velocity, so no frame stalls or jumps.
+    double At(double now, double* velocity = nullptr) const;
+    static double NowMs(); // QueryPerformanceCounter (GetTickCount64's 15.6 ms steps made uneven frames)
+    double m_current = 0, m_from = 0, m_v0 = 0;
     int m_target = 0;
-    ULONGLONG m_start = 0;
+    double m_start = 0;
     static constexpr int kDurationMs = 250; // Files' ScrollViewer wheel animation
     bool m_animating = false;
     HWND m_hwnd = nullptr;

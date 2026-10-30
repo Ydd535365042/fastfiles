@@ -817,7 +817,7 @@ Result Show(HWND owner, const Theme* theme, Spec& spec)
     ShowWindow(hwnd, SW_SHOW);
     if (d.smoke && AnimationsEnabled())
     {
-        d.fadeStart = GetTickCount64();
+        d.fadeStart = AnimNow();
         SetTimer(hwnd, kFadeTimer, 15, nullptr);
     }
     if (HWND first = d.FirstEdit())

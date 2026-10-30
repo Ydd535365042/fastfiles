@@ -1,6 +1,7 @@
 #include "MainWindow.h"
 #include "Lang.h"
 #include "ContentDialog.h"
+#include "DarkMode.h"
 #include "NewItem.h"
 #include "Sandbox.h"
 
@@ -197,8 +198,9 @@ void MainWindow::CreateShortcutFromDialog()
         s.fields[1].error = hasTarget && !nameOk ? Tr(L"指定的项目名称无效") : L"";
         s.primaryEnabled = parsed->valid && nameOk && hasTarget;
     };
-    spec.browse = [owner = m_hwnd](ContentDialog::Spec& s, int field)
+    spec.browse = [owner = m_hwnd, theme = &m_theme](ContentDialog::Spec& s, int field)
     {
+        const DarkMode::DialogScope dark(theme->dark, theme->chrome, theme->ink);
         // Files: SHBrowseForFolder with BIF_BROWSEINCLUDEFILES (folders and files)
         BROWSEINFOW bi{};
         bi.hwndOwner = GetActiveWindow() ? GetActiveWindow() : owner;

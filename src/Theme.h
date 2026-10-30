@@ -120,7 +120,10 @@ COLORREF TagFallbackColor(); // a tag whose stored color can't be read (tags.txt
 void StartGdiplus(); // once per process, before any GDI+ drawing outside Theme.cpp
 // Windows' "Show animations in Windows" (Settings > Accessibility > Visual effects)
 bool AnimationsEnabled();
-// Eased 0..1 for an animation started at GetTickCount64() value `start` (0 = finished)
+// The animation clock: milliseconds, never 0, from QueryPerformanceCounter (GetTickCount64 moves in 15.6 ms steps, so
+// an animation sampled once per 16.7 ms frame advanced unevenly: some frames by 0, the next by two steps)
+ULONGLONG AnimNow();
+// Eased 0..1 for an animation started at AnimNow() value `start` (0 = finished)
 double AnimProgress(ULONGLONG start, int ms);
 
 // A control's hover / pressed fill moving between states the way WinUI's BrushTransition does (Duration 0:0:0.083

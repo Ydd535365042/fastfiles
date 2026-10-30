@@ -92,11 +92,16 @@ bool FileList::Create(HWND parent)
     SHFILEINFOW sfi{};
     m_icons = reinterpret_cast<HIMAGELIST>(SHGetFileInfoW(L"x", FILE_ATTRIBUTE_NORMAL, &sfi, sizeof(sfi),
         SHGFI_USEFILEATTRIBUTES | SHGFI_SYSICONINDEX | SHGFI_SMALLICON));
-    m_linkOverlay = SHGetIconOverlayIndexW(nullptr, IDO_SHGIOI_LINK);
     // The larger system icons for the larger layouts (the same indexes as the small ones)
     const int kLists[4] = { SHIL_SMALL, SHIL_LARGE, SHIL_EXTRALARGE, SHIL_JUMBO };
     for (int i = 0; i < 4; ++i)
         SHGetImageList(kLists[i], IID_IImageList, reinterpret_cast<void**>(&m_iconLists[i]));
+    // The shortcut arrow: SHGetIconOverlayIndex gives its overlay number, the image is GetOverlayImage's (Files'
+    // GetIconOverlay); the number itself as an image index drew a stray system icon over every shortcut
+    m_linkOverlay = -1;
+    if (const int overlay = SHGetIconOverlayIndexW(nullptr, IDO_SHGIOI_LINK); overlay > 0 && m_iconLists[0])
+        if (int image = -1; SUCCEEDED(reinterpret_cast<IImageList*>(m_iconLists[0])->GetOverlayImage(overlay, &image)) && image >= 0)
+            m_linkOverlay = image;
     m_dropTarget.owner = this;
     RegisterDragDrop(m_list, &m_dropTarget);
     SetupColumns();

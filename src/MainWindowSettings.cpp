@@ -42,8 +42,9 @@ bool CopyText(HWND owner, const std::wstring& text)
     return ok;
 }
 
-std::wstring PickFile(HWND owner, bool save, const wchar_t* title)
+std::wstring PickFile(HWND owner, const Theme& theme, bool save, const wchar_t* title)
 {
+    const DarkMode::DialogScope dark(theme.dark, theme.chrome, theme.ink);
     ComPtr<IFileDialog> dialog;
     if (FAILED(CoCreateInstance(save ? CLSID_FileSaveDialog : CLSID_FileOpenDialog, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&dialog))))
         return {};
@@ -62,8 +63,9 @@ std::wstring PickFile(HWND owner, bool save, const wchar_t* title)
     return result;
 }
 
-std::wstring PickFolder(HWND owner)
+std::wstring PickFolder(HWND owner, const Theme& theme)
 {
+    const DarkMode::DialogScope dark(theme.dark, theme.chrome, theme.ink);
     ComPtr<IFileOpenDialog> dialog;
     if (FAILED(CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&dialog))))
         return {};
@@ -700,7 +702,7 @@ std::vector<SettingsPage> MainWindow::BuildSettingsPages()
             {
                 if (i == static_cast<int>(AppSettings::Startup::Path) && m_settings.startupPath.empty())
                 {
-                    const std::wstring folder = PickFolder(owner);
+                    const std::wstring folder = PickFolder(owner, m_theme);
                     if (folder.empty())
                         return;
                     m_settings.startupPath = folder;
@@ -711,7 +713,7 @@ std::vector<SettingsPage> MainWindow::BuildSettingsPages()
         if (m_settings.startup == AppSettings::Startup::Path)
             p.rows.push_back(value(Tr(L"启动文件夹"), [this] { return m_settings.startupPath; }, Tr(L"选择…"), [this, owner, changed]
             {
-                const std::wstring folder = PickFolder(owner);
+                const std::wstring folder = PickFolder(owner, m_theme);
                 if (!folder.empty())
                 {
                     m_settings.startupPath = folder;
@@ -859,6 +861,7 @@ std::vector<SettingsPage> MainWindow::BuildSettingsPages()
                 ofn.lpstrFile = file;
                 ofn.nMaxFile = MAX_PATH;
                 ofn.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_EXPLORER | OFN_NOCHANGEDIR;
+                const DarkMode::DialogScope dark(m_theme.dark, m_theme.chrome, m_theme.ink);
                 if (!GetOpenFileNameW(&ofn))
                     return;
                 m_settings.bgImage = file;
@@ -1128,14 +1131,14 @@ std::vector<SettingsPage> MainWindow::BuildSettingsPages()
         p.rows.push_back(header(Tr(L"设置文件")));
         p.rows.push_back(button(Tr(L"导出设置"), Tr(L"保存为文本文件，可以在其他电脑上导入。"), Tr(L"导出…"), [this, owner]
         {
-            const std::wstring path = PickFile(owner, true, Tr(L"导出 FastFiles 设置"));
+            const std::wstring path = PickFile(owner, m_theme, true, Tr(L"导出 FastFiles 设置"));
             // Files' ExportSettingsAsync is silent on success and failure (no dialog at all); FastFiles keeps its own notice.
             if (!path.empty())
                 ContentDialog::Notice(owner, &m_theme, L"FastFiles", ExportSettings(path) ? Tr(L"设置已导出。") : Tr(L"导出失败。"));
         }));
         p.rows.push_back(button(Tr(L"导入设置"), Tr(L"用文件中的设置替换当前设置。"), Tr(L"导入…"), [this, owner]
         {
-            const std::wstring path = PickFile(owner, false, Tr(L"导入 FastFiles 设置"));
+            const std::wstring path = PickFile(owner, m_theme, false, Tr(L"导入 FastFiles 设置"));
             if (path.empty())
                 return;
             const int count = ImportSettings(path);

@@ -170,7 +170,7 @@ void SettingsView::ShowPage(int page)
     if (page != m_page && m_hwnd && IsWindowVisible(m_hwnd) && AnimationsEnabled())
     {
         m_navFrom = m_page;
-        m_navStart = m_pageStart = GetTickCount64();
+        m_navStart = m_pageStart = AnimNow();
         Animate();
     }
     m_toggleRow = -1;
@@ -810,14 +810,14 @@ void SettingsView::SetBubble(int cell)
 
 bool SettingsView::Animating() const
 {
-    const ULONGLONG now = GetTickCount64();
+    const ULONGLONG now = AnimNow();
     return (m_toggleStart && now - m_toggleStart < kToggleMs) || (m_pageStart && now - m_pageStart < kPageMs) ||
         (m_navStart && now - m_navStart < kNavMs);
 }
 
 void SettingsView::Animate()
 {
-    SetTimer(m_hwnd, kAnimTimer, 10, nullptr); // ~one frame; WM_TIMER stops it when everything has settled
+    SmoothFrame::Register(m_hwnd); // a paint per display frame (SmoothFrame's vblank clock) until everything settled
 }
 
 // --- Input ---
@@ -855,7 +855,7 @@ void SettingsView::Activate(int cell, Part part, int tile)
             if (AnimationsEnabled())
             {
                 m_toggleRow = m_cells[cell].row;
-                m_toggleStart = GetTickCount64();
+                m_toggleStart = AnimNow();
             }
             row.setOn(!row.isOn());
             if (m_hwnd && m_toggleRow >= 0)
@@ -1240,13 +1240,7 @@ LRESULT SettingsView::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
     case WM_TIMER:
         if (wp == kAnimTimer)
         {
-            InvalidateRect(m_hwnd, nullptr, FALSE);
-            if (!Animating())
-            {
-                KillTimer(m_hwnd, kAnimTimer);
-                m_toggleStart = m_pageStart = m_navStart = 0;
-                m_toggleRow = m_navFrom = -1;
-            }
+            KillTimer(m_hwnd, kAnimTimer); // (older builds' timer; the frames now come from SmoothFrame)
             return 0;
         }
         if (wp == kBarTimer)
@@ -1422,6 +1416,18 @@ LRESULT SettingsView::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
     case SmoothFrame::kMsgTick:
         if (m_smooth.Animating())
             ScrollTo(m_smooth.Tick());
+        // The toggle knob, the page entrance and the navigation indicator: one paint per display frame
+        if (m_toggleStart || m_pageStart || m_navStart)
+        {
+            InvalidateRect(m_hwnd, nullptr, FALSE);
+            if (Animating())
+                SmoothFrame::Register(m_hwnd);
+            else
+            {
+                m_toggleStart = m_pageStart = m_navStart = 0;
+                m_toggleRow = m_navFrom = -1;
+            }
+        }
         return 0;
     case WM_SYSKEYDOWN:
     case WM_KEYDOWN:

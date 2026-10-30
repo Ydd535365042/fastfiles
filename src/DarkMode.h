@@ -15,4 +15,19 @@ void ApplyControl(HWND hwnd, bool dark, const wchar_t* lightClass = L"Explorer",
 // Column header text follows *color (read at paint time): DarkMode_ItemsView darkens the header but leaves its text black.
 // Subclasses the list view, which is where the header sends NM_CUSTOMDRAW; safe to call repeatedly.
 void ColorHeaderText(HWND list, const COLORREF* color);
+
+// While alive, the system dialogs this thread opens (打开 / 另存为 / 浏览文件夹: #32770 windows) follow the dark theme:
+// their title bar, their Win32 controls (file name box, file type list, the buttons) and their own background. The
+// shell parts inside (the file list, the navigation pane) already follow SetApp. Nothing outside this thread's
+// dialogs is touched (a thread-local CBT hook, gone with the scope). `back` / `ink`: the theme's colors for them.
+class DialogScope
+{
+public:
+    DialogScope(bool dark, COLORREF back, COLORREF ink);
+    ~DialogScope();
+    DialogScope(const DialogScope&) = delete;
+    DialogScope& operator=(const DialogScope&) = delete;
+private:
+    HHOOK m_hook = nullptr;
+};
 }

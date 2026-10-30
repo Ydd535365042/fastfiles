@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(FastFiles VERSION 1.0.0.8 LANGUAGES CXX)
+project(FastFiles VERSION 1.0.0.9 LANGUAGES CXX)
 
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 

@@ -137,4 +137,156 @@ void ColorHeaderText(HWND list, const COLORREF* color)
     if (HWND header = ListView_GetHeader(list))
         InvalidateRect(header, nullptr, TRUE);
 }
+
+// --- The system dialogs (DialogScope) ---
+
+namespace
+{
+constexpr UINT_PTR kDialogSubclassId = 0xFFD1;
+struct DialogColors
+{
+    COLORREF back = 0, ink = 0;
+    HBRUSH brush = nullptr;
+    int depth = 0; // nested scopes on this thread
+};
+thread_local DialogColors t_dialog;
+
+bool ClassIs(HWND hwnd, const wchar_t* name)
+{
+    wchar_t cls[64]{};
+    GetClassNameW(hwnd, cls, ARRAYSIZE(cls));
+    return _wcsicmp(cls, name) == 0;
+}
+
+LRESULT CALLBACK ComboProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR, DWORD_PTR)
+{
+    switch (msg)
+    {
+    case WM_CTLCOLOREDIT:
+    case WM_CTLCOLORLISTBOX:
+        if (t_dialog.brush)
+        {
+            SetTextColor(reinterpret_cast<HDC>(wp), t_dialog.ink);
+            SetBkColor(reinterpret_cast<HDC>(wp), t_dialog.back);
+            return reinterpret_cast<LRESULT>(t_dialog.brush);
+        }
+        break;
+    case WM_NCDESTROY:
+        RemoveWindowSubclass(hwnd, ComboProc, kDialogSubclassId);
+        break;
+    }
+    return DefSubclassProc(hwnd, msg, wp, lp);
+}
+
+// The dialog's own Win32 children: DarkMode_Explorer buttons / scroll bars, DarkMode_CFD (the common file dialog's
+// dark class: the boxes and lists Explorer's own dialogs use). The shell's views (DirectUIHWND, SHELLDLL_DefView,
+// the navigation tree) are left as they are: SetApp already themes them.
+BOOL CALLBACK ThemeChild(HWND child, LPARAM)
+{
+    wchar_t cls[64]{};
+    GetClassNameW(child, cls, ARRAYSIZE(cls));
+    const Api& api = Get();
+    auto apply = [&](const wchar_t* dark)
+    {
+        if (api.allowForWindow)
+            api.allowForWindow(child, true);
+        SetWindowTheme(child, dark, nullptr);
+        SendMessageW(child, WM_THEMECHANGED, 0, 0);
+    };
+    if (!_wcsicmp(cls, WC_BUTTONW) || !_wcsicmp(cls, WC_SCROLLBARW))
+        apply(L"DarkMode_Explorer");
+    else if (!_wcsicmp(cls, WC_COMBOBOXW) || !_wcsicmp(cls, WC_COMBOBOXEXW) || !_wcsicmp(cls, WC_EDITW))
+        apply(L"DarkMode_CFD");
+    // A combo box colors its own edit (the 文件名 box) and list: it gets their WM_CTLCOLOR* and doesn't pass them up
+    if (!_wcsicmp(cls, WC_COMBOBOXW))
+        SetWindowSubclass(child, ComboProc, kDialogSubclassId, 0);
+    return TRUE;
+}
+
+LRESULT CALLBACK DialogProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR, DWORD_PTR)
+{
+    switch (msg)
+    {
+    case WM_ERASEBKGND:
+        if (t_dialog.brush)
+        {
+            RECT rc{};
+            GetClientRect(hwnd, &rc);
+            FillRect(reinterpret_cast<HDC>(wp), &rc, t_dialog.brush);
+            return 1;
+        }
+        break;
+    case WM_CTLCOLORDLG:
+    case WM_CTLCOLORSTATIC:
+    case WM_CTLCOLORBTN:
+    case WM_CTLCOLOREDIT:    // the 文件名 box (the editable combo box's edit; the combo boxes pass it up)
+    case WM_CTLCOLORLISTBOX: // their drop-down lists
+        if (t_dialog.brush)
+        {
+            SetTextColor(reinterpret_cast<HDC>(wp), t_dialog.ink);
+            SetBkColor(reinterpret_cast<HDC>(wp), t_dialog.back);
+            return reinterpret_cast<LRESULT>(t_dialog.brush);
+        }
+        break;
+    case WM_SHOWWINDOW:
+    case WM_INITDIALOG:
+        // The controls exist (and more come with the dialog's own layout): theme them all
+        EnumChildWindows(hwnd, ThemeChild, 0);
+        break;
+    case WM_NCDESTROY:
+        RemoveWindowSubclass(hwnd, DialogProc, kDialogSubclassId);
+        break;
+    }
+    return DefSubclassProc(hwnd, msg, wp, lp);
+}
+
+LRESULT CALLBACK DialogHook(int code, WPARAM wp, LPARAM lp)
+{
+    // A top-level dialog window (#32770: the file dialog, the folder browser), once it is built (activation: before
+    // it is shown; at creation it isn't initialized yet, and touching it there broke the dialog)
+    if (code == HCBT_ACTIVATE)
+    {
+        const HWND hwnd = reinterpret_cast<HWND>(wp);
+        if (ClassIs(hwnd, L"#32770") && !(GetWindowLongW(hwnd, GWL_STYLE) & WS_CHILD) &&
+            SetWindowSubclass(hwnd, DialogProc, kDialogSubclassId, 0))
+        {
+            const Api& api = Get();
+            if (api.allowForWindow)
+                api.allowForWindow(hwnd, true);
+            const BOOL value = TRUE;
+            if (api.build >= 17763)
+                DwmSetWindowAttribute(hwnd, api.build >= 18985 ? 20 : 19, &value, sizeof(value));
+            EnumChildWindows(hwnd, ThemeChild, 0);
+            RedrawWindow(hwnd, nullptr, nullptr, RDW_INVALIDATE | RDW_ERASE | RDW_ALLCHILDREN | RDW_FRAME);
+        }
+    }
+    return CallNextHookEx(nullptr, code, wp, lp);
+}
+}
+
+DialogScope::DialogScope(bool dark, COLORREF back, COLORREF ink)
+{
+    if (!dark || !Get().allowForWindow)
+        return; // light: the system dialogs are light already
+    if (t_dialog.depth++ == 0)
+    {
+        t_dialog.back = back;
+        t_dialog.ink = ink;
+        t_dialog.brush = CreateSolidBrush(back);
+    }
+    m_hook = SetWindowsHookExW(WH_CBT, DialogHook, nullptr, GetCurrentThreadId());
+}
+
+DialogScope::~DialogScope()
+{
+    if (!m_hook && t_dialog.depth == 0)
+        return;
+    if (m_hook)
+        UnhookWindowsHookEx(m_hook);
+    if (m_hook && --t_dialog.depth == 0 && t_dialog.brush)
+    {
+        DeleteObject(t_dialog.brush);
+        t_dialog.brush = nullptr;
+    }
+}
 }

@@ -1,5 +1,7 @@
 #include "SmoothScroll.h"
 #include "Theme.h"
+#include "Sandbox.h"
+#include <cstdio>
 #include <dwmapi.h>
 #include <thread>
 #include <mutex>
@@ -17,23 +19,55 @@ SmoothScroll::~SmoothScroll()
         SmoothFrame::Forget(m_hwnd); // never leaves a stale pointer registered after the view is destroyed
 }
 
+double SmoothScroll::NowMs()
+{
+    static const double freq = [] { LARGE_INTEGER f{}; QueryPerformanceFrequency(&f); return static_cast<double>(f.QuadPart); }();
+    LARGE_INTEGER q{};
+    QueryPerformanceCounter(&q);
+    return static_cast<double>(q.QuadPart) * 1000.0 / freq;
+}
+
+double SmoothScroll::At(double now, double* velocity) const
+{
+    const double d = kDurationMs;
+    const double s = std::clamp((now - m_start) / d, 0.0, 1.0);
+    const double dist = m_target - m_from;
+    // Cubic Hermite, end velocity 0: h01 = 3s^2 - 2s^3 (the distance), h10 = s^3 - 2s^2 + s (the start velocity)
+    const double h01 = s * s * (3.0 - 2.0 * s), h10 = s * (1.0 - s) * (1.0 - s);
+    if (velocity)
+        *velocity = s >= 1.0 ? 0.0 : (dist * 6.0 * s * (1.0 - s) + d * m_v0 * (1.0 - s) * (1.0 - 3.0 * s)) / d;
+    return m_from + dist * h01 + d * m_v0 * h10;
+}
+
 void SmoothScroll::StartOrRetarget(HWND hwnd, int newTarget, bool immediate)
 {
     m_hwnd = hwnd;
-    m_target = newTarget;
     if (immediate || !AnimationsEnabled())
     {
+        m_target = newTarget;
         m_current = m_from = newTarget;
+        m_v0 = 0;
         m_animating = false;
         return;
     }
-    // Retargeting keeps the velocity continuous: the animation restarts from wherever it is now (m_current), not
-    // from the old target, so a rapid run of notches doesn't jerk back to a stale start point (Files/WinUI: the
-    // ScrollViewer's existing DoubleAnimation is retargeted the same way).
+    // Retargeting keeps position and velocity continuous (Files/WinUI: the ScrollViewer's running animation is
+    // retargeted, not restarted from rest): the new curve starts where the old one is now, at the speed it has now.
+    // Restarting the ease-out from the arrival time made the first frame after each notch stand still and the next
+    // one jump. The start speed is capped at the ease-out's own (3 * distance / duration: never past the target);
+    // turning back starts from rest.
+    const double now = NowMs();
+    double v = 0;
+    if (m_animating)
+        m_current = At(now, &v);
+    const double dist = newTarget - m_current;
+    const double fresh = 3.0 * dist / kDurationMs;
+    m_v0 = !m_animating ? fresh : (v * dist > 0 ? (std::abs(v) < std::abs(fresh) ? v : fresh) : 0.0);
     m_from = m_current;
-    m_start = GetTickCount64();
-    m_animating = true;
-    SmoothFrame::Register(hwnd);
+    m_target = newTarget;
+    m_start = now;
+    m_animating = dist != 0;
+    if (m_animating)
+        SmoothFrame::Register(hwnd);
 }
 
 int SmoothScroll::OnWheel(HWND hwnd, int delta, int step, int maxValue)
@@ -55,9 +89,11 @@ int SmoothScroll::OnWheel(HWND hwnd, int delta, int step, int maxValue)
 void SmoothScroll::Reset(int value)
 {
     m_current = m_from = m_target = value;
-    m_animating = false;
-    if (m_hwnd)
+    m_v0 = 0;
+    // Off the frame clock only if this scroll was on it (the window may be ticking for its other animations)
+    if (m_animating && m_hwnd)
         SmoothFrame::Forget(m_hwnd);
+    m_animating = false;
 }
 
 void SmoothScroll::ClampTarget(int maxValue)
@@ -66,20 +102,40 @@ void SmoothScroll::ClampTarget(int maxValue)
     const int clamped = std::clamp(m_target, 0, maxValue);
     if (clamped == m_target && Value() <= maxValue)
         return;
-    m_target = clamped;
-    if (m_current > maxValue)
-        m_current = m_from = maxValue;
     if (!m_animating)
+    {
+        m_target = clamped;
         m_current = m_from = m_target;
+        return;
+    }
+    // Still moving: on from where it is now toward the new end (the same curve a retarget takes)
+    const double now = NowMs();
+    double v = 0;
+    m_current = std::min(At(now, &v), static_cast<double>(maxValue));
+    const double dist = clamped - m_current;
+    const double fresh = 3.0 * dist / kDurationMs;
+    m_v0 = v * dist > 0 ? (std::abs(v) < std::abs(fresh) ? v : fresh) : 0.0;
+    m_from = m_current;
+    m_target = clamped;
+    m_start = now;
 }
 
 int SmoothScroll::Tick()
 {
     if (!m_animating)
         return Value();
-    const double p = AnimProgress(m_start, kDurationMs);
-    m_current = m_from + (m_target - m_from) * p;
-    if (p >= 1.0)
+    const double now = NowMs();
+    m_current = At(now);
+    const bool done = now - m_start >= kDurationMs;
+    // Tests only (test mode and FF_SCROLL_TRACE set): one line per frame, "<scroller> <ms> <value>", in the data folder
+    static const bool trace = Sandbox::Active() && GetEnvironmentVariableW(L"FF_SCROLL_TRACE", nullptr, 0) > 0;
+    if (trace)
+        if (FILE* fp = nullptr; _wfopen_s(&fp, (Sandbox::Dir() + L"scroll-trace.txt").c_str(), L"a") == 0 && fp)
+        {
+            fwprintf(fp, L"%p %.3f %d\n", static_cast<void*>(this), now, Value());
+            fclose(fp);
+        }
+    if (done)
     {
         m_current = m_target;
         m_animating = false;

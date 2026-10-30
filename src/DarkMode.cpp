@@ -193,12 +193,16 @@ BOOL CALLBACK ThemeChild(HWND child, LPARAM)
         SetWindowTheme(child, dark, nullptr);
         SendMessageW(child, WM_THEMECHANGED, 0, 0);
     };
+    // The combo box inside a ComboBoxEx32 (the 文件名 box) stays unthemed: DarkMode_CFD on it drew a light frame around
+    // its edit; the outer ComboBoxEx32 carries the dark border
+    const bool insideEx = !_wcsicmp(cls, WC_COMBOBOXW) && ClassIs(GetParent(child), WC_COMBOBOXEXW);
     if (!_wcsicmp(cls, WC_BUTTONW) || !_wcsicmp(cls, WC_SCROLLBARW))
         apply(L"DarkMode_Explorer");
-    else if (!_wcsicmp(cls, WC_COMBOBOXW) || !_wcsicmp(cls, WC_COMBOBOXEXW) || !_wcsicmp(cls, WC_EDITW))
+    else if (!insideEx && (!_wcsicmp(cls, WC_COMBOBOXW) || !_wcsicmp(cls, WC_COMBOBOXEXW) || !_wcsicmp(cls, WC_EDITW)))
         apply(L"DarkMode_CFD");
-    // A combo box colors its own edit (the 文件名 box) and list: it gets their WM_CTLCOLOR* and doesn't pass them up
-    if (!_wcsicmp(cls, WC_COMBOBOXW))
+    // A combo box colors its own edit (the 文件名 box) and list: it gets their WM_CTLCOLOR* and doesn't pass them up.
+    // The 文件名 box is a ComboBoxEx32 around one: the light ring around the text was the outer one's fill
+    if (!_wcsicmp(cls, WC_COMBOBOXW) || !_wcsicmp(cls, WC_COMBOBOXEXW))
         SetWindowSubclass(child, ComboProc, kDialogSubclassId, 0);
     return TRUE;
 }

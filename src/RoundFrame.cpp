@@ -309,11 +309,16 @@ void RoundFrame::PaintStrip(Piece& piece, const RECT& strip, POINT at, SIZE fram
         const double shadowA = (m_active ? m_look.shadowAlpha : m_look.shadowInactiveAlpha) / 255.0;
         // In the frame's coordinates (x, y); what the window covers is cleared once and skipped
         ZeroMemory(bits, static_cast<size_t>(sw) * sh * 4);
+        // Rows across the top / bottom: between the corners every pixel of a row is the same (the distance there is
+        // the row's alone), so it's worked out once, at the first column past the left corner, and copied along.
+        // This runs on every size step of a frame drag: the whole width pixel by pixel took ~2 ms
+        const int midL = m + r, midR = fw - m - r;
+        const bool midIn = midL >= strip.left && midR <= strip.right && midR > midL + 1;
         for (int y = strip.top; y < strip.bottom; ++y)
         {
             // Rows along the straight sides: just the band at each end (the window covers what's between)
             const bool side = y >= m + r && y < fh - m - r;
-            const int spanL = side ? m + 1 : fw, spanR = side ? fw - m - 1 : fw;
+            const int spanL = side ? m + 1 : midIn ? midL + 1 : fw, spanR = side ? fw - m - 1 : midIn ? midR : fw;
             for (int x = strip.left; x < strip.right; x = (x + 1 == spanL && spanR > x + 1) ? std::max<int>(spanR, x + 1) : x + 1)
             {
                 DWORD& p = px[static_cast<size_t>(y - strip.top) * sw + (x - strip.left)];
@@ -335,6 +340,11 @@ void RoundFrame::PaintStrip(Piece& piece, const RECT& strip, POINT at, SIZE fram
                     alpha = std::max(alpha, 1); // the resize band takes the mouse everywhere
                 const auto c = [&](int v) { return static_cast<DWORD>(std::min(alpha, static_cast<int>(v * cover + 0.5))); };
                 p = static_cast<DWORD>(alpha) << 24 | c(GetRValue(ring)) << 16 | c(GetGValue(ring)) << 8 | c(GetBValue(ring));
+            }
+            if (!side && midIn)
+            {
+                DWORD* row = px + static_cast<size_t>(y - strip.top) * sw - strip.left;
+                std::fill(row + midL + 1, row + midR, row[midL]);
             }
         }
         POINT zero{ 0, 0 };

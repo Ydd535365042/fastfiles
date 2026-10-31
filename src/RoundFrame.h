@@ -34,7 +34,8 @@ public:
     void SetActive(bool active);
     void Suppress(bool on);      // full screen: square, no frame window
     // The window moved, sized, showed, hid, changed z-order (WM_WINDOWPOSCHANGED) or its state changed
-    void Update();
+    // afterRegion: called right after a new region is set (its surface is Windows' own picture again until drawn into)
+    void Update(void (*afterRegion)(void*) = nullptr, void* context = nullptr);
     void Detach();
     bool Custom() const { return m_window && !Windows11(); } // this draws the frame (the window has no system one)
     bool Rounded() const;        // corners rounded now (not maximized / minimized / suppressed)

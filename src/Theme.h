@@ -185,7 +185,9 @@ private:
 class BufferedPaint
 {
 public:
-    BufferedPaint(HWND hwnd);
+    // visibleOnly: the buffer is clipped to what of the window is on screen (its children cut out): a parent drawing
+    // big shapes its children cover (the main window's cards) does only the part that shows; same pixels where seen
+    explicit BufferedPaint(HWND hwnd, bool visibleOnly = false);
     ~BufferedPaint();
     HDC dc() const { return m_buffer->dc; }
     const RECT& rect() const { return m_rc; }

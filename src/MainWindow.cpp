@@ -210,6 +210,19 @@ LRESULT MainWindow::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
             GetClientRect(m_hwnd, &m_sizeFrom);
             MapWindowPoints(m_hwnd, nullptr, reinterpret_cast<POINT*>(&m_sizeFrom), 2);
             GetWindowRect(m_hwnd, &m_sizeFromWindow);
+            // A frame drag's left / top edge: where its picture is cut (WM_WINDOWPOSCHANGED), found now (the client is
+            // the window here while it's dragged, WM_NCCALCSIZE)
+            m_cutCount = 0;
+            m_cutX = !(pos->flags & SWP_NOMOVE) && pos->x != now.left;
+            m_cutY = !(pos->flags & SWP_NOMOVE) && pos->y != now.top;
+            const SIZE to{ m_sizeFrom.right - m_sizeFrom.left + pos->cx - (now.right - now.left),
+                m_sizeFrom.bottom - m_sizeFrom.top + pos->cy - (now.bottom - now.top) };
+            if (m_moving && m_dragDc && (m_cutX || m_cutY) && to.cx > 0 && to.cy > 0 &&
+                m_dragSize.cx == m_sizeFrom.right - m_sizeFrom.left && m_dragSize.cy == m_sizeFrom.bottom - m_sizeFrom.top)
+            {
+                m_cutCount = DragCuts(m_cutX, m_cutY, to.cx, to.cy, m_cuts);
+                m_cutsFor = to;
+            }
         }
         m_probeSteps.push_back(resized && LayoutProbe::Start(m_hwnd, L"size"));
         break;
@@ -228,27 +241,82 @@ LRESULT MainWindow::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
         GetClientRect(m_hwnd, &rc);
         const bool resized = sizing && !IsRectEmpty(&m_sizeFrom) &&
             (rc.right != m_sizeFrom.right - m_sizeFrom.left || rc.bottom != m_sizeFrom.bottom - m_sizeFrom.top);
-        const auto touch = [&]
+        // A frame drag by the left / top edge: Windows keeps the old picture at the window's top left, which moved
+        // everything pinned right / at the bottom (the caption buttons, the search box, the details pane, the status
+        // bar) one step along with the edge until the paint put it back: it jittered on every step. Put where it
+        // was on the screen instead, what's pinned left / at the top (the sidebar, the tabs, the list) went one step
+        // the other way. So the last step's picture (SaveDragFrame) is cut in two where it's one color (the omnibar's
+        // empty end, between the list's columns and the details pane, between the list's rows and the status bar),
+        // each side where it goes, the cut doubled or cut out: as the new layout will have it. Then a child the layout
+        // moves is painted again in WM_SIZE, not copied from its old place (that's the cut picture now).
+        POINT origin{ 0, 0 };
+        ClientToScreen(m_hwnd, &origin);
+        const bool cutX = m_sizeFrom.left != origin.x, cutY = m_sizeFrom.top != origin.y;
+        const bool restore = resized && m_cutCount > 0 && cutX == m_cutX && cutY == m_cutY &&
+            m_cutsFor.cx == rc.right && m_cutsFor.cy == rc.bottom;
+        const DragCut (&cuts)[5] = m_cuts;
+        const int cutCount = restore ? m_cutCount : 0;
+        if (sizing)
+        {
+            m_repaintAll = restore;
+            m_cutCount = 0;
+        }
+        // (cut: the cut picture, else the picture onto itself)
+        const auto touch = [&](bool cut)
         {
             if (HDC dc = GetDCEx(m_hwnd, nullptr, DCX_CACHE))
             {
-                BitBlt(dc, 0, 0, rc.right, rc.bottom, dc, 0, 0, SRCCOPY);
+                if (cut)
+                    for (int i = 0; i < cutCount; ++i)
+                        PutDragFrame(dc, cuts[i], rc.right, rc.bottom);
+                else
+                    BitBlt(dc, 0, 0, rc.right, rc.bottom, dc, 0, 0, SRCCOPY);
                 ReleaseDC(m_hwnd, dc);
             }
             GdiFlush();
         };
+        // Rounded by a region (Windows 8 / 10): its new surface is Windows' own picture again, so the cut one goes in
+        // right after it (RoundFrame::Update's afterRegion), not after the rest of the frame's update; before it only
+        // the quick touch
+        struct AfterRegion { decltype(touch)* touch; bool cut, done; } after{ &touch, restore, false };
         if (resized)
-            touch();
-        m_round.Update();
+            touch(restore && !m_round.Custom());
+        void (*const putAfter)(void*) = [](void* p)
+        {
+            auto& a = *static_cast<AfterRegion*>(p);
+            (*a.touch)(a.cut);
+            a.done = true;
+        };
+        m_round.Update(resized ? putAfter : nullptr, &after);
         if (sizing)
             for (RECT& s : m_uncovered)
                 s = {};
         if (resized)
         {
-            if (m_round.Custom())
-                touch();
-            if (rc.right > m_sizeFrom.right - m_sizeFrom.left || rc.bottom > m_sizeFrom.bottom - m_sizeFrom.top)
-                PaintUncovered(m_sizeFrom, m_moving, m_uncovered);
+            if (m_round.Custom() && !after.done)
+                touch(restore);
+            // (cut: the picture covers the new size the way it's cut, the old one the other way, from the top left;
+            // what's uncovered is past that)
+            RECT was = m_sizeFrom, wasWindow = m_sizeFromWindow;
+            if (restore)
+            {
+                bool allX = cutX, allY = cutY;
+                // (the parts reaching the right / bottom: those cover the new size there when they're cut)
+                for (int i = 0; i < cutCount; ++i)
+                {
+                    allX = allX && (cuts[i].band.right < m_dragSize.cx ||
+                        (cuts[i].seamX >= 0 && (cuts[i].seamY < 0 || cuts[i].seamX2 >= 0)));
+                    allY = allY && (cuts[i].band.bottom < m_dragSize.cy || cuts[i].seamY >= 0);
+                }
+                RECT now{};
+                GetWindowRect(m_hwnd, &now);
+                const LONG ww = allX ? now.right - now.left : m_sizeFromWindow.right - m_sizeFromWindow.left;
+                const LONG wh = allY ? now.bottom - now.top : m_sizeFromWindow.bottom - m_sizeFromWindow.top;
+                wasWindow = { now.left, now.top, now.left + ww, now.top + wh };
+                was = { origin.x, origin.y, origin.x + (allX ? rc.right : m_dragSize.cx), origin.y + (allY ? rc.bottom : m_dragSize.cy) };
+            }
+            if (rc.right > was.right - was.left || rc.bottom > was.bottom - was.top)
+                PaintUncovered(was, wasWindow, m_moving && !restore, m_uncovered);
             GdiFlush();
         }
         // (WM_SIZE and its Layout come from DefWindowProc here)
@@ -300,7 +368,9 @@ LRESULT MainWindow::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
     {
         m_strip.SetMaximized(wp == SIZE_MAXIMIZED || m_fullScreen);
         LayoutProbe::Uncovered(m_hwnd); // (test mode: what the new size shows before its layout)
+        g_moveRepaints = m_repaintAll;
         Layout();
+        g_moveRepaints = false;
         // (what was uncovered, a child included: the sidebar / the tab row a left / top edge's drag reaches, which the
         // layout doesn't touch when their size stays)
         for (RECT& s : m_uncovered)
@@ -309,9 +379,17 @@ LRESULT MainWindow::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
                 RedrawWindow(m_hwnd, &s, nullptr, RDW_INVALIDATE | RDW_ALLCHILDREN);
             s = {};
         }
-        // Dragging the frame: each size is painted whole before the next one (see WM_MOUSEMOVE's splitter drags)
+        m_repaintAll = false;
+        // Dragging the frame: each size is painted whole before the next one (see WM_MOUSEMOVE's splitter drags), and
+        // kept for the next one to show until it's painted (WM_WINDOWPOSCHANGED)
         if (m_moving)
+        {
             RedrawWindow(m_hwnd, nullptr, nullptr, RDW_UPDATENOW | RDW_ALLCHILDREN);
+            // (kept for the next step only when this one moved the left / top edge: a drag keeps to its edge, and a
+            // right / bottom edge's drag doesn't use it)
+            if (m_cutX || m_cutY)
+                SaveDragFrame();
+        }
         return 0;
     }
     case WM_DPICHANGED:
@@ -338,7 +416,9 @@ LRESULT MainWindow::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
         return 1;
     case WM_PAINT:
     {
-        BufferedPaint paint(m_hwnd);
+        // (visible only: the cards are big anti-aliased shapes the children cover almost all of; drawn whole, they cost
+        // a good part of every size step of a frame drag)
+        BufferedPaint paint(m_hwnd, true);
         PaintChrome(paint.dc(), paint.rect());
         return 0;
     }
@@ -509,6 +589,8 @@ LRESULT MainWindow::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
         break;
     case WM_EXITSIZEMOVE:
         m_moving = false;
+        Backdrop::SetMoving(false);
+        FreeDragFrame();
         KillTimer(m_hwnd, kMoveTimer);
         if (Backdrop::Live())
         {
@@ -532,7 +614,11 @@ LRESULT MainWindow::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
         if (m_paletteOpen)
             ClosePalette(false);
         if (msg == WM_ENTERSIZEMOVE)
+        {
             m_moving = true;
+            Backdrop::SetMoving(true);
+            SaveDragFrame(); // (the first step shows the picture as it is now)
+        }
         // The material is the wallpaper behind the window: our own surfaces repaint for where it now is (a background
         // image moves with the window: nothing to repaint). While it's dragged a repaint costs more than a frame and
         // the blurred material barely changes over a few pixels: the picture moves with the window, and is redone

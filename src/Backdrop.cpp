@@ -36,6 +36,7 @@ struct State
     unsigned version = 0;             // bumped whenever material32 / the image change (the Sampled caches go stale)
     std::vector<Backdrop::Layer> layers;
     COLORREF base = 0;                // the solid page color (no material)
+    bool moving = false;              // the window's frame is being dragged (SetMoving)
 };
 static State g;
 
@@ -500,23 +501,30 @@ void SampleRow(POINT origin, int y, int x0, int x1, uint32_t* out)
 // The material under a top-level window's client area: from the cache once the window has painted twice at the same
 // screen position with the same material (rows filled as they're first needed, kept across resizes). Its children read
 // their part of it at their offset, so a child that moves or resizes inside the window (a splitter drag: the list,
-// the details pane) keeps reading the cache instead of sampling every row again. A window being moved on the screen
-// has no cache and gets nullptr (Compose samples those rows itself, as it always did).
-Sampled* SampledFor(HWND hwnd, POINT origin, int width, int height)
+// the details pane) keeps reading the cache instead of sampling every row again. A window moved on the screen since
+// (a frame drag's left / top edge moves it every step) reads it shifted by how far (shift: the material is where it
+// is on the screen, so the same pixels), what's past it sampled as before; it's built again where the window rests
+// (not during a frame drag: each step paints all its windows at one place, which looked like resting there, and the
+// cache was built again on every step). No cache yet: nullptr (Compose samples those rows itself, as it always did).
+Sampled* SampledFor(HWND hwnd, POINT origin, int width, int height, POINT& shift)
 {
     auto& cache = SampledCache();
     Sampled& s = cache[hwnd];
-    const bool same = s.seen.x == origin.x && s.seen.y == origin.y;
+    shift = { origin.x - s.origin.x, origin.y - s.origin.y };
+    const bool here = shift.x == 0 && shift.y == 0;
+    // (a right / bottom edge's drag doesn't move it: built again there when it grew past the cache, as before)
+    const bool same = s.seen.x == origin.x && s.seen.y == origin.y && (!g.moving || here || s.origin.x == LONG_MIN);
     s.seen = origin;
-    if (s.origin.x == origin.x && s.origin.y == origin.y && s.version == g.version && width <= s.stride)
+    if (s.origin.x != LONG_MIN && s.version == g.version && (here ? width <= s.stride : !same))
     {
-        if (static_cast<int>(s.filled.size()) < height)
+        if (here && static_cast<int>(s.filled.size()) < height)
         {
             s.px.resize(static_cast<size_t>(s.stride) * height);
             s.filled.resize(static_cast<size_t>(height), 0);
         }
         return &s;
     }
+    shift = {};
     if (!same)
         return nullptr; // moving (or the first paint here): no cache to build yet
     // Windows that are gone: their entries go (the map only ever holds the few windows that compose)
@@ -574,6 +582,8 @@ void Reload()
 }
 
 void SetActive(bool active) { g.active = active; }
+
+void SetMoving(bool moving) { g.moving = moving; }
 
 bool Live() { return g.material != Solid && g.active && g.image && !g.material32.empty(); }
 
@@ -688,7 +698,8 @@ void Compose(HWND hwnd, uint32_t* bits, int width, const RECT& rc, const std::ve
     // The material under this window: the top-level window's cache (SampledFor), read at this window's offset in it
     const int x0 = std::max(0L, rc.left), x1 = std::min<int>(rc.right, width);
     Sampled* sampled = nullptr;
-    POINT offset{ 0, 0 }; // this window's client top-left in the top-level window's client area
+    POINT offset{ 0, 0 }; // this window's client top-left in the top-level window's client area (the cache's)
+    POINT shift{ 0, 0 };  // how far the top-level window moved since the cache was made (SampledFor)
     std::vector<uint32_t> direct; // rows the cache can't give (window being moved, or outside it), sampled as before
     if (live && x1 > x0)
     {
@@ -702,7 +713,10 @@ void Compose(HWND hwnd, uint32_t* bits, int width, const RECT& rc, const std::ve
         // Sized by the windows, not by `width` (the paint buffer's row stride, which can be wider: PaintBuffer)
         if (offset.x >= 0 && offset.y >= 0)
             sampled = SampledFor(root, rootOrigin, std::max<int>(rootClient.right, offset.x + std::max<int>(client.right, x1)),
-                std::max<int>(rootClient.bottom, offset.y + std::max<int>(client.bottom, rc.bottom)));
+                std::max<int>(rootClient.bottom, offset.y + std::max<int>(client.bottom, rc.bottom)), shift);
+        // (read where this window is in the cache's client area)
+        offset.x += shift.x;
+        offset.y += shift.y;
         direct.resize(static_cast<size_t>(x1 - x0));
     }
     // The rectangles to compose: rc, or its parts in the paint DC's visible region (screen coordinates)
@@ -740,15 +754,15 @@ void Compose(HWND hwnd, uint32_t* bits, int width, const RECT& rc, const std::ve
         uint32_t* row = bits + static_cast<ptrdiff_t>(y) * width;
         const uint32_t* under = nullptr;
         const int xa = part.left, xb = part.right;
-        const int cy = y + offset.y, cx1 = xb + offset.x;
-        if (sampled && cy < static_cast<int>(sampled->filled.size()) && cx1 <= sampled->stride)
+        const int cy = y + offset.y, cx0 = xa + offset.x, cx1 = xb + offset.x;
+        if (sampled && cy >= 0 && cx0 >= 0 && cy < static_cast<int>(sampled->filled.size()) && cx1 <= sampled->stride)
         {
             // The columns this paint needs that no earlier paint sampled (the next paints read them)
             uint32_t* cached = sampled->px.data() + static_cast<ptrdiff_t>(cy) * sampled->stride;
             int& done = sampled->filled[static_cast<size_t>(cy)];
             if (done < cx1)
             {
-                const POINT rootOrigin{ origin.x - offset.x, origin.y - offset.y };
+                const POINT rootOrigin{ origin.x - offset.x, origin.y - offset.y }; // (the cache's)
                 SampleRow(rootOrigin, cy, done, cx1, cached + done);
                 done = cx1;
             }

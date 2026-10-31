@@ -27,6 +27,7 @@ bool Active();        // something to compose: a live material or a background i
 void SetBase(COLORREF base); // the solid page color under the image when no material is live
 void Reload();                      // wallpaper, monitors or DPI changed
 void SetActive(bool active);
+void SetMoving(bool moving); // the window's frame is dragged (WM_ENTERSIZEMOVE / EXITSIZEMOVE): the material's cache kept, read shifted
 bool Live();                        // a material, its image loaded, the window active
 COLORREF Mean(const RECT& screen);  // the material's average over a screen rectangle
 

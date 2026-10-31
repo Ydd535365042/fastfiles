@@ -266,7 +266,274 @@ bool MainWindow::StatusWanted() const
     return m_statusVisible && !(tab && tab->OnHome() && !(slot && slot->Split()));
 }
 
-void MainWindow::PaintUncovered(const RECT& was, bool dragged, RECT (&strips)[10])
+void MainWindow::SaveDragFrame()
+{
+    RECT rc{};
+    GetClientRect(m_hwnd, &rc);
+    if (rc.right <= 0 || rc.bottom <= 0)
+        return;
+    HDC wnd = GetDCEx(m_hwnd, nullptr, DCX_CACHE); // (not clipped to the children: their pixels too)
+    if (!wnd)
+        return;
+    // Grown only (with room: a drag making the window bigger doesn't make a new bitmap every step)
+    if (!m_dragDc || rc.right > m_dragCapacity.cx || rc.bottom > m_dragCapacity.cy)
+    {
+        FreeDragFrame();
+        const SIZE cap{ rc.right + 128, rc.bottom + 128 };
+        m_dragDc = CreateCompatibleDC(wnd);
+        // (its pixels readable: DragSeam looks for where to cut it)
+        BITMAPINFO bi{};
+        bi.bmiHeader.biSize = sizeof(bi.bmiHeader);
+        bi.bmiHeader.biWidth = cap.cx;
+        bi.bmiHeader.biHeight = -cap.cy;
+        bi.bmiHeader.biPlanes = 1;
+        bi.bmiHeader.biBitCount = 32;
+        bi.bmiHeader.biCompression = BI_RGB;
+        void* bits = nullptr;
+        m_dragBmp = m_dragDc ? CreateDIBSection(wnd, &bi, DIB_RGB_COLORS, &bits, nullptr, 0) : nullptr;
+        m_dragBits = static_cast<const DWORD*>(bits);
+        if (!m_dragBmp || !m_dragBits)
+        {
+            FreeDragFrame();
+            ReleaseDC(m_hwnd, wnd);
+            return;
+        }
+        m_dragOld = SelectObject(m_dragDc, m_dragBmp);
+        m_dragCapacity = cap;
+    }
+    BitBlt(m_dragDc, 0, 0, rc.right, rc.bottom, wnd, 0, 0, SRCCOPY);
+    GdiFlush();
+    m_dragSize = { rc.right, rc.bottom };
+    ReleaseDC(m_hwnd, wnd);
+}
+
+int MainWindow::DragSeam(bool vertical, int a0, int a1, int lo, int hi, int from, int to) const
+{
+    // Cut where the picture is the same color right across: what a smaller size cuts out there (from - to columns /
+    // rows after the cut) or a bigger one doubles (the one before it) is all the one before it. Rows / columns where
+    // it isn't are counted, the cut where the fewest are (the right / bottom most of those: the closest to the side
+    // pinned parts). Not the picture's edges across (the rounded corners).
+    if (!m_dragBits || from <= 0 || to <= 0)
+        return -1;
+    const int cut = std::max(0, from - to);
+    hi = std::min(hi, from - cut);
+    // (no room between what's pinned to each side, a narrow window's list columns reaching the scroll bar: cut right
+    // before the side pinned right / bottom anyway, the cut columns doubled or cut out)
+    lo = std::max(std::min(lo, hi - 1), 1);
+    const int across = vertical ? m_dragSize.cx : m_dragSize.cy;
+    a0 = std::max(a0, 4);
+    a1 = std::min(a1, across - 4);
+    if (hi - lo < 1 || a1 - a0 < 1)
+        return -1;
+    const auto alike = [](DWORD a, DWORD b)
+    {
+        if (a == b)
+            return true;
+        const int dr = static_cast<int>((a >> 16) & 255) - static_cast<int>((b >> 16) & 255);
+        const int dg = static_cast<int>((a >> 8) & 255) - static_cast<int>((b >> 8) & 255);
+        const int db = static_cast<int>(a & 255) - static_cast<int>(b & 255);
+        return dr >= -6 && dr <= 6 && dg >= -6 && dg <= 6 && db >= -6 && db <= 6;
+    };
+    const int stride = m_dragCapacity.cx;
+    // cost[s]: lines across where [s - 1, s + cut] along isn't all one color; a line's last change before s + cut
+    // (last[]) is all it takes: one at s or after it counts
+    std::vector<int> cost(static_cast<size_t>(hi), 0);
+    if (vertical)
+    {
+        std::vector<int> last(static_cast<size_t>(across), -1);
+        for (int y = 1; y < hi + cut; ++y)
+        {
+            const DWORD* row = m_dragBits + static_cast<size_t>(y) * stride;
+            const DWORD* up = row - stride;
+            for (int x = a0; x < a1; ++x)
+                if (!alike(row[x], up[x]))
+                    last[x] = y;
+            const int s = y - cut;
+            if (s >= lo && s < hi)
+                for (int x = a0; x < a1; ++x)
+                    cost[s] += last[x] >= s ? 1 : 0;
+        }
+    }
+    else
+    {
+        for (int y = a0; y < a1; ++y)
+        {
+            const DWORD* row = m_dragBits + static_cast<size_t>(y) * stride;
+            int lastChange = -1;
+            for (int x = 1; x < hi + cut; ++x)
+            {
+                if (!alike(row[x], row[x - 1]))
+                    lastChange = x;
+                const int s = x - cut;
+                if (s >= lo && s < hi && lastChange >= s)
+                    ++cost[s];
+            }
+        }
+    }
+    int least = -1;
+    for (int s = lo; s < hi; ++s)
+        if (least < 0 || cost[s] < least)
+            least = cost[s];
+    // A row: the bottom most (right above the status bar's line, the cards' bottoms). A column: the middle of the
+    // widest gap (the right most of those): between the tabs and the caption buttons, the toolbar's groups, the list's
+    // last column and the status bar's right text. The right most column alone could be one between parts pinned
+    // right (the 6 px between that text and the card's edge took it as pinned left).
+    int best = -1, runStart = -1, bestLen = 0;
+    for (int s = lo; s <= hi; ++s)
+    {
+        const bool in = s < hi && cost[s] == least;
+        if (in && runStart < 0)
+            runStart = s;
+        if (!in && runStart >= 0)
+        {
+            const int len = s - runStart;
+            if (vertical || len >= bestLen)
+            {
+                best = vertical ? s - 1 : runStart + len / 2;
+                bestLen = len;
+            }
+            runStart = -1;
+        }
+    }
+    return best;
+}
+
+int MainWindow::DragCuts(bool cutX, bool cutY, int width, int height, DragCut (&cuts)[5]) const
+{
+    // The old layout's (the picture's) parts, each cut on its own between what's pinned to each side of it
+    const Theme& t = m_theme;
+    const int w = m_dragSize.cx, h = m_dragSize.cy;
+    const int title = t.S(kTitleRow), bodyTop = title + t.S(kNavRow), pad = std::max(1, t.S(kCardInset));
+    // (columns: right of the sidebar, left of the details pane / the scroll bar; rows: under the list's header, above
+    // the status bar / the cards' bottoms)
+    int contentL = m_fileCard.left + pad;
+    const int contentR = m_fileCard.right - pad - t.S(16);
+    // (the list's columns are pinned left, the gaps between them too: right of its last one, details headers)
+    struct Find { HWND main; RECT view; int right; } find{ m_hwnd, m_viewRect, -1 };
+    EnumChildWindows(m_hwnd, [](HWND w, LPARAM lp) -> BOOL
+    {
+        auto& f = *reinterpret_cast<Find*>(lp);
+        wchar_t cls[16]{};
+        if (!IsWindowVisible(w) || !GetClassNameW(w, cls, 16) || wcscmp(cls, WC_HEADERW) != 0)
+            return TRUE;
+        const int count = Header_GetItemCount(w);
+        RECT item{};
+        if (count <= 0 || !Header_GetItemRect(w, Header_OrderToIndex(w, count - 1), &item))
+            return TRUE;
+        RECT shown{};
+        GetClientRect(w, &shown);
+        item.right = std::min(item.right, shown.right);
+        MapWindowPoints(w, f.main, reinterpret_cast<POINT*>(&item), 2);
+        if (item.right > f.view.left && item.left < f.view.right)
+            f.right = std::max(f.right, static_cast<int>(item.right));
+        return TRUE;
+    }, reinterpret_cast<LPARAM>(&find));
+    if (find.right >= 0)
+        contentL = std::max(contentL, find.right + t.S(2));
+    const int listT = m_viewRect.top + t.S(32), listB = m_viewRect.bottom;
+    int n = 0;
+    if (cutX)
+    {
+        // Rows: the tab row (the tabs | the caption buttons), the nav row (the omnibar's empty end | its right end,
+        // the search box), the command bar (its groups), the list (its columns | the details pane, the scroll bar),
+        // the status bar (its left text | its right text; it's in no gap of the list's)
+        const int cmdBottom = IsRectEmpty(&m_cmdCard) ? bodyTop : static_cast<int>(m_cmdCard.bottom);
+        const int statusTop = std::clamp(listB, cmdBottom, h);
+        const int rows[6] = { 0, title, bodyTop, cmdBottom, cutY ? h : statusTop, h };
+        // (the caption buttons: 3 x 46, TabStrip::Relayout)
+        const int lo[5] = { t.S(48), static_cast<int>(m_omni.left) + t.S(40), static_cast<int>(m_cmdCard.left) + pad, contentL,
+            static_cast<int>(m_fileCard.left) + pad + t.S(8) };
+        const int hi[5] = { w - 3 * t.S(46) - t.S(2), static_cast<int>(m_omni.right) - t.S(4), static_cast<int>(m_cmdCard.right) - pad,
+            contentR, static_cast<int>(m_fileCard.right) - pad - t.S(4) };
+        for (int i = 0; i < 5; ++i)
+            if (rows[i + 1] > rows[i])
+                cuts[n++] = { { 0, rows[i], w, rows[i + 1] },
+                    DragSeam(false, rows[i], i == 3 ? statusTop : rows[i + 1], lo[i], hi[i], w, width), -1, -1 };
+        // A corner: the list down to the bottom cut across too, between the list's rows and what's pinned to the
+        // bottom (the status bar, the settings button under the sidebar), what's under that cut on its own way
+        if (cutY && n > 0)
+        {
+            DragCut& c = cuts[n - 1];
+            c.seamY = DragSeam(true, 0, w, listT, m_sidebarVisible ? std::min(listB, h - t.S(kSideFoot)) : listB, h, height);
+            c.seamX2 = DragSeam(false, c.seamY >= 0 ? c.seamY : statusTop, h, lo[4], hi[4], w, width);
+        }
+        return n;
+    }
+    // Columns: the sidebar (its list | the settings button under it), the rest (the list's rows | the status bar, the
+    // cards' bottoms; the tab and nav rows are above)
+    const int cols[3] = { 0, m_sidebarVisible ? static_cast<int>(m_fileCard.left) : 0, w };
+    const int lo[2] = { bodyTop + t.S(8), listT }, hi[2] = { h - t.S(kSideFoot), listB };
+    for (int i = 0; i < 2; ++i)
+        if (cols[i + 1] > cols[i])
+            cuts[n++] = { { cols[i], 0, cols[i + 1], h }, -1, DragSeam(true, cols[i], cols[i + 1], lo[i], hi[i], h, height), -1 };
+    return n;
+}
+
+void MainWindow::PutDragFrame(HDC dc, const DragCut& cut, int width, int height) const
+{
+    // Each side of a cut: before it where it was in the client (pinned left / top), after it where it was from the
+    // client's right / bottom; between them the column / row before the cut doubled, or cut out. Not cut that way:
+    // where it was in the client (Windows' own way).
+    struct Part { int to, from, toLen, fromLen; };
+    const auto parts = [](int base, int from, int to, int seam, Part (&p)[3]) -> int
+    {
+        if (seam < 0)
+        {
+            p[0] = { base, base, std::min(from, to), std::min(from, to) };
+            return 1;
+        }
+        const int d = to - from, s = seam - base;
+        int n = 0;
+        p[n++] = { base, base, s, s };
+        if (d > 0)
+            p[n++] = { base + s, base + s - 1, d, 1 };
+        const int fromRight = s + std::max(0, -d);
+        p[n++] = { base + fromRight + d, base + fromRight, from - fromRight, from - fromRight };
+        return n;
+    };
+    const RECT& b = cut.band;
+    const int bw = b.right - b.left, bh = b.bottom - b.top;
+    Part xs[3], xs2[3], ys[3];
+    const int nx = parts(b.left, bw, cut.seamX >= 0 ? bw + width - m_dragSize.cx : width - b.left, cut.seamX, xs);
+    const int nx2 = parts(b.left, bw, cut.seamX2 >= 0 ? bw + width - m_dragSize.cx : width - b.left, cut.seamX2, xs2);
+    const int ny = parts(b.top, bh, cut.seamY >= 0 ? bh + height - m_dragSize.cy : height - b.top, cut.seamY, ys);
+    SetStretchBltMode(dc, COLORONCOLOR);
+    for (int j = 0; j < ny; ++j)
+    {
+        // (under the row cut: its own column cut)
+        const bool under = cut.seamY >= 0 && j == ny - 1;
+        for (int i = 0; i < (under ? nx2 : nx); ++i)
+        {
+            const Part& x = under ? xs2[i] : xs[i];
+            const Part& y = ys[j];
+            if (x.toLen <= 0 || y.toLen <= 0 || x.fromLen <= 0 || y.fromLen <= 0)
+                continue;
+            if (x.toLen == x.fromLen && y.toLen == y.fromLen)
+                BitBlt(dc, x.to, y.to, x.toLen, y.toLen, m_dragDc, x.from, y.from, SRCCOPY);
+            else
+                StretchBlt(dc, x.to, y.to, x.toLen, y.toLen, m_dragDc, x.from, y.from, x.fromLen, y.fromLen, SRCCOPY);
+        }
+    }
+}
+
+void MainWindow::FreeDragFrame()
+{
+    if (m_dragDc)
+    {
+        if (m_dragOld)
+            SelectObject(m_dragDc, m_dragOld);
+        DeleteDC(m_dragDc);
+    }
+    if (m_dragBmp)
+        DeleteObject(m_dragBmp);
+    m_dragDc = nullptr;
+    m_dragBmp = nullptr;
+    m_dragOld = nullptr;
+    m_dragBits = nullptr;
+    m_dragSize = m_dragCapacity = {};
+}
+
+void MainWindow::PaintUncovered(const RECT& was, const RECT& wasWindow, bool dragged, RECT (&strips)[10])
 {
     for (RECT& s : strips)
         s = {};
@@ -274,6 +541,7 @@ void MainWindow::PaintUncovered(const RECT& was, bool dragged, RECT (&strips)[10
     GetClientRect(m_hwnd, &rc);
     POINT origin{};
     ClientToScreen(m_hwnd, &origin);
+    // (was / wasWindow on the screen)
     // What the old picture doesn't cover. Where Windows left it: a size at once (WVR_REDRAW) where it was on the
     // screen; a frame drag at the window's top left or (a left / top edge) where it was on the screen, both seen, so
     // there both. Before the layout: only the flat background there (the tab row's, the layer's, through the
@@ -293,9 +561,9 @@ void MainWindow::PaintUncovered(const RECT& was, bool dragged, RECT (&strips)[10
     // Windows 8 / 10: the old picture's rounded corners were never painted (outside the window's region then); only
     // what was outside it (corner) is filled, the rest of the corner box is the old picture
     HRGN corner = nullptr;
-    if (m_round.Custom() && !IsRectEmpty(&m_sizeFromWindow) && m_round.Radius() > 0)
+    if (m_round.Custom() && !IsRectEmpty(&wasWindow) && m_round.Radius() > 0)
     {
-        const RECT& w = m_sizeFromWindow;
+        const RECT& w = wasWindow;
         const int d = 2 * m_round.Radius();
         corner = CreateRectRgn(rc.left, rc.top, rc.right, rc.bottom);
         if (HRGN round = CreateRoundRectRgn(w.left - origin.x, w.top - origin.y, w.right - origin.x + 1, w.bottom - origin.y + 1, d, d))
@@ -462,6 +730,9 @@ void MainWindow::OnDestroy()
     }
     RemovePropW(m_hwnd, L"FastFiles.Primary");
     m_sizer.Cancel();
+    FreeDragFrame(); // (closed during a frame drag: no WM_EXITSIZEMOVE)
+    if (m_moving)
+        Backdrop::SetMoving(false);
     KillTimer(m_hwnd, kStatusTimer);
     KillTimer(m_hwnd, kInfoTimer);
     m_info.reset();

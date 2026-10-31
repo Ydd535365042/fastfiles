@@ -138,7 +138,7 @@ bool RoundFrame::Rounded() const
     return Custom() && !m_suppressed && !IsZoomed(m_window) && !IsIconic(m_window);
 }
 
-void RoundFrame::Update()
+void RoundFrame::Update(void (*afterRegion)(void*), void* context)
 {
     if (!Custom() || m_updating)
         return;
@@ -160,6 +160,8 @@ void RoundFrame::Update()
             // No redraw of the whole window for it (that repainted everything on every size step of a resize): only the
             // corner boxes the old and the new region cut differently can show something stale
             SetWindowRgn(m_window, round ? CreateRoundRectRgn(0, 0, w + 1, h + 1, d, d) : nullptr, FALSE);
+            if (afterRegion)
+                afterRegion(context);
             const int box = Radius() + 2;
             for (const SIZE s : { before, SIZE{ w, h } })
                 if (s.cx > 0 && s.cy > 0 && (wasRounded || round))
@@ -280,8 +282,27 @@ void RoundFrame::Update()
         }
         if (!Fresh(strip, size))
             PaintStrip(strip, s, at, frame);
-        // Just behind the window (the corner boxes stay above it by themselves: they're owned by the window)
-        SetWindowPos(strip.hwnd, m_window, at.x + s.left, at.y + s.top, size.cx, size.cy, SWP_NOACTIVATE | SWP_SHOWWINDOW | SWP_NOOWNERZORDER);
+        // Just behind the window (the corner boxes stay above it by themselves: they're owned by the window). Only
+        // what's not so already (a repaint just placed it; a frame drag's step moved the window, not the z-order):
+        // each layered window placed again costs DWM on every step
+        RECT now{};
+        GetWindowRect(strip.hwnd, &now);
+        const bool placed = now.left == at.x + s.left && now.top == at.y + s.top && now.right - now.left == size.cx && now.bottom - now.top == size.cy;
+        // (the strips lie one after the other just behind the window: above this one only other strips, then it)
+        bool behind = false;
+        for (HWND above = GetWindow(strip.hwnd, GW_HWNDPREV); above; above = GetWindow(above, GW_HWNDPREV))
+        {
+            if (above == m_window)
+            {
+                behind = true;
+                break;
+            }
+            if (std::none_of(std::begin(m_frame), std::end(m_frame), [&](const Piece& p) { return p.hwnd == above; }))
+                break;
+        }
+        if (!placed || !behind || !IsWindowVisible(strip.hwnd))
+            SetWindowPos(strip.hwnd, m_window, at.x + s.left, at.y + s.top, size.cx, size.cy,
+                SWP_NOACTIVATE | SWP_SHOWWINDOW | SWP_NOOWNERZORDER | (behind ? SWP_NOZORDER : 0));
     }
     m_updating = false;
 }

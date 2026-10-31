@@ -819,12 +819,26 @@ PaintBuffer::~PaintBuffer()
     DeleteDC(dc);
 }
 
-BufferedPaint::BufferedPaint(HWND hwnd) : m_hwnd(hwnd)
+BufferedPaint::BufferedPaint(HWND hwnd, bool visibleOnly) : m_hwnd(hwnd)
 {
     m_target = BeginPaint(hwnd, &m_ps);
     GetClientRect(hwnd, &m_rc);
     // A top-down 32bpp DIB: the backdrop material is composed into its pixels before the blit
     m_buffer = std::make_unique<PaintBuffer>(m_target, m_rc.right, m_rc.bottom, m_ps.rcPaint);
+    // (the paint DC's visible region is in screen coordinates; the buffer's are the client area's. The shared buffer's
+    // RestoreDC takes the clip off again, an own one is deleted)
+    if (visibleOnly)
+        if (HRGN rgn = CreateRectRgn(0, 0, 0, 0))
+        {
+            if (GetRandomRgn(m_target, rgn, SYSRGN) == 1)
+            {
+                POINT origin{ 0, 0 };
+                ClientToScreen(hwnd, &origin);
+                OffsetRgn(rgn, -origin.x, -origin.y);
+                SelectClipRgn(m_buffer->dc, rgn);
+            }
+            DeleteObject(rgn);
+        }
 }
 
 BufferedPaint::~BufferedPaint()

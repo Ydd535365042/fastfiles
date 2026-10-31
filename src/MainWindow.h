@@ -154,7 +154,8 @@ private:
     void PaintChrome(HDC hdc, const RECT& rc);
     // The window got bigger (was: the old client area, screen; dragged: a frame drag): what it uncovered, painted
     // with the background at once; `strips` (client) get their real paint after the layout
-    void PaintUncovered(const RECT& was, bool dragged, RECT (&strips)[10]);
+    // was: the old picture (client, as it is now on the screen), wasWindow: the old window there
+    void PaintUncovered(const RECT& was, const RECT& wasWindow, bool dragged, RECT (&strips)[10]);
     RECT ViewRect() const { return m_viewRect; }
     bool OverSplitter(int x, int y) const;
     bool OverInfoSplitter(int x, int y) const;
@@ -521,6 +522,30 @@ private:
     bool m_moving = false;
     RECT m_sizeFrom{}, m_sizeFromWindow{}; // the client area / the window on the screen right before a size change
     RECT m_uncovered[10]{}; // what that size change uncovered (client), painted with the background, painted for real after the layout
+    // A frame drag: the window's last painted picture (client area, m_dragSize of it), put back cut in two when the
+    // next step moves the left / top edge (WM_WINDOWPOSCHANGED): what's pinned to each side where it goes
+    HDC m_dragDc = nullptr;
+    HBITMAP m_dragBmp = nullptr;
+    HGDIOBJ m_dragOld = nullptr;
+    const DWORD* m_dragBits = nullptr; // (its pixels, top down, m_dragCapacity.cx a row)
+    SIZE m_dragSize{}, m_dragCapacity{};
+    bool m_repaintAll = false; // that picture was put back cut: the children the layout moves painted again
+    // Where it's cut for the size coming (WM_WINDOWPOSCHANGING: found before Windows' own picture shows)
+    // (seamX2: the column cut of what's under the row cut, seamY; the status bar's own)
+    struct DragCut { RECT band; int seamX, seamY, seamX2; };
+    DragCut m_cuts[5]{};
+    int m_cutCount = 0;
+    SIZE m_cutsFor{};
+    bool m_cutX = false, m_cutY = false;
+    void SaveDragFrame();
+    void FreeDragFrame();
+    // Where the picture is cut (vertical == false: at a column, over its rows [a0, a1); true: at a row, over those
+    // columns) for the client to go from `from` to `to` long: in [lo, hi) where what's cut out or doubled is all one
+    // color; -1 none
+    int DragSeam(bool vertical, int a0, int a1, int lo, int hi, int from, int to) const;
+    // A part of the picture (DragCut: band) and where it's cut each way (-1 not: where it was in the client)
+    int DragCuts(bool cutX, bool cutY, int width, int height, DragCut (&cuts)[5]) const;
+    void PutDragFrame(HDC dc, const DragCut& cut, int width, int height) const;
     std::vector<bool> m_probeSteps; // test mode: WM_WINDOWPOSCHANGING / CHANGED pairs that started a LayoutProbe step
     void RepaintMaterial(); // our surfaces that show the material, for where the window is now
     // Files' search mode suggestions under the search box (MainWindowInput.cpp)

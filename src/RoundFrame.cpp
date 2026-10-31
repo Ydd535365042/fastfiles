@@ -138,7 +138,7 @@ bool RoundFrame::Rounded() const
     return Custom() && !m_suppressed && !IsZoomed(m_window) && !IsIconic(m_window);
 }
 
-void RoundFrame::Update(void (*afterRegion)(void*), void* context)
+void RoundFrame::Update()
 {
     if (!Custom() || m_updating)
         return;
@@ -160,8 +160,6 @@ void RoundFrame::Update(void (*afterRegion)(void*), void* context)
             // No redraw of the whole window for it (that repainted everything on every size step of a resize): only the
             // corner boxes the old and the new region cut differently can show something stale
             SetWindowRgn(m_window, round ? CreateRoundRectRgn(0, 0, w + 1, h + 1, d, d) : nullptr, FALSE);
-            if (afterRegion)
-                afterRegion(context);
             const int box = Radius() + 2;
             for (const SIZE s : { before, SIZE{ w, h } })
                 if (s.cx > 0 && s.cy > 0 && (wasRounded || round))

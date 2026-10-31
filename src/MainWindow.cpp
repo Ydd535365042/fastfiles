@@ -267,10 +267,24 @@ LRESULT MainWindow::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
         // drag: the edge the mouse holds blinking on every step; a snap / maximize: one black flash); painted with
         // the window's own background now
         RECT uncovered[10]{};
-        if (!IsRectEmpty(&m_sizeFrom) &&
-            (LOWORD(lp) > m_sizeFrom.right - m_sizeFrom.left || HIWORD(lp) > m_sizeFrom.bottom - m_sizeFrom.top))
+        // (a real size change: WM_WINDOWPOSCHANGING noted the old client area)
+        const bool sized = !IsRectEmpty(&m_sizeFrom) &&
+            (LOWORD(lp) != m_sizeFrom.right - m_sizeFrom.left || HIWORD(lp) != m_sizeFrom.bottom - m_sizeFrom.top);
+        if (sized && (LOWORD(lp) > m_sizeFrom.right - m_sizeFrom.left || HIWORD(lp) > m_sizeFrom.bottom - m_sizeFrom.top))
             PaintUncovered(m_sizeFrom, m_moving, uncovered);
         m_sizeFrom = {};
+        // (where each child is before the layout, in the client area)
+        struct ChildPlace { HWND hwnd; RECT rc; };
+        std::vector<ChildPlace> before;
+        if (sized)
+            for (HWND c = GetWindow(m_hwnd, GW_CHILD); c; c = GetWindow(c, GW_HWNDNEXT))
+                if (IsWindowVisible(c))
+                {
+                    ChildPlace p{ c, {} };
+                    GetWindowRect(c, &p.rc);
+                    MapWindowPoints(nullptr, m_hwnd, reinterpret_cast<POINT*>(&p.rc), 2);
+                    before.push_back(p);
+                }
         LayoutProbe::Uncovered(m_hwnd); // (test mode: what the new size shows before its layout)
         Layout();
         // (what was uncovered, a child included: the sidebar / the tab row a left / top edge's drag reaches, which the
@@ -278,6 +292,21 @@ LRESULT MainWindow::HandleMessage(UINT msg, WPARAM wp, LPARAM lp)
         for (const RECT& s : uncovered)
             if (!IsRectEmpty(&s))
                 RedrawWindow(m_hwnd, &s, nullptr, RDW_INVALIDATE | RDW_ALLCHILDREN);
+        // A child the layout left where it was, at its size (the sidebar on a right edge's drag, the tab and nav rows on
+        // a bottom edge's), showed black on the screen for a moment: Windows gives the resized window a new surface
+        // and copies the old picture into it only later, and DWM composed in between (the whole window blinking while
+        // it was resized). One moved or resized has its pixels in the new surface at once (copied with the move, or
+        // painted again: SWP_NOCOPYBITS). So those left alone are painted again too.
+        for (const ChildPlace& c : before)
+        {
+            RECT now{};
+            if (IsWindowVisible(c.hwnd) && GetWindowRect(c.hwnd, &now))
+            {
+                MapWindowPoints(nullptr, m_hwnd, reinterpret_cast<POINT*>(&now), 2);
+                if (EqualRect(&now, &c.rc))
+                    RedrawWindow(c.hwnd, nullptr, nullptr, RDW_INVALIDATE | RDW_ALLCHILDREN);
+            }
+        }
         // Dragging the frame: each size is painted whole before the next one (see WM_MOUSEMOVE's splitter drags)
         if (m_moving)
             RedrawWindow(m_hwnd, nullptr, nullptr, RDW_UPDATENOW | RDW_ALLCHILDREN);
